@@ -47,7 +47,7 @@
 }
 
 html {
-  font-size: 16px;
+  font-size: 13px;
   scroll-behavior: smooth;
 }
 
@@ -99,7 +99,7 @@ body {
 /* --- Header --- */
 #game-header {
   text-align: center;
-  padding: 1.5rem 1rem 0.5rem;
+  padding: 0.75rem 1rem 0.25rem;
   position: relative;
   z-index: 1;
 }
@@ -134,14 +134,14 @@ body {
 /* --- Main Layout --- */
 #game-container {
   display: grid;
-  grid-template-columns: 320px 1fr 400px;
-  gap: 1.5rem;
-  max-width: 1600px;
-  margin: 0.75rem auto;
-  padding: 0 1.25rem 2rem;
+  grid-template-columns: 280px 1fr 360px;
+  gap: 1rem;
+  max-width: 1400px;
+  margin: 0.5rem auto;
+  padding: 0 1rem 2rem;
   position: relative;
   z-index: 1;
-  min-height: calc(100vh - 120px);
+  min-height: calc(100vh - 100px);
 }
 
 /* --- Glass Panel --- */
@@ -287,19 +287,21 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 3.5rem;
-  padding: 2rem 1rem;
+  justify-content: flex-start;
+  gap: 1rem;
+  padding: 0.75rem 0.75rem 1.5rem;
+  overflow-y: auto;
+  max-height: calc(100vh - 80px);
 }
 
 #calorie-display {
   text-align: center;
-  padding: 1rem 2.5rem;
-  min-width: 280px;
+  padding: 0.6rem 1.5rem;
+  min-width: 220px;
 }
 
 #calorie-count {
-  font-size: clamp(2.5rem, 6vw, 4rem);
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
   font-weight: 900;
   background: var(--accent-gradient);
   -webkit-background-clip: text;
@@ -315,10 +317,10 @@ body {
 }
 
 .calorie-label {
-  font-size: 1rem;
+  font-size: 0.7rem;
   color: var(--text-secondary);
   font-weight: 600;
-  letter-spacing: 2px;
+  letter-spacing: 1.5px;
   text-transform: uppercase;
 }
 
@@ -331,8 +333,8 @@ body {
 }
 
 #click-target {
-  width: 200px;
-  height: 200px;
+  width: 260px;
+  height: 260px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -343,6 +345,7 @@ body {
   user-select: none;
   -webkit-user-select: none;
   outline: none;
+  overflow: visible;
 }
 
 #click-target:hover {
@@ -354,9 +357,10 @@ body {
 }
 
 .aubin-img {
-  width: 180px;
-  height: 180px;
+  width: 160px;
+  height: 160px;
   object-fit: contain;
+  object-position: center;
   border-radius: 50%;
   filter: drop-shadow(0 0 30px rgba(255, 107, 53, 0.4));
   transition:
@@ -383,6 +387,70 @@ body {
 
 #click-target:hover .aubin-img {
   filter: drop-shadow(0 0 50px rgba(255, 107, 53, 0.6));
+}
+
+/* ====== Aubin Aura System ====== */
+#aubin-aura {
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 1;
+  transition: all 0.6s ease;
+}
+
+/* Aura level 1 – Blanc/Bleu (rebirths 5-9) */
+#aubin-aura.aura-1 {
+  box-shadow:
+    0 0 20px 8px rgba(150, 200, 255, 0.5),
+    0 0 50px 20px rgba(100, 160, 255, 0.25);
+  animation: aura-pulse-1 2.5s ease-in-out infinite;
+}
+@keyframes aura-pulse-1 {
+  0%, 100% { box-shadow: 0 0 20px 8px rgba(150,200,255,0.5), 0 0 50px 20px rgba(100,160,255,0.25); }
+  50%       { box-shadow: 0 0 35px 15px rgba(150,200,255,0.75), 0 0 70px 30px rgba(100,160,255,0.4); }
+}
+
+/* Aura level 2 – Or/Feu (rebirths 10-14) */
+#aubin-aura.aura-2 {
+  box-shadow:
+    0 0 25px 10px rgba(255, 180, 30, 0.65),
+    0 0 60px 25px rgba(255, 100, 10, 0.35);
+  animation: aura-pulse-2 2s ease-in-out infinite;
+}
+@keyframes aura-pulse-2 {
+  0%, 100% { box-shadow: 0 0 25px 10px rgba(255,180,30,0.65), 0 0 60px 25px rgba(255,100,10,0.35); }
+  50%       { box-shadow: 0 0 45px 20px rgba(255,220,50,0.9), 0 0 90px 40px rgba(255,100,10,0.55); }
+}
+
+/* Aura level 3 – Violet/Magie (rebirths 15-19) */
+#aubin-aura.aura-3 {
+  box-shadow:
+    0 0 30px 12px rgba(170, 60, 255, 0.7),
+    0 0 70px 30px rgba(100, 0, 200, 0.4);
+  animation: aura-pulse-3 1.8s ease-in-out infinite;
+}
+@keyframes aura-pulse-3 {
+  0%, 100% { box-shadow: 0 0 30px 12px rgba(170,60,255,0.7), 0 0 70px 30px rgba(100,0,200,0.4); }
+  50%       { box-shadow: 0 0 55px 22px rgba(200,80,255,0.9), 0 0 100px 45px rgba(130,0,255,0.6); }
+}
+
+/* Aura level 4 – Arc-en-ciel/Divin (rebirths 20+) */
+#aubin-aura.aura-4 {
+  animation: aura-rainbow 2s linear infinite;
+}
+@keyframes aura-rainbow {
+  0%   { box-shadow: 0 0 40px 16px rgba(255,50,50,0.8),   0 0 80px 35px rgba(255,50,50,0.4); }
+  16%  { box-shadow: 0 0 40px 16px rgba(255,165,0,0.8),   0 0 80px 35px rgba(255,165,0,0.4); }
+  33%  { box-shadow: 0 0 40px 16px rgba(255,255,0,0.8),   0 0 80px 35px rgba(255,255,0,0.4); }
+  50%  { box-shadow: 0 0 40px 16px rgba(0,220,100,0.8),   0 0 80px 35px rgba(0,220,100,0.4); }
+  66%  { box-shadow: 0 0 40px 16px rgba(60,100,255,0.8),  0 0 80px 35px rgba(60,100,255,0.4); }
+  83%  { box-shadow: 0 0 40px 16px rgba(180,60,255,0.8),  0 0 80px 35px rgba(180,60,255,0.4); }
+  100% { box-shadow: 0 0 40px 16px rgba(255,50,50,0.8),   0 0 80px 35px rgba(255,50,50,0.4); }
 }
 
 /* Puff orbit ring */
@@ -541,24 +609,29 @@ body {
 
 .shop-tabs {
   display: flex;
-  gap: 0.4rem;
+  flex-wrap: wrap;
+  gap: 0.25rem;
   background: rgba(0, 0, 0, 0.2);
-  padding: 0.3rem;
+  padding: 0.25rem;
   border-radius: var(--radius-sm);
 }
 
 .shop-tab {
-  flex: 1;
-  padding: 0.5rem;
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0.35rem 0.4rem;
   border: none;
   border-radius: 6px;
   background: transparent;
   color: var(--text-muted);
   font-family: var(--font);
-  font-size: 0.8rem;
+  font-size: 0.7rem;
   font-weight: 600;
   cursor: pointer;
   transition: all var(--transition-fast);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
 .shop-tab:hover {
@@ -605,8 +678,8 @@ body {
 .shop-item {
   display: flex;
   align-items: center;
-  gap: 0.85rem;
-  padding: 1rem;
+  gap: 0.5rem;
+  padding: 0.55rem 0.7rem;
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: var(--radius-md);
@@ -649,9 +722,9 @@ body {
 }
 
 .shop-item-icon {
-  font-size: 2rem;
-  width: 48px;
-  height: 48px;
+  font-size: 1.4rem;
+  width: 34px;
+  height: 34px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1054,32 +1127,35 @@ body {
 
 /* --- Pet Inventory --- */
 #pet-inventory {
-  padding: 1rem 1.5rem;
+  padding: 0.5rem 0.75rem;
   width: 100%;
   max-width: 500px;
 }
 
 #pet-inventory h3 {
-  font-size: 1rem;
+  font-size: 0.8rem;
   font-weight: 700;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.4rem;
   text-align: center;
 }
 
 #pet-count-display {
   color: var(--text-muted);
   font-weight: 400;
-  font-size: 0.85rem;
+  font-size: 0.75rem;
 }
 
 #pet-slots {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 0.6rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  justify-content: center;
 }
 
 .pet-slot {
-  aspect-ratio: 1;
+  width: 58px;
+  height: 58px;
+  flex-shrink: 0;
   background: rgba(255, 255, 255, 0.03);
   border: 2px dashed rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-md);
@@ -1087,11 +1163,10 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.25rem;
-  padding: 0.5rem;
+  gap: 0.1rem;
+  padding: 0.25rem;
   transition: all var(--transition-fast);
   position: relative;
-  min-height: 90px;
 }
 
 .pet-slot.empty {
@@ -1111,7 +1186,7 @@ body {
 }
 
 .pet-slot-icon {
-  font-size: 2rem;
+  font-size: 1.4rem;
 }
 
 .pet-slot-name {
@@ -1421,6 +1496,156 @@ body {
 #rebirth-tokens {
   color: var(--accent-secondary);
   font-weight: 800;
+}
+
+/* --- Gambling Panel --- */
+.gambling-intro {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.75rem;
+  text-align: center;
+}
+
+.gambling-block {
+  margin-bottom: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.gambling-block h4 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.gambling-teams {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--accent-secondary);
+}
+
+.vs-label {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.gambling-bet-row {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.bet-input {
+  flex: 1;
+  padding: 0.45rem 0.6rem;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--font);
+  font-size: 0.8rem;
+  min-width: 0;
+}
+
+.bet-input:focus {
+  outline: none;
+  border-color: rgba(255,107,53,0.4);
+}
+
+.bet-select {
+  flex: 1.5;
+  padding: 0.45rem 0.4rem;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--font);
+  font-size: 0.75rem;
+  min-width: 0;
+}
+
+.bet-select option {
+  background: #1a1a2e;
+}
+
+.btn-gamble {
+  background: linear-gradient(135deg, #f59e0b, #ef4444);
+  border: 1px solid rgba(245,158,11,0.3);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.8rem;
+  padding: 0.5rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  width: 100%;
+}
+
+.btn-gamble:hover:not(:disabled) {
+  box-shadow: 0 0 20px rgba(245,158,11,0.35);
+  transform: scale(1.02);
+}
+
+.btn-gamble:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.gamble-result {
+  font-size: 0.82rem;
+  font-weight: 700;
+  min-height: 1.2em;
+  text-align: center;
+  transition: color 0.3s;
+}
+
+.gamble-result.win  { color: var(--success); }
+.gamble-result.lose { color: var(--danger); }
+.gamble-result.draw { color: var(--accent-secondary); }
+
+/* Scratch grid */
+#scratch-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.4rem;
+  margin: 0.25rem 0;
+}
+
+.scratch-cell {
+  aspect-ratio: 1;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  user-select: none;
+}
+
+.scratch-cell.hidden-cell {
+  background: linear-gradient(135deg, #374151, #1f2937);
+  font-size: 0;
+}
+
+.scratch-cell.hidden-cell:hover {
+  background: linear-gradient(135deg, #4b5563, #374151);
+  transform: scale(1.05);
+}
+
+.scratch-cell.revealed {
+  background: rgba(255,255,255,0.04);
+  cursor: default;
+}
+
+.scratch-desc {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
 }
 
 /* --- Responsive --- */

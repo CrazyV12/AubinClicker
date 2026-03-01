@@ -3,7 +3,7 @@
    ============================================ */
 
 // >>>>>> DEBUG: Supprimer cette ligne pour retirer le multiplicateur de test <<<<<<
-const DEBUG_MULTIPLIER = 10000000;
+
 // >>>>>> FIN DEBUG <<<<<<
 
 // ============ GAME DATA ============
@@ -465,9 +465,9 @@ function getUnlockedPets() {
     return PETS.filter(p => p.minRebirth <= state.rebirthCount && p.weight > 0);
 }
 
-// Rebirth cap = 1M × 10^rebirthCount (infini, chaque rebirth x10)
+// Rebirth cap = 100K × 5^rebirthCount (chaque rebirth ×5, plus accessible)
 function getCalorieCap() {
-    return 1000000 * Math.pow(10, state.rebirthCount);
+    return 100000 * Math.pow(5, state.rebirthCount);
 }
 
 const QUOTES = [
@@ -569,6 +569,8 @@ const dom = {
     codeInput: document.getElementById('code-input'),
     codeSubmit: document.getElementById('code-submit'),
     codeResult: document.getElementById('code-result'),
+    codesTab: document.getElementById('codes-tab'),
+    gamblingTab: document.getElementById('gambling-tab'),
 };
 
 // ============ NUMBER FORMATTING ============
@@ -695,8 +697,7 @@ function renderBuildings() {
             <div class="shop-item-icon">${b.icon}</div>
             <div class="shop-item-info">
                 <div class="shop-item-name">${isLocked ? '???' : b.name}</div>
-                <div class="shop-item-desc">${isLocked ? 'Pas encore débloqué...' : b.desc}</div>
-                <div class="shop-item-cost ${canAfford ? '' : 'too-expensive'}">${formatNumber(cost)} Calories d'Or</div>
+                <div class="shop-item-cost ${canAfford ? '' : 'too-expensive'}">${formatNumber(cost)} cal</div>
             </div>
             <div class="shop-item-count">${b.count}</div>
         `;
@@ -728,8 +729,7 @@ function renderUpgrades() {
             <div class="upgrade-icon">${u.icon}</div>
             <div class="upgrade-item-info">
                 <div class="upgrade-item-name">${u.name}</div>
-                <div class="upgrade-item-desc">${u.desc}</div>
-                ${!u.purchased ? `<div class="upgrade-item-cost ${canAfford ? '' : 'too-expensive'}">${formatNumber(u.cost)} Calories d'Or</div>` : ''}
+                ${!u.purchased ? `<div class="upgrade-item-cost ${canAfford ? '' : 'too-expensive'}">${formatNumber(u.cost)} cal</div>` : ''}
             </div>
         `;
 
@@ -965,9 +965,15 @@ function doRebirth() {
     currentOrbitCount = -1;
     dom.puffOrbit.innerHTML = '';
 
-    // Show pets tab + inventory after first rebirth
+    // Show pets tab + inventory + codes tab after first rebirth
     if (state.rebirthCount >= 1 && dom.petsTab) {
         dom.petsTab.style.display = '';
+    }
+    if (state.rebirthCount >= 1 && dom.codesTab) {
+        dom.codesTab.style.display = '';
+    }
+    if (state.rebirthCount >= 2 && dom.gamblingTab) {
+        dom.gamblingTab.style.display = '';
     }
     const petInv = document.getElementById('pet-inventory');
     if (state.rebirthCount >= 1 && petInv) {
@@ -985,8 +991,45 @@ function doRebirth() {
     initWheel();
     updateDisplay();
 
+    updateAubinAppearance();
     showMilestone(`🔄 Rebirth #${state.rebirthCount} ! +1 Token 🪙`);
     showQuote(`"Aubin renaît de ses cendres... mais il a toujours faim."`);
+}
+
+// ====== Aubin Appearance (image + aura) ======
+// Images: aubin.png, aubin2.png, aubin3.png, aubin4.png, aubin5.png, aubin6.png → cycle of 6
+const AUBIN_IMAGES = [
+    'images/aubin.png',
+    'images/aubin2.png',
+    'images/aubin3.png',
+    'images/aubin4.png',
+    'images/aubin5.png',
+    'images/aubin6.png',
+];
+const AUBIN_CYCLE = AUBIN_IMAGES.length; // 6
+
+function getAubinBaseSrc() {
+    const cyclePos = state.rebirthCount % AUBIN_CYCLE;
+    return AUBIN_IMAGES[cyclePos];
+}
+
+function updateAubinAppearance() {
+    const cycleNum = Math.floor(state.rebirthCount / AUBIN_CYCLE); // 0 = no aura
+
+    const imgEl = document.getElementById('aubin-img');
+    if (imgEl) {
+        imgEl.src = getAubinBaseSrc();
+    }
+
+    // Aura: no aura on first cycle, then levels 1-4 (capped at 4)
+    const auraEl = document.getElementById('aubin-aura');
+    if (auraEl) {
+        auraEl.className = '';
+        if (cycleNum >= 1) {
+            const auraLevel = Math.min(cycleNum, 4);
+            auraEl.classList.add(`aura-${auraLevel}`);
+        }
+    }
 }
 
 function updateRebirthUI() {
@@ -1468,6 +1511,215 @@ function resetGame() {
     showQuote("🔄 C'est reparti ! Aubin a encore faim !");
 }
 
+// ============ GAMBLING ============
+
+const FOOT_TEAMS = [
+    ['PSG', 'OM'], ['Real Madrid', 'Barça'], ['Man City', 'Liverpool'],
+    ['Bayern', 'Dortmund'], ['Juventus', 'Inter'], ['Chelsea', 'Arsenal'],
+    ['Atlético', 'Séville'], ['Ajax', 'Feyenoord'], ['Porto', 'Benfica'],
+    ['Lyon', 'Saint-Étienne'],
+];
+
+const TENNIS_PLAYERS = [
+    ['Djokovic', 'Alcaraz'], ['Nadal', 'Federer'], ['Sinner', 'Medvedev'],
+    ['Zverev', 'Tsitsipas'], ['Rublev', 'Fritz'], ['Auger-Aliassime', 'Tiafoe'],
+    ['Hurkacz', 'Rune'], ['Berrettini', 'Shapovalov'],
+];
+
+const SCRATCH_SYMBOLS = ['🍔', '🍟', '🍕', '🌮', '🍗', '💰', '⭐', '🎯'];
+
+let scratchState = null; // { cells: [...], revealed: [...], active: bool }
+
+function initGambling() {
+    // Pick random teams/players
+    const ft = FOOT_TEAMS[Math.floor(Math.random() * FOOT_TEAMS.length)];
+    document.getElementById('foot-team-a').textContent = ft[0];
+    document.getElementById('foot-team-b').textContent = ft[1];
+    const fo = document.getElementById('foot-choice');
+    fo.options[0].text = `⚽ ${ft[0]} gagne`;
+    fo.options[2].text = `⚽ ${ft[1]} gagne`;
+
+    const tp = TENNIS_PLAYERS[Math.floor(Math.random() * TENNIS_PLAYERS.length)];
+    document.getElementById('tennis-player-a').textContent = tp[0];
+    document.getElementById('tennis-player-b').textContent = tp[1];
+    const to = document.getElementById('tennis-choice');
+    to.options[0].text = `🎾 ${tp[0]} gagne`;
+    to.options[1].text = `🎾 ${tp[1]} gagne`;
+
+    document.getElementById('foot-bet-btn').addEventListener('click', doFootBet);
+    document.getElementById('tennis-bet-btn').addEventListener('click', doTennisBet);
+    document.getElementById('scratch-btn').addEventListener('click', buyScratchTicket);
+}
+
+function doFootBet() {
+    const betVal = parseInt(document.getElementById('foot-bet').value);
+    const choice = document.getElementById('foot-choice').value;
+    const resultEl = document.getElementById('foot-result');
+
+    if (!betVal || betVal <= 0) { resultEl.textContent = '⚠️ Mise invalide !'; resultEl.className = 'gamble-result lose'; return; }
+    if (betVal > state.calories) { resultEl.textContent = '❌ Pas assez de calories !'; resultEl.className = 'gamble-result lose'; return; }
+
+    state.calories -= betVal;
+
+    // Probabilities: A wins 40%, draw 20%, B wins 40%
+    const r = Math.random();
+    let outcome;
+    if (r < 0.40) outcome = 'A';
+    else if (r < 0.60) outcome = 'draw';
+    else outcome = 'B';
+
+    const teamA = document.getElementById('foot-team-a').textContent;
+    const teamB = document.getElementById('foot-team-b').textContent;
+    let outcomeText;
+    if (outcome === 'A') outcomeText = `${teamA} gagne`;
+    else if (outcome === 'B') outcomeText = `${teamB} gagne`;
+    else outcomeText = 'Match nul';
+
+    if (outcome === choice) {
+        let mult = outcome === 'draw' ? 3 : 2;
+        const gain = betVal * mult;
+        state.calories += gain;
+        resultEl.textContent = `✅ ${outcomeText} ! Tu gagnes ${formatNumber(gain)} cal !`;
+        resultEl.className = 'gamble-result win';
+        showMilestone(`🎰 Pari foot gagné ! +${formatNumber(gain)} cal !`);
+    } else {
+        resultEl.textContent = `❌ ${outcomeText}. Tu perds ${formatNumber(betVal)} cal.`;
+        resultEl.className = 'gamble-result lose';
+    }
+
+    // Refresh teams
+    const ft = FOOT_TEAMS[Math.floor(Math.random() * FOOT_TEAMS.length)];
+    document.getElementById('foot-team-a').textContent = ft[0];
+    document.getElementById('foot-team-b').textContent = ft[1];
+    const fo = document.getElementById('foot-choice');
+    fo.options[0].text = `⚽ ${ft[0]} gagne`;
+    fo.options[2].text = `⚽ ${ft[1]} gagne`;
+    document.getElementById('foot-bet').value = '';
+    updateDisplay();
+}
+
+function doTennisBet() {
+    const betVal = parseInt(document.getElementById('tennis-bet').value);
+    const choice = document.getElementById('tennis-choice').value;
+    const resultEl = document.getElementById('tennis-result');
+
+    if (!betVal || betVal <= 0) { resultEl.textContent = '⚠️ Mise invalide !'; resultEl.className = 'gamble-result lose'; return; }
+    if (betVal > state.calories) { resultEl.textContent = '❌ Pas assez de calories !'; resultEl.className = 'gamble-result lose'; return; }
+
+    state.calories -= betVal;
+
+    const outcome = Math.random() < 0.5 ? 'A' : 'B';
+    const playerA = document.getElementById('tennis-player-a').textContent;
+    const playerB = document.getElementById('tennis-player-b').textContent;
+    const winner = outcome === 'A' ? playerA : playerB;
+
+    if (outcome === choice) {
+        const gain = betVal * 2;
+        state.calories += gain;
+        resultEl.textContent = `✅ ${winner} gagne ! +${formatNumber(gain)} cal !`;
+        resultEl.className = 'gamble-result win';
+        showMilestone(`🎾 Pari tennis gagné ! +${formatNumber(gain)} cal !`);
+    } else {
+        resultEl.textContent = `❌ ${winner} gagne. Tu perds ${formatNumber(betVal)} cal.`;
+        resultEl.className = 'gamble-result lose';
+    }
+
+    // Refresh players
+    const tp = TENNIS_PLAYERS[Math.floor(Math.random() * TENNIS_PLAYERS.length)];
+    document.getElementById('tennis-player-a').textContent = tp[0];
+    document.getElementById('tennis-player-b').textContent = tp[1];
+    const to = document.getElementById('tennis-choice');
+    to.options[0].text = `🎾 ${tp[0]} gagne`;
+    to.options[1].text = `🎾 ${tp[1]} gagne`;
+    document.getElementById('tennis-bet').value = '';
+    updateDisplay();
+}
+
+function buyScratchTicket() {
+    const cost = 500;
+    const resultEl = document.getElementById('scratch-result');
+    if (state.calories < cost) {
+        resultEl.textContent = '❌ Pas assez de calories ! (500 cal requis)';
+        resultEl.className = 'gamble-result lose';
+        return;
+    }
+    state.calories -= cost;
+    updateDisplay();
+
+    // Generate 9 symbols (3x3)
+    const symbols = [];
+    for (let i = 0; i < 9; i++) {
+        symbols.push(SCRATCH_SYMBOLS[Math.floor(Math.random() * SCRATCH_SYMBOLS.length)]);
+    }
+    // Chance of jackpot: force 3 identical in a row/col/diag ~20% of the time
+    if (Math.random() < 0.20) {
+        const sym = SCRATCH_SYMBOLS[Math.floor(Math.random() * SCRATCH_SYMBOLS.length)];
+        const line = Math.floor(Math.random() * 3);
+        symbols[line * 3] = sym;
+        symbols[line * 3 + 1] = sym;
+        symbols[line * 3 + 2] = sym;
+    }
+
+    scratchState = { symbols, revealed: Array(9).fill(false), active: true };
+    renderScratchGrid();
+    resultEl.textContent = '🎟️ Gratte les cases !';
+    resultEl.className = 'gamble-result';
+    document.getElementById('scratch-btn').disabled = true;
+}
+
+function renderScratchGrid() {
+    const grid = document.getElementById('scratch-grid');
+    grid.innerHTML = '';
+    if (!scratchState) return;
+    scratchState.symbols.forEach((sym, i) => {
+        const cell = document.createElement('div');
+        cell.className = 'scratch-cell' + (scratchState.revealed[i] ? ' revealed' : ' hidden-cell');
+        cell.textContent = scratchState.revealed[i] ? sym : '';
+        if (!scratchState.revealed[i] && scratchState.active) {
+            cell.addEventListener('click', () => revealScratchCell(i));
+        }
+        grid.appendChild(cell);
+    });
+}
+
+function revealScratchCell(idx) {
+    if (!scratchState || scratchState.revealed[idx]) return;
+    scratchState.revealed[idx] = true;
+    renderScratchGrid();
+
+    if (scratchState.revealed.every(r => r)) {
+        // All revealed – check for win
+        checkScratchWin();
+    }
+}
+
+function checkScratchWin() {
+    const s = scratchState.symbols;
+    const resultEl = document.getElementById('scratch-result');
+    const lines = [
+        [0,1,2],[3,4,5],[6,7,8], // rows
+        [0,3,6],[1,4,7],[2,5,8], // cols
+        [0,4,8],[2,4,6],         // diags
+    ];
+    let won = false;
+    for (const [a,b,c] of lines) {
+        if (s[a] === s[b] && s[b] === s[c]) { won = true; break; }
+    }
+    if (won) {
+        const prize = 500 * 10;
+        state.calories += prize;
+        resultEl.textContent = `🎉 JACKPOT ! +${formatNumber(prize)} cal !`;
+        resultEl.className = 'gamble-result win';
+        showMilestone(`🎟️ JACKPOT au ticket ! +${formatNumber(prize)} cal !`);
+        updateDisplay();
+    } else {
+        resultEl.textContent = '😢 Pas de chance cette fois...';
+        resultEl.className = 'gamble-result lose';
+    }
+    scratchState.active = false;
+    document.getElementById('scratch-btn').disabled = false;
+}
+
 // ============ SHOP TABS ============
 
 function initShopTabs() {
@@ -1499,10 +1751,18 @@ function init() {
     renderPetInventory();
     initWheel();
     updateDisplay();
+    updateAubinAppearance();
+    initGambling();
 
-    // Show pets tab + inventory if rebirth >= 1
+    // Show pets tab + inventory + codes tab if rebirth >= 1, gambling >= 2
     if (state.rebirthCount >= 1 && dom.petsTab) {
         dom.petsTab.style.display = '';
+    }
+    if (state.rebirthCount >= 1 && dom.codesTab) {
+        dom.codesTab.style.display = '';
+    }
+    if (state.rebirthCount >= 2 && dom.gamblingTab) {
+        dom.gamblingTab.style.display = '';
     }
     const petInv = document.getElementById('pet-inventory');
     if (petInv) {
@@ -1516,6 +1776,21 @@ function init() {
             handleClick(null);
         }
     });
+
+    // Aubin pressed image
+    const _setAubinPressed = () => {
+        const imgEl = document.getElementById('aubin-img');
+        if (imgEl) imgEl.src = 'images/aubinappuye.png';
+    };
+    const _setAubinReleased = () => {
+        const imgEl = document.getElementById('aubin-img');
+        if (imgEl) imgEl.src = getAubinBaseSrc();
+    };
+    dom.clickTarget.addEventListener('mousedown', _setAubinPressed);
+    dom.clickTarget.addEventListener('mouseup', _setAubinReleased);
+    dom.clickTarget.addEventListener('mouseleave', _setAubinReleased);
+    dom.clickTarget.addEventListener('touchstart', _setAubinPressed, { passive: true });
+    dom.clickTarget.addEventListener('touchend', _setAubinReleased);
 
     dom.saveBtn.addEventListener('click', saveGame);
     dom.resetBtn.addEventListener('click', resetGame);

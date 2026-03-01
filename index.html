@@ -92,7 +92,8 @@
             
             <div id="click-zone">
                 <div id="click-target" role="button" tabindex="0" aria-label="Cliquer sur Aubin pour gagner des Calories d'Or">
-                    <img src="aubin.png" alt="Aubin" class="aubin-img" draggable="false">
+                        <div id="aubin-aura"></div>
+                        <img src="images/aubin.png" alt="Aubin" id="aubin-img" class="aubin-img" draggable="false">
                     <div id="puff-orbit"></div>
                     <div class="click-ring"></div>
                     <div class="click-ring ring-2"></div>
@@ -124,7 +125,8 @@
                 <button class="shop-tab" data-tab="upgrades">⬆️ Améliorations</button>
                 <button class="shop-tab" data-tab="quests">🎯 Quêtes</button>
                 <button class="shop-tab" data-tab="pets" id="pets-tab" style="display:none;">🐾 Pets</button>
-                <button class="shop-tab" data-tab="codes">🔑 Codes</button>
+                <button class="shop-tab" data-tab="gambling" id="gambling-tab" style="display:none;">🎲 Gambling</button>
+                <button class="shop-tab" data-tab="codes" id="codes-tab" style="display:none;">🔑 Codes</button>
             </div>
 
             <!-- Buildings list -->
@@ -154,6 +156,61 @@
                     <p id="rebirth-tokens-display" class="tokens-display">Tokens: <span id="rebirth-tokens">0</span> 🪙</p>
                 </div>
             </div>
+            <!-- Gambling panel -->
+            <div id="gambling-list" class="shop-content">
+                <div id="gambling-section">
+                    <p class="gambling-intro">🎲 Mise tes Calories d'Or sur des matchs ou gratte des tickets !</p>
+
+                    <!-- Football -->
+                    <div class="gambling-block glass-panel-inner">
+                        <h4>⚽ Match de Foot</h4>
+                        <div class="gambling-teams" id="foot-teams">
+                            <span id="foot-team-a">Équipe A</span>
+                            <span class="vs-label">VS</span>
+                            <span id="foot-team-b">Équipe B</span>
+                        </div>
+                        <div class="gambling-bet-row">
+                            <input type="number" id="foot-bet" class="bet-input" placeholder="Mise (cal)" min="1">
+                            <select id="foot-choice" class="bet-select">
+                                <option value="A">⚽ Équipe A gagne</option>
+                                <option value="draw">🤝 Match nul</option>
+                                <option value="B">⚽ Équipe B gagne</option>
+                            </select>
+                        </div>
+                        <button id="foot-bet-btn" class="btn btn-gamble">🎰 Parier</button>
+                        <p id="foot-result" class="gamble-result"></p>
+                    </div>
+
+                    <!-- Tennis -->
+                    <div class="gambling-block glass-panel-inner">
+                        <h4>🎾 Match de Tennis</h4>
+                        <div class="gambling-teams" id="tennis-teams">
+                            <span id="tennis-player-a">Joueur A</span>
+                            <span class="vs-label">VS</span>
+                            <span id="tennis-player-b">Joueur B</span>
+                        </div>
+                        <div class="gambling-bet-row">
+                            <input type="number" id="tennis-bet" class="bet-input" placeholder="Mise (cal)" min="1">
+                            <select id="tennis-choice" class="bet-select">
+                                <option value="A">🎾 Joueur A gagne</option>
+                                <option value="B">🎾 Joueur B gagne</option>
+                            </select>
+                        </div>
+                        <button id="tennis-bet-btn" class="btn btn-gamble">🎰 Parier</button>
+                        <p id="tennis-result" class="gamble-result"></p>
+                    </div>
+
+                    <!-- Scratch tickets -->
+                    <div class="gambling-block glass-panel-inner">
+                        <h4>🎟️ Ticket à Gratter</h4>
+                        <p class="scratch-desc">Coûte <strong>500 cal</strong>. Clique sur les 9 cases pour les révéler. Si tu trouves 3 symboles identiques alignés (ligne, colonne ou diagonale) → <strong>Jackpot ×10 = 5 000 cal</strong> ! (~20% de chance)</p>
+                        <div id="scratch-grid"></div>
+                        <button id="scratch-btn" class="btn btn-gamble">🎟️ Acheter un ticket (500 cal)</button>
+                        <p id="scratch-result" class="gamble-result"></p>
+                    </div>
+                </div>
+            </div>
+
             <!-- Codes panel -->
             <div id="codes-list" class="shop-content">
                 <div id="codes-section">
