@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AubinClicker 🍔</title>
+    <meta name="description" content="AubinClicker - Le jeu incrémental où tu nourris Aubin jusqu'à l'infini !">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Particles container -->
+    <div id="particles"></div>
+
+    <!-- Header -->
+    <header id="game-header">
+        <h1>🍔 Aubin<span class="accent">Clicker</span> 🍔</h1>
+        <p class="subtitle">Nourris Aubin. Il a faim. Il a <em>toujours</em> faim.</p>
+    </header>
+
+    <!-- Main Game Layout -->
+    <main id="game-container">
+        
+        <!-- Left Panel - Stats -->
+        <section id="stats-panel" class="glass-panel">
+            <h2>📊 Statistiques</h2>
+            <div class="stat-grid">
+                <div class="stat-card">
+                    <span class="stat-label">Calories d'Or totales</span>
+                    <span class="stat-value" id="total-calories">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Par seconde</span>
+                    <span class="stat-value" id="cal-per-second">0</span>
+                    <span class="stat-unit">cal/s</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Par clic</span>
+                    <span class="stat-value" id="cal-per-click">1</span>
+                    <span class="stat-unit">cal</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Clics totaux</span>
+                    <span class="stat-value" id="total-clicks">0</span>
+                </div>
+            </div>
+
+            <!-- Rebirth Info -->
+            <div id="rebirth-info" class="glass-panel-inner">
+                <div class="rebirth-header">
+                    <span>🔄 Rebirth</span>
+                    <span id="rebirth-count" class="rebirth-badge">0</span>
+                </div>
+                <div class="rebirth-details">
+                    <div class="rebirth-cap">
+                        <span class="stat-label">Cap calories</span>
+                        <span id="calorie-cap-display" class="stat-value">1M</span>
+                    </div>
+                    <div class="rebirth-mult">
+                        <span class="stat-label">Multi. Pets</span>
+                        <span id="pet-multiplier-display" class="stat-value">x1</span>
+                    </div>
+                </div>
+                <button id="rebirth-btn" class="btn btn-rebirth" disabled>🔄 Rebirth</button>
+                <p id="rebirth-require" class="rebirth-require-text"></p>
+            </div>
+
+            <!-- Aubin Quote -->
+            <div id="quote-box" class="glass-panel-inner">
+                <p id="aubin-quote">"J'ai un petit creux..."</p>
+            </div>
+
+            <!-- Save Controls -->
+            <div class="save-controls">
+                <button id="save-btn" class="btn btn-save" title="Sauvegarder">💾 Save</button>
+                <button id="reset-btn" class="btn btn-reset" title="Tout recommencer">🗑️ Reset</button>
+            </div>
+        </section>
+
+        <!-- Center Panel - The Clicker -->
+        <section id="clicker-panel">
+            <div id="calorie-display" class="glass-panel">
+                <span id="calorie-count">0</span>
+                <span class="calorie-label">Calories d'Or</span>
+                <div id="calorie-bar-container">
+                    <div id="calorie-bar"></div>
+                    <span id="calorie-bar-text"></span>
+                </div>
+            </div>
+            
+            <div id="click-zone">
+                <div id="click-target" role="button" tabindex="0" aria-label="Cliquer sur Aubin pour gagner des Calories d'Or">
+                    <img src="aubin.png" alt="Aubin" class="aubin-img" draggable="false">
+                    <div id="puff-orbit"></div>
+                    <div class="click-ring"></div>
+                    <div class="click-ring ring-2"></div>
+                </div>
+                <p class="click-hint">Clique sur Aubin pour gagner des Calories d'Or !</p>
+            </div>
+
+            <!-- Pet Inventory -->
+            <div id="pet-inventory" class="glass-panel" style="display:none;">
+                <h3>🐾 Tes Pets <span id="pet-count-display">(0/4)</span></h3>
+                <div id="pet-slots">
+                    <!-- Generated dynamically by JS -->
+                </div>
+            </div>
+
+            <!-- Milestones ticker -->
+            <div id="milestone-banner" class="glass-panel hidden">
+                <span id="milestone-text"></span>
+            </div>
+        </section>
+
+        <!-- Right Panel - Shop -->
+        <section id="shop-panel" class="glass-panel">
+            <h2>🛒 Boutique</h2>
+            
+            <!-- Tab navigation -->
+            <div class="shop-tabs">
+                <button class="shop-tab active" data-tab="buildings">🏗️ Bâtiments</button>
+                <button class="shop-tab" data-tab="upgrades">⬆️ Améliorations</button>
+                <button class="shop-tab" data-tab="quests">🎯 Quêtes</button>
+                <button class="shop-tab" data-tab="pets" id="pets-tab" style="display:none;">🐾 Pets</button>
+                <button class="shop-tab" data-tab="codes">🔑 Codes</button>
+            </div>
+
+            <!-- Buildings list -->
+            <div id="buildings-list" class="shop-content active">
+            </div>
+
+            <!-- Upgrades list -->
+            <div id="upgrades-list" class="shop-content">
+            </div>
+
+            <!-- Quests list -->
+            <div id="quests-list" class="shop-content">
+            </div>
+
+            <!-- Pets shop (wheel) -->
+            <div id="pets-list" class="shop-content">
+                <div id="wheel-section">
+                    <p class="wheel-intro">Tourne la roue pour gagner un Pet !</p>
+                    <div id="wheel-container">
+                        <div id="wheel-pointer">▼</div>
+                        <div id="wheel">
+                            <!-- Segments populated by JS -->
+                        </div>
+                    </div>
+                    <button id="spin-btn" class="btn btn-spin">🎰 Tourner (1 Rebirth Token)</button>
+                    <p id="spin-result" class="spin-result hidden"></p>
+                    <p id="rebirth-tokens-display" class="tokens-display">Tokens: <span id="rebirth-tokens">0</span> 🪙</p>
+                </div>
+            </div>
+            <!-- Codes panel -->
+            <div id="codes-list" class="shop-content">
+                <div id="codes-section">
+                    <p class="codes-intro">Entre un code pour des récompenses exclusives !</p>
+                    <div class="code-input-group">
+                        <input type="text" id="code-input" placeholder="Ton code ici..." autocomplete="off" spellcheck="false">
+                        <button id="code-submit" class="btn btn-code">✔ Valider</button>
+                    </div>
+                    <p id="code-result" class="code-result"></p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Float notifications -->
+    <div id="float-text-container"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
