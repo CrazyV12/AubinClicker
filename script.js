@@ -132,6 +132,7 @@ let state = {
     completedQuests: [],
     isSelectionMode: false,
     selectedPetsToSell: [],
+    sortOrder: 'desc', 
 };
 
 // ============ DOM ELEMENTS ============
@@ -186,10 +187,10 @@ const dom = {
 // ============ NUMBER FORMATTING ============
 
 function formatNumber(n) {
-    if (n < 1000) return Math.floor(n).toLocaleString('fr-FR');
+    if (n < 1000) return Number(n.toFixed(1)).toLocaleString('fr-FR');
     const suffixes = ['', 'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc'];
     const tier = Math.floor(Math.log10(Math.abs(n)) / 3);
-    if (tier === 0) return Math.floor(n).toLocaleString('fr-FR');
+    if (tier === 0) return Number(n.toFixed(1)).toLocaleString('fr-FR');
     const suffix = suffixes[tier] || `e${tier * 3}`;
     const scale = Math.pow(10, tier * 3);
     const scaled = n / scale;
@@ -312,7 +313,6 @@ function getPetMultiplier() {
         const pet = PETS.find(p => p.id === pInfo.id);
         if (pet) {
             const fLvl = pInfo.fusionLevel || 0;
-            // Bonus x2 à chaque niveau de fusion (0=1, 1=2, 2=4, 3=8, 4=16)
             mult *= pet.mult * Math.pow(2, fLvl);
         }
     }
@@ -395,7 +395,10 @@ function buyEgg(egg) {
     
     updateDisplay();
     renderEggs();
-    renderPetInventory();
+    
+    if (state.sortOrder) toggleSortInventory(true);
+    else renderPetInventory();
+    
     renderPetIndex();
 }
 
@@ -431,7 +434,7 @@ function toggleSelectionMode() {
         document.querySelectorAll('.pet-card.selected').forEach(c => c.classList.remove('selected'));
     } else {
         if(btnMode) {
-            btnMode.textContent = 'Sélection Multiple';
+            btnMode.textContent = 'Sélect. Multiple';
             btnMode.style.background = '';
         }
         if(btnDelete) btnDelete.style.display = 'none';
@@ -461,7 +464,6 @@ function sellSelectedPets() {
     for(const p of petsToSell) {
         const petData = PETS.find(pd => pd.id === p.id);
         const fLvl = p.fusionLevel || 0;
-        // Prix de revente multiplié par 5 à chaque fusion pour ne rien perdre
         if(petData) totalGain += petData.sellPrice * Math.pow(5, fLvl);
     }
     
@@ -485,7 +487,7 @@ function sellSelectedPets() {
         const btnMode = document.getElementById('btn-selection-mode');
         const btnDelete = document.getElementById('btn-delete-selected');
         if (btnMode) {
-            btnMode.textContent = 'Sélection Multiple';
+            btnMode.textContent = 'Sélect. Multiple';
             btnMode.style.background = '';
         }
         if (btnDelete) btnDelete.style.display = 'none';
@@ -501,7 +503,37 @@ function sellSelectedPets() {
     }, 400);
 }
 
-// --- FONCTION DE FUSION DES PETS (NOUVEAU) ---
+// --- FONCTION DE TRI ---
+function toggleSortInventory(forceSort = false) {
+    if (!forceSort) {
+        state.sortOrder = state.sortOrder === 'desc' ? 'asc' : 'desc';
+    } else if (!state.sortOrder) {
+        state.sortOrder = 'desc';
+    }
+    
+    state.inventoryPets.sort((a, b) => {
+        const petA = PETS.find(p => p.id === a.id);
+        const petB = PETS.find(p => p.id === b.id);
+        
+        const multA = petA ? petA.mult * Math.pow(2, a.fusionLevel || 0) : 0;
+        const multB = petB ? petB.mult * Math.pow(2, b.fusionLevel || 0) : 0;
+        
+        if (state.sortOrder === 'desc') {
+            return multB - multA;
+        } else {
+            return multA - multB;
+        }
+    });
+
+    const btnSort = document.getElementById('btn-sort-inventory');
+    if (btnSort) {
+        btnSort.innerHTML = state.sortOrder === 'desc' ? '🔽 Trier (Max)' : '🔼 Trier (Min)';
+    }
+    
+    renderPetInventory();
+}
+
+// --- FONCTIONS DE FUSION DES PETS ---
 
 function fusePet(uid) {
     let targetPet = state.inventoryPets.find(p => p.uid === uid) || state.equippedPets.find(p => p.uid === uid);
@@ -513,7 +545,6 @@ function fusePet(uid) {
         return;
     }
 
-    // Cherche tous les pets identiques (même ID et MÊME NIVEAU DE FUSION) partout (inventaire + équipés) SAUF le pet ciblé
     let allSameLevel = [...state.inventoryPets, ...state.equippedPets].filter(p => p.id === targetPet.id && (p.fusionLevel || 0) === currentLevel && p.uid !== targetPet.uid);
     
     if (allSameLevel.length < 4) {
@@ -521,9 +552,7 @@ function fusePet(uid) {
         return;
     }
 
-    // On retire 4 copies du jeu (en priorité dans l'inventaire)
     let toRemove = 4;
-    
     state.inventoryPets = state.inventoryPets.filter(p => {
         if (toRemove > 0 && p.id === targetPet.id && (p.fusionLevel || 0) === currentLevel && p.uid !== targetPet.uid) {
             toRemove--;
@@ -532,7 +561,6 @@ function fusePet(uid) {
         return true;
     });
 
-    // S'il manquait des copies dans l'inventaire, on les retire de ceux équipés
     if (toRemove > 0) {
         state.equippedPets = state.equippedPets.filter(p => {
             if (toRemove > 0 && p.id === targetPet.id && (p.fusionLevel || 0) === currentLevel && p.uid !== targetPet.uid) {
@@ -543,19 +571,91 @@ function fusePet(uid) {
         });
     }
 
-    // On augmente le niveau de fusion
     targetPet.fusionLevel = currentLevel + 1;
     
     const selIdx = state.selectedPetsToSell.indexOf(uid);
     if (selIdx > -1) state.selectedPetsToSell.splice(selIdx, 1);
 
     const petData = PETS.find(p=>p.id===targetPet.id);
-    showMilestone(`✨ Évolution réussie ! Ton pet devient ${FUSION_NAMES[targetPet.fusionLevel]} (x${petData.mult * Math.pow(2, targetPet.fusionLevel)}) !`);
+    showMilestone(`✨ Évolution réussie ! Ton pet devient ${FUSION_NAMES[targetPet.fusionLevel]} !`);
     
     recalculateCps();
-    renderPetInventory();
+    if (state.sortOrder) toggleSortInventory(true);
+    else renderPetInventory();
     updateDisplay();
     updateRebirthUI();
+}
+
+function autoFusePets() {
+    if (state.isSelectionMode) toggleSelectionMode(); 
+    
+    let fusedAny = false;
+    let keepFusing = true;
+    let fusionsCount = 0;
+
+    while (keepFusing) {
+        keepFusing = false;
+        
+        let counts = {};
+        [...state.inventoryPets, ...state.equippedPets].forEach(p => {
+            const fLvl = p.fusionLevel || 0;
+            if (fLvl < 4) { 
+                const key = `${p.id}_${fLvl}`;
+                if (!counts[key]) counts[key] = { count: 0, items: [] };
+                counts[key].count++;
+                counts[key].items.push(p);
+            }
+        });
+
+        for (const key in counts) {
+            if (counts[key].count >= 5) {
+                let toRemove = 5;
+                const id = counts[key].items[0].id;
+                const fLvl = counts[key].items[0].fusionLevel || 0;
+
+                state.inventoryPets = state.inventoryPets.filter(p => {
+                    if (toRemove > 0 && p.id === id && (p.fusionLevel || 0) === fLvl) {
+                        toRemove--;
+                        return false;
+                    }
+                    return true;
+                });
+
+                if (toRemove > 0) {
+                    state.equippedPets = state.equippedPets.filter(p => {
+                        if (toRemove > 0 && p.id === id && (p.fusionLevel || 0) === fLvl) {
+                            toRemove--;
+                            return false;
+                        }
+                        return true;
+                    });
+                }
+
+                state.inventoryPets.push({
+                    uid: Date.now() + Math.random(),
+                    id: id,
+                    fusionLevel: fLvl + 1
+                });
+
+                fusedAny = true;
+                keepFusing = true;
+                fusionsCount++;
+                break; 
+            }
+        }
+    }
+
+    if (fusedAny) {
+        recalculateCps();
+        if (state.sortOrder) toggleSortInventory(true);
+        else renderPetInventory();
+        renderEggs();
+        updateDisplay();
+        updateRebirthUI();
+        showMilestone(`✨ Auto-fusion : ${fusionsCount} fusions effectuées avec succès !`);
+    } else {
+        showQuote("Aucune fusion possible. Il faut 5 pets identiques de même niveau !");
+    }
 }
 
 // ---------------------------------------
@@ -587,7 +687,8 @@ function unequipPet(uid) {
         const pet = state.equippedPets.splice(index, 1)[0];
         state.inventoryPets.push(pet);
         recalculateCps();
-        renderPetInventory();
+        if (state.sortOrder) toggleSortInventory(true);
+        else renderPetInventory();
         renderEggs(); 
         updateDisplay();
         updateRebirthUI();
@@ -637,7 +738,8 @@ function equipBestPets() {
     }
 
     recalculateCps();
-    renderPetInventory();
+    if (state.sortOrder) toggleSortInventory(true);
+    else renderPetInventory();
     renderEggs(); 
     updateDisplay();
     updateRebirthUI();
@@ -684,7 +786,7 @@ function renderPetInventory() {
                     ${badgeHtml}
                     <div class="pet-icon">${pet.icon}</div>
                     <div class="pet-name">${pet.name}</div>
-                    <div class="pet-mult">x${realMult}</div>
+                    <div class="pet-mult">x${formatNumber(realMult)}</div>
                     <div class="btn-group">
                         ${fuseBtnHtml}
                         <div style="display:flex; gap:0.5rem; width:100%;">
@@ -753,7 +855,7 @@ function renderPetInventory() {
                 ${badgeHtml}
                 <div class="pet-icon">${pet.icon}</div>
                 <div class="pet-name">${pet.name}</div>
-                <div class="pet-mult">x${realMult}</div>
+                <div class="pet-mult">x${formatNumber(realMult)}</div>
                 <div class="btn-group">
                     ${fuseBtnHtml}
                     <div style="display:flex; gap:0.5rem; width:100%;">
@@ -785,7 +887,7 @@ function renderPetIndex() {
             card.innerHTML = `
                 <div class="index-icon">${pet.icon}</div>
                 <div class="egg-name">${pet.name}</div>
-                <div class="pet-mult">x${pet.mult}</div>
+                <div class="pet-mult">x${formatNumber(pet.mult)}</div>
             `;
         } else {
             card.className = `index-card unknown`;
@@ -1153,7 +1255,10 @@ function doRebirth() {
     checkQuests();
     updateRebirthUI();
     renderEggs();
-    renderPetInventory();
+    
+    if (state.sortOrder) toggleSortInventory(true);
+    else renderPetInventory();
+    
     renderPetIndex();
     updateDisplay();
 
@@ -1207,7 +1312,8 @@ function updateRebirthUI() {
         dom.calorieCapDisplay.previousElementSibling.textContent = 'Objectif Rebirth';
     }
 
-    dom.petMultDisplay.textContent = `x${getPetMultiplier().toFixed(1)}`;
+    const mult = getPetMultiplier();
+    dom.petMultDisplay.textContent = `x${formatNumber(mult)}`;
 
     dom.rebirthBtn.disabled = !ready;
     dom.rebirthBtn.classList.toggle('ready', ready);
@@ -1366,7 +1472,6 @@ function doAscension() {
     state.completedQuests = [];
     state.codesUsed = [];
     
-    // Annuler le mode sélection s'il est actif
     state.isSelectionMode = false;
     state.selectedPetsToSell = [];
     
@@ -1503,7 +1608,8 @@ const CODES = {
             }
             
             recalculateCps();
-            renderPetInventory();
+            if (state.sortOrder) toggleSortInventory(true);
+            else renderPetInventory();
             renderPetIndex();
             updateDisplay();
             return '🦄 Licorne Calorique ajoutée + 1 slot bonus !';
@@ -1662,6 +1768,7 @@ function saveGame() {
         ascensionCount: state.ascensionCount,
         ascensionPoints: state.ascensionPoints,
         ascensionUpgrades: state.ascensionUpgrades,
+        sortOrder: state.sortOrder,
         savedAt: Date.now(),
     };
     localStorage.setItem('aubinclicker_save', JSON.stringify(saveData));
@@ -1704,12 +1811,12 @@ function loadGame() {
         state.rebirthTokens = data.rebirthTokens || 0;
         state.bonusPetSlots = data.bonusPetSlots || 0;
         state.codesUsed = data.codesUsed || [];
+        state.sortOrder = data.sortOrder || 'desc';
         
         state.equippedPets = data.equippedPets || [];
         state.inventoryPets = data.inventoryPets || [];
         state.discoveredPets = data.discoveredPets || [];
 
-        // --- MIGRATION: Gérer l'ancien système "isFused: true" vers "fusionLevel: 1" ---
         const migrateFusion = (p) => {
             if (p.isFused) {
                 p.fusionLevel = 1;
@@ -1779,6 +1886,7 @@ function resetGame() {
     state.maxPetSlots = 3;
     state.bonusPetSlots = 0;
     state.codesUsed = [];
+    state.sortOrder = 'desc';
     
     state.ascensionCount = 0;
     state.ascensionPoints = 0;
@@ -1803,7 +1911,10 @@ function resetGame() {
     checkQuests();
     updateRebirthUI();
     renderEggs();
-    renderPetInventory();
+    
+    if (state.sortOrder) toggleSortInventory(true);
+    else renderPetInventory();
+    
     renderPetIndex();
     updateDisplay();
     showQuote("🔄 C'est reparti ! Aubin a encore faim !");
@@ -1836,7 +1947,6 @@ function init() {
     loadGame();
     recalculateCps();
 
-    // Rendre l'interface clean au démarrage
     state.isSelectionMode = false;
     state.selectedPetsToSell = [];
 
@@ -1847,7 +1957,10 @@ function init() {
     checkQuests();
     updateRebirthUI();
     renderEggs();
-    renderPetInventory();
+    
+    if (state.sortOrder) toggleSortInventory(true);
+    else renderPetInventory();
+    
     renderPetIndex();
     updateDisplay();
     updateAubinAppearance();
@@ -1897,20 +2010,24 @@ function init() {
     const btnEquipBest = document.getElementById('btn-equip-best');
     if(btnEquipBest) btnEquipBest.addEventListener('click', equipBestPets);
     
-    // --- LIAISON DES BOUTONS DE SELECTION MULTIPLE ---
     const btnSelMode = document.getElementById('btn-selection-mode');
     if(btnSelMode) btnSelMode.addEventListener('click', toggleSelectionMode);
     
     const btnDelSel = document.getElementById('btn-delete-selected');
     if(btnDelSel) btnDelSel.addEventListener('click', sellSelectedPets);
     
+    const btnSortInv = document.getElementById('btn-sort-inventory');
+    if(btnSortInv) btnSortInv.addEventListener('click', () => toggleSortInventory());
+    
+    const btnAutoFuse = document.getElementById('btn-auto-fuse');
+    if(btnAutoFuse) btnAutoFuse.addEventListener('click', autoFusePets);
+
     initShopTabs();
     if (dom.ascensionShop) {
         renderAscensionShop();
         updateAscensionUI();
     }
 
-    // Gestion du clic extérieur pour fermer les menus de Pets
     document.addEventListener('click', (e) => {
         if (!state.isSelectionMode && !e.target.closest('.pet-card')) {
             document.querySelectorAll('.pet-card.selected').forEach(c => c.classList.remove('selected'));

@@ -13,11 +13,6 @@
 <body>
     <div id="particles"></div>
 
-    <header id="game-header">
-        <h1>🍔 Aubin<span class="accent">Clicker</span> 🍔</h1>
-        <p class="subtitle">Nourris Aubin. Il a faim. Il a <em>toujours</em> faim.</p>
-    </header>
-
     <main id="game-container">
         
         <section id="stats-panel" class="glass-panel">
@@ -85,6 +80,12 @@
         </section>
 
         <section id="clicker-panel">
+            
+            <header id="game-header">
+                <h1>🍔 Aubin<span class="accent">Clicker</span> 🍔</h1>
+                <p class="subtitle">Nourris Aubin. Il a faim. Il a <em>toujours</em> faim.</p>
+            </header>
+
             <div id="calorie-display" class="glass-panel">
                 <span id="calorie-count">0</span>
                 <span class="calorie-label">Calories d'Or</span>
@@ -137,11 +138,15 @@
                 </div>
 
                 <div id="inventory-list" class="shop-content">
-                    <div class="inventory-header">
-                        <span class="inventory-stats">Stock : <span id="inventory-count">0</span> / <span id="inventory-max">100</span></span>
-                        <div class="inventory-actions" style="display:flex; gap:0.5rem;">
-                            <button id="btn-selection-mode" class="btn btn-save" style="font-size: 0.7rem; padding: 0.4rem;">Sélection Multiple</button>
-                            <button id="btn-delete-selected" class="btn btn-sell hidden" style="font-size: 0.7rem; padding: 0.4rem; background: var(--danger); color:white; display:none;">Vendre (0)</button>
+                    <div class="inventory-header" style="flex-direction: column; align-items: stretch; gap: 0.5rem;">
+                        <div style="display:flex; justify-content: space-between; align-items: center;">
+                            <span class="inventory-stats">Stock : <span id="inventory-count">0</span> / <span id="inventory-max">100</span></span>
+                        </div>
+                        <div class="inventory-actions" style="display:flex; gap:0.5rem; flex-wrap: wrap;">
+                            <button id="btn-sort-inventory" class="btn btn-save" style="font-size: 0.7rem; padding: 0.4rem; flex: 1;">🔽 Trier (Max)</button>
+                            <button id="btn-auto-fuse" class="btn" style="font-size: 0.7rem; padding: 0.4rem; background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #1a1a1a; font-weight: bold; border: none; flex: 1;">✨ Auto-Fusion</button>
+                            <button id="btn-selection-mode" class="btn btn-save" style="font-size: 0.7rem; padding: 0.4rem; flex: 1;">Sélect. Multiple</button>
+                            <button id="btn-delete-selected" class="btn btn-sell hidden" style="font-size: 0.7rem; padding: 0.4rem; background: var(--danger); color:white; display:none; flex: 1;">Vendre (0)</button>
                         </div>
                     </div>
                     <div id="pet-inventory-grid" class="inventory-grid"></div>

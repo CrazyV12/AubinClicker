@@ -80,20 +80,10 @@ body {
 }
 
 @keyframes floatUp {
-  0% {
-    transform: translateY(100vh) rotate(0deg) scale(0.5);
-    opacity: 0;
-  }
-  10% {
-    opacity: 0.6;
-  }
-  90% {
-    opacity: 0.3;
-  }
-  100% {
-    transform: translateY(-10vh) rotate(360deg) scale(1);
-    opacity: 0;
-  }
+  0% { transform: translateY(100vh) rotate(0deg) scale(0.5); opacity: 0; }
+  10% { opacity: 0.6; }
+  90% { opacity: 0.3; }
+  100% { transform: translateY(-10vh) rotate(360deg) scale(1); opacity: 0; }
 }
 
 /* --- Header --- */
@@ -134,14 +124,17 @@ body {
 /* --- Main Layout --- */
 #game-container {
   display: grid;
-  grid-template-columns: 280px 1fr auto; 
-  gap: 1.5rem; 
-  max-width: 1400px;
-  margin: 0.5rem auto;
-  padding: 0 1rem 2rem;
+  /* On met 340px des deux côtés pour que la colonne centrale soit PARFAITEMENT au milieu de l'écran */
+  grid-template-columns: 340px 1fr 340px; 
+  gap: 2rem; 
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  /* Centre verticalement les panneaux latéraux par rapport à l'écran ! */
+  align-items: center; 
   position: relative;
   z-index: 1;
-  min-height: calc(100vh - 100px);
+  min-height: 100vh;
 }
 
 /* --- Right Interface (Wrapper) --- */
@@ -149,9 +142,7 @@ body {
   display: flex;
   gap: 1rem;
   align-items: flex-start;
-  height: fit-content;
-  position: sticky;
-  top: 1rem;
+  width: 100%;
 }
 
 /* --- Glass Panel --- */
@@ -190,9 +181,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  height: fit-content;
-  position: sticky;
-  top: 1rem;
+  width: 100%;
 }
 
 .stat-grid {
@@ -278,30 +267,18 @@ body {
   transition: all var(--transition-fast);
 }
 
-.btn:hover {
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.btn-save:hover {
-  border-color: var(--success);
-  box-shadow: 0 0 12px rgba(74, 222, 128, 0.15);
-}
-
-.btn-reset:hover {
-  border-color: var(--danger);
-  box-shadow: 0 0 12px rgba(244, 63, 94, 0.15);
-}
+.btn:hover { background: rgba(255, 255, 255, 0.08); }
+.btn-save:hover { border-color: var(--success); box-shadow: 0 0 12px rgba(74, 222, 128, 0.15); }
+.btn-reset:hover { border-color: var(--danger); box-shadow: 0 0 12px rgba(244, 63, 94, 0.15); }
 
 /* --- Center Panel - Clicker --- */
 #clicker-panel {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
   gap: 1rem;
   padding: 0.75rem 0.75rem 1.5rem;
-  overflow-y: auto;
-  max-height: calc(100vh - 80px);
 }
 
 #calorie-display {
@@ -322,9 +299,7 @@ body {
   transition: transform var(--transition-fast);
 }
 
-#calorie-count.bump {
-  transform: scale(1.08);
-}
+#calorie-count.bump { transform: scale(1.08); }
 
 .calorie-label {
   font-size: 0.7rem;
@@ -340,6 +315,7 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 0.75rem;
+  margin-top: 2.5rem; /* Espace pour ne pas toucher le compteur de calories ! */
 }
 
 #click-target {
@@ -358,13 +334,8 @@ body {
   overflow: visible;
 }
 
-#click-target:hover {
-  transform: scale(1.05);
-}
-
-#click-target:active {
-  transform: scale(0.92);
-}
+#click-target:hover { transform: scale(1.05); }
+#click-target:active { transform: scale(0.92); }
 
 .aubin-img {
   width: 160px;
@@ -373,26 +344,17 @@ body {
   object-position: center;
   border-radius: 50%;
   filter: drop-shadow(0 0 30px rgba(255, 107, 53, 0.4));
-  transition:
-    filter var(--transition-normal),
-    transform var(--transition-fast);
+  transition: filter var(--transition-normal), transform var(--transition-fast);
   animation: gentleBounce 3s ease-in-out infinite;
   z-index: 2;
   pointer-events: none;
 }
 
-.aubin-img.clicked {
-  transform: scale(0.85) rotate(-5deg);
-}
+.aubin-img.clicked { transform: scale(0.85) rotate(-5deg); }
 
 @keyframes gentleBounce {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
 }
 
 #click-target:hover .aubin-img {
@@ -413,46 +375,14 @@ body {
   transition: all 0.6s ease;
 }
 
-/* Aura level 1 – Blanc/Bleu */
-#aubin-aura.aura-1 {
-  box-shadow:
-    0 0 20px 8px rgba(150, 200, 255, 0.5),
-    0 0 50px 20px rgba(100, 160, 255, 0.25);
-  animation: aura-pulse-1 2.5s ease-in-out infinite;
-}
-@keyframes aura-pulse-1 {
-  0%, 100% { box-shadow: 0 0 20px 8px rgba(150,200,255,0.5), 0 0 50px 20px rgba(100,160,255,0.25); }
-  50%       { box-shadow: 0 0 35px 15px rgba(150,200,255,0.75), 0 0 70px 30px rgba(100,160,255,0.4); }
-}
-
-/* Aura level 2 – Or/Feu */
-#aubin-aura.aura-2 {
-  box-shadow:
-    0 0 25px 10px rgba(255, 180, 30, 0.65),
-    0 0 60px 25px rgba(255, 100, 10, 0.35);
-  animation: aura-pulse-2 2s ease-in-out infinite;
-}
-@keyframes aura-pulse-2 {
-  0%, 100% { box-shadow: 0 0 25px 10px rgba(255,180,30,0.65), 0 0 60px 25px rgba(255,100,10,0.35); }
-  50%       { box-shadow: 0 0 45px 20px rgba(255,220,50,0.9), 0 0 90px 40px rgba(255,100,10,0.55); }
-}
-
-/* Aura level 3 – Violet/Magie */
-#aubin-aura.aura-3 {
-  box-shadow:
-    0 0 30px 12px rgba(170, 60, 255, 0.7),
-    0 0 70px 30px rgba(100, 0, 200, 0.4);
-  animation: aura-pulse-3 1.8s ease-in-out infinite;
-}
-@keyframes aura-pulse-3 {
-  0%, 100% { box-shadow: 0 0 30px 12px rgba(170,60,255,0.7), 0 0 70px 30px rgba(100,0,200,0.4); }
-  50%       { box-shadow: 0 0 55px 22px rgba(200,80,255,0.9), 0 0 100px 45px rgba(130,0,255,0.6); }
-}
-
-/* Aura level 4 – Arc-en-ciel/Divin */
-#aubin-aura.aura-4 {
-  animation: aura-rainbow 2s linear infinite;
-}
+/* Auras... */
+#aubin-aura.aura-1 { box-shadow: 0 0 20px 8px rgba(150, 200, 255, 0.5), 0 0 50px 20px rgba(100, 160, 255, 0.25); animation: aura-pulse-1 2.5s ease-in-out infinite; }
+@keyframes aura-pulse-1 { 0%, 100% { box-shadow: 0 0 20px 8px rgba(150,200,255,0.5), 0 0 50px 20px rgba(100,160,255,0.25); } 50% { box-shadow: 0 0 35px 15px rgba(150,200,255,0.75), 0 0 70px 30px rgba(100,160,255,0.4); } }
+#aubin-aura.aura-2 { box-shadow: 0 0 25px 10px rgba(255, 180, 30, 0.65), 0 0 60px 25px rgba(255, 100, 10, 0.35); animation: aura-pulse-2 2s ease-in-out infinite; }
+@keyframes aura-pulse-2 { 0%, 100% { box-shadow: 0 0 25px 10px rgba(255,180,30,0.65), 0 0 60px 25px rgba(255,100,10,0.35); } 50% { box-shadow: 0 0 45px 20px rgba(255,220,50,0.9), 0 0 90px 40px rgba(255,100,10,0.55); } }
+#aubin-aura.aura-3 { box-shadow: 0 0 30px 12px rgba(170, 60, 255, 0.7), 0 0 70px 30px rgba(100, 0, 200, 0.4); animation: aura-pulse-3 1.8s ease-in-out infinite; }
+@keyframes aura-pulse-3 { 0%, 100% { box-shadow: 0 0 30px 12px rgba(170,60,255,0.7), 0 0 70px 30px rgba(100,0,200,0.4); } 50% { box-shadow: 0 0 55px 22px rgba(200,80,255,0.9), 0 0 100px 45px rgba(130,0,255,0.6); } }
+#aubin-aura.aura-4 { animation: aura-rainbow 2s linear infinite; }
 @keyframes aura-rainbow {
   0%   { box-shadow: 0 0 40px 16px rgba(255,50,50,0.8),   0 0 80px 35px rgba(255,50,50,0.4); }
   16%  { box-shadow: 0 0 40px 16px rgba(255,165,0,0.8),   0 0 80px 35px rgba(255,165,0,0.4); }
@@ -570,13 +500,13 @@ body {
 
 /* --- Shop Panel (Right) --- */
 #shop-panel {
-  width: 320px;
-  position: static; 
+  width: 100%;
+  flex: 1;
+  max-height: 85vh; /* Empêche le panneau d'être plus grand que l'écran */
+  display: flex;
+  flex-direction: column;
   margin: 0;
-  max-height: calc(100vh - 2rem);
 }
-
-.shop-tabs { display: none; }
 
 #vertical-nav {
   display: flex;
@@ -648,8 +578,8 @@ body {
   display: none;
   flex-direction: column;
   gap: 0.5rem;
-  overflow-y: auto;
-  max-height: calc(100vh - 220px);
+  overflow-y: auto; /* Permet le scroll dans le panneau */
+  flex: 1;
   padding-right: 0.25rem;
 }
 
@@ -973,7 +903,7 @@ body {
     margin-bottom: 0.2rem; 
 }
 
-/* NOUVEAU: Badges et Auras de Fusion */
+/* Badges et Auras de Fusion */
 .fusion-badge {
     font-size: 0.55rem;
     font-weight: 900;
@@ -990,7 +920,6 @@ body {
 .badge-fusion-3 { background: #aa3cff; box-shadow: 0 0 5px rgba(170, 60, 255, 0.6); color: #fff;}
 .badge-fusion-4 { background: linear-gradient(90deg, #ff3232, #ffa500, #ffff00, #00dc64, #3c64ff, #b43cff); color: #fff; box-shadow: 0 0 5px rgba(255, 255, 255, 0.6); }
 
-/* Effets lumineux sur la carte en fonction du niveau de fusion */
 .pet-fusion-1 { border-color: #96c8ff !important; animation: pet-aura-1 2.5s ease-in-out infinite; }
 .pet-fusion-2 { border-color: #ffb41e !important; animation: pet-aura-2 2s ease-in-out infinite; }
 .pet-fusion-3 { border-color: #aa3cff !important; animation: pet-aura-3 1.8s ease-in-out infinite; }
@@ -1027,10 +956,7 @@ body {
     z-index: 10;
 }
 
-.pet-card.selected .btn-group {
-    opacity: 1;
-    pointer-events: all;
-}
+.pet-card.selected .btn-group { opacity: 1; pointer-events: all; }
 
 .pet-card .btn-equip, .pet-card .btn-sell {
     flex: 1;
@@ -1046,7 +972,6 @@ body {
 }
 
 .pet-card .btn-equip:active, .pet-card .btn-sell:active { transform: scale(0.95); }
-
 .pet-card .btn-equip { background: var(--success); color: #0d0d0d; }
 .pet-card .btn-sell { background: rgba(244, 63, 94, 0.1); border: 1px solid var(--danger); color: var(--danger); }
 
@@ -1091,7 +1016,6 @@ body {
 .rarity-legendary { background: rgba(255, 201, 71, 0.1); border-color: rgba(255, 201, 71, 0.3); color: #ffc947; }
 .rarity-mythic { background: rgba(236, 72, 153, 0.1); border-color: rgba(236, 72, 153, 0.3); color: #ec4899; box-shadow: 0 0 15px rgba(236, 72, 153, 0.2); }
 
-
 /* --- Rebirth Section --- */
 #rebirth-info {
   display: flex;
@@ -1124,8 +1048,7 @@ body {
   gap: 0.75rem;
 }
 
-.rebirth-cap,
-.rebirth-mult {
+.rebirth-cap, .rebirth-mult {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -1147,30 +1070,16 @@ body {
   transform: scale(1.02);
 }
 
-.btn-rebirth:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
+.btn-rebirth:disabled { opacity: 0.4; cursor: not-allowed; }
 
-.btn-rebirth.ready {
-  animation: rebirthPulse 1.5s ease-in-out infinite;
-}
+.btn-rebirth.ready { animation: rebirthPulse 1.5s ease-in-out infinite; }
 
 @keyframes rebirthPulse {
-  0%,
-  100% {
-    box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.3);
-  }
-  50% {
-    box-shadow: 0 0 20px 5px rgba(139, 92, 246, 0.4);
-  }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.3); }
+  50% { box-shadow: 0 0 20px 5px rgba(139, 92, 246, 0.4); }
 }
 
-.rebirth-require-text {
-  font-size: 0.7rem;
-  color: var(--text-muted);
-  text-align: center;
-}
+.rebirth-require-text { font-size: 0.7rem; color: var(--text-muted); text-align: center; }
 
 /* --- Ascension Styles --- */
 .ascension-header {
@@ -1193,18 +1102,8 @@ body {
   font-weight: 800;
 }
 
-.ascension-details {
-  display: flex;
-  gap: 15px;
-  margin: 10px 0;
-}
-
-.ascension-points {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  flex: 1;
-}
+.ascension-details { display: flex; gap: 15px; margin: 10px 0; }
+.ascension-points { display: flex; flex-direction: column; align-items: center; flex: 1; }
 
 .btn-ascension {
   background: linear-gradient(135deg, #fbbf24, #f59e0b);
@@ -1214,66 +1113,24 @@ body {
   margin-top: 10px;
 }
 
-.btn-ascension:hover:not(:disabled) {
-  box-shadow: 0 0 20px rgba(251, 191, 36, 0.4);
-}
-
-.btn-ascension:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.btn-ascension.ready {
-  animation: ascensionPulse 1.5s ease-in-out infinite;
-}
+.btn-ascension:hover:not(:disabled) { box-shadow: 0 0 20px rgba(251, 191, 36, 0.4); }
+.btn-ascension:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-ascension.ready { animation: ascensionPulse 1.5s ease-in-out infinite; }
 
 @keyframes ascensionPulse {
-  0%,
-  100% {
-    box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.3);
-  }
-  50% {
-    box-shadow: 0 0 20px 5px rgba(251, 191, 36, 0.4);
-  }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.3); }
+  50% { box-shadow: 0 0 20px 5px rgba(251, 191, 36, 0.4); }
 }
 
-.ascension-require-text {
-  font-size: 0.7rem;
-  color: var(--text-muted);
-  text-align: center;
-  margin-top: 5px;
-}
+.ascension-require-text { font-size: 0.7rem; color: var(--text-muted); text-align: center; margin-top: 5px; }
 
 /* --- Ascension Shop --- */
-.ascension-intro {
-  text-align: center;
-  color: var(--text-muted);
-  margin-bottom: 15px;
-  font-size: 0.9rem;
-}
+.ascension-intro { text-align: center; color: var(--text-muted); margin-bottom: 15px; font-size: 0.9rem; }
 
-#ascension-shop {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  max-height: 400px;
-  overflow-y: auto;
-  padding-right: 5px;
-}
-
-#ascension-shop::-webkit-scrollbar {
-  width: 6px;
-}
-
-#ascension-shop::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 3px;
-}
-
-#ascension-shop::-webkit-scrollbar-thumb {
-  background: rgba(251, 191, 36, 0.3);
-  border-radius: 3px;
-}
+#ascension-shop { display: flex; flex-direction: column; gap: 10px; max-height: 400px; overflow-y: auto; padding-right: 5px; }
+#ascension-shop::-webkit-scrollbar { width: 6px; }
+#ascension-shop::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); border-radius: 3px; }
+#ascension-shop::-webkit-scrollbar-thumb { background: rgba(251, 191, 36, 0.3); border-radius: 3px; }
 
 .ascension-card {
   display: flex;
@@ -1286,64 +1143,17 @@ body {
   transition: all 0.2s ease;
 }
 
-.ascension-card:hover:not(.maxed):not(.locked) {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(251, 191, 36, 0.4);
-}
+.ascension-card:hover:not(.maxed):not(.locked) { background: rgba(255, 255, 255, 0.08); border-color: rgba(251, 191, 36, 0.4); }
+.ascension-card.maxed { border-color: rgba(34, 197, 94, 0.4); opacity: 0.8; }
+.ascension-card.locked { opacity: 0.5; filter: grayscale(0.5); }
+.ascension-card.cant-afford { opacity: 0.7; }
 
-.ascension-card.maxed {
-  border-color: rgba(34, 197, 94, 0.4);
-  opacity: 0.8;
-}
-
-.ascension-card.locked {
-  opacity: 0.5;
-  filter: grayscale(0.5);
-}
-
-.ascension-card.cant-afford {
-  opacity: 0.7;
-}
-
-.ascension-icon {
-  font-size: 1.8rem;
-  width: 45px;
-  height: 45px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(251, 191, 36, 0.15);
-  border-radius: 10px;
-  flex-shrink: 0;
-}
-
-.ascension-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.ascension-name {
-  font-weight: 700;
-  color: var(--text-primary);
-  font-size: 0.9rem;
-}
-
-.ascension-desc {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  margin-top: 2px;
-}
-
-.ascension-level {
-  font-size: 0.7rem;
-  color: #fbbf24;
-  margin-top: 4px;
-}
-
-.ascension-bonus {
-  font-size: 0.65rem;
-  color: #22c55e;
-}
+.ascension-icon { font-size: 1.8rem; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; background: rgba(251, 191, 36, 0.15); border-radius: 10px; flex-shrink: 0; }
+.ascension-info { flex: 1; min-width: 0; }
+.ascension-name { font-weight: 700; color: var(--text-primary); font-size: 0.9rem; }
+.ascension-desc { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
+.ascension-level { font-size: 0.7rem; color: #fbbf24; margin-top: 4px; }
+.ascension-bonus { font-size: 0.65rem; color: #22c55e; }
 
 .ascension-buy-btn {
   padding: 8px 12px;
@@ -1358,172 +1168,51 @@ body {
   transition: all 0.2s ease;
 }
 
-.ascension-buy-btn:hover:not(:disabled) {
-  transform: scale(1.05);
-  box-shadow: 0 0 10px rgba(251, 191, 36, 0.4);
-}
-
-.ascension-buy-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
-}
+.ascension-buy-btn:hover:not(:disabled) { transform: scale(1.05); box-shadow: 0 0 10px rgba(251, 191, 36, 0.4); }
+.ascension-buy-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
 /* --- Calorie Progress Bar --- */
-#calorie-bar-container {
-  width: 100%;
-  height: 8px;
-  background: rgba(255, 255, 255, 0.06);
-  border-radius: 4px;
-  margin-top: 0.5rem;
-  position: relative;
-  overflow: hidden;
-}
+#calorie-bar-container { width: 100%; height: 8px; background: rgba(255, 255, 255, 0.06); border-radius: 4px; margin-top: 0.5rem; position: relative; overflow: hidden; }
+#calorie-bar { height: 100%; background: var(--accent-gradient); border-radius: 4px; transition: width 0.3s ease; width: 0%; }
+#calorie-bar.capped { background: linear-gradient(90deg, #f43f5e, #ff6b6b); animation: capFlash 1s ease-in-out infinite; }
 
-#calorie-bar {
-  height: 100%;
-  background: var(--accent-gradient);
-  border-radius: 4px;
-  transition: width 0.3s ease;
-  width: 0%;
-}
+@keyframes capFlash { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+#calorie-bar-text { position: absolute; top: -18px; right: 0; font-size: 0.65rem; color: var(--text-muted); }
 
-#calorie-bar.capped {
-  background: linear-gradient(90deg, #f43f5e, #ff6b6b);
-  animation: capFlash 1s ease-in-out infinite;
-}
-
-@keyframes capFlash {
-  0%,
-  100% { opacity: 1; }
-  50% { opacity: 0.6; }
-}
-
-#calorie-bar-text {
-  position: absolute;
-  top: -18px;
-  right: 0;
-  font-size: 0.65rem;
-  color: var(--text-muted);
-}
+/* --- Pet Inventory Equipment --- */
+#pet-inventory { padding: 0.5rem 0.75rem; width: 100%; max-width: 500px; }
+#pet-inventory h3 { font-size: 0.8rem; font-weight: 700; margin-bottom: 0.4rem; text-align: center; }
+#pet-count-display { color: var(--text-muted); font-weight: 400; font-size: 0.75rem; }
+#pet-slots { display: flex; flex-wrap: wrap; gap: 0.35rem; justify-content: center; }
 
 /* --- Codes Section --- */
-#codes-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-  padding: 1rem 0;
-}
-
-.codes-intro {
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-  text-align: center;
-}
-
-.code-input-group {
-  display: flex;
-  gap: 0.5rem;
-  width: 100%;
-}
-
-#code-input {
-  flex: 1;
-  padding: 0.65rem 1rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: var(--radius-sm);
-  color: var(--text-primary);
-  font-family: var(--font);
-  font-size: 0.85rem;
-  font-weight: 600;
-  letter-spacing: 1px;
-  outline: none;
-  transition: border-color var(--transition-fast);
-}
-
-#code-input:focus {
-  border-color: rgba(139, 92, 246, 0.5);
-}
-
-#code-input::placeholder {
-  color: var(--text-muted);
-  font-weight: 400;
-}
-
-.btn-code {
-  background: linear-gradient(135deg, #8b5cf6, #a78bfa);
-  border: 1px solid rgba(139, 92, 246, 0.3);
-  color: #fff;
-  font-weight: 700;
-  padding: 0.65rem 1rem;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  white-space: nowrap;
-}
-
-.btn-code:hover {
-  box-shadow: 0 0 15px rgba(139, 92, 246, 0.3);
-  transform: scale(1.02);
-}
-
-.code-result {
-  font-size: 0.85rem;
-  font-weight: 700;
-  text-align: center;
-  min-height: 1.2em;
-}
-
+#codes-section { display: flex; flex-direction: column; align-items: center; gap: 1rem; padding: 1rem 0; }
+.codes-intro { font-size: 0.85rem; color: var(--text-secondary); text-align: center; }
+.code-input-group { display: flex; gap: 0.5rem; width: 100%; }
+#code-input { flex: 1; padding: 0.65rem 1rem; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: var(--radius-sm); color: var(--text-primary); font-family: var(--font); font-size: 0.85rem; font-weight: 600; letter-spacing: 1px; outline: none; transition: border-color var(--transition-fast); }
+#code-input:focus { border-color: rgba(139, 92, 246, 0.5); }
+#code-input::placeholder { color: var(--text-muted); font-weight: 400; }
+.btn-code { background: linear-gradient(135deg, #8b5cf6, #a78bfa); border: 1px solid rgba(139, 92, 246, 0.3); color: #fff; font-weight: 700; padding: 0.65rem 1rem; cursor: pointer; transition: all var(--transition-fast); white-space: nowrap; }
+.btn-code:hover { box-shadow: 0 0 15px rgba(139, 92, 246, 0.3); transform: scale(1.02); }
+.code-result { font-size: 0.85rem; font-weight: 700; text-align: center; min-height: 1.2em; }
 .code-result.success { color: var(--success); }
 .code-result.error { color: #f43f5e; }
 
 /* --- Pet Selection Mode --- */
 .pet-card.selectable { cursor: pointer; }
 .pet-card.selectable::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border: 2px solid transparent;
-    border-radius: inherit;
-    pointer-events: none;
-    transition: all var(--transition-fast);
+    content: ''; position: absolute; inset: 0; border: 2px solid transparent; border-radius: inherit; pointer-events: none; transition: all var(--transition-fast);
 }
-.pet-card.selectable:hover::after {
-    border-color: rgba(255, 255, 255, 0.3);
-    background: rgba(255, 255, 255, 0.1);
-}
-.pet-card.selected-for-sale::after {
-    border-color: var(--danger) !important;
-    background: rgba(244, 63, 94, 0.2) !important;
-}
+.pet-card.selectable:hover::after { border-color: rgba(255, 255, 255, 0.3); background: rgba(255, 255, 255, 0.1); }
+.pet-card.selected-for-sale::after { border-color: var(--danger) !important; background: rgba(244, 63, 94, 0.2) !important; }
 .pet-card.selected-for-sale .pet-icon { transform: scale(0.9); }
 
 .selection-checkbox {
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    width: 16px;
-    height: 16px;
-    border-radius: 4px;
-    border: 2px solid var(--text-muted);
-    display: none; 
-    align-items: center;
-    justify-content: center;
-    font-size: 10px;
-    color: transparent;
-    z-index: 15;
-    background: var(--glass-bg);
+    position: absolute; top: 5px; right: 5px; width: 16px; height: 16px; border-radius: 4px; border: 2px solid var(--text-muted); display: none; align-items: center; justify-content: center; font-size: 10px; color: transparent; z-index: 15; background: var(--glass-bg);
 }
-
 .selection-mode-active .selection-checkbox { display: flex; }
-.pet-card.selected-for-sale .selection-checkbox {
-    background: var(--danger);
-    border-color: var(--danger);
-    color: white;
-}
+.pet-card.selected-for-sale .selection-checkbox { background: var(--danger); border-color: var(--danger); color: white; }
 .pet-card.selected-for-sale .selection-checkbox::before { content: '✔'; }
-
 .selection-mode-active .pet-card .btn-group { display: none !important; }
 
 @keyframes poof {
@@ -1531,35 +1220,81 @@ body {
     50% { transform: scale(1.2) rotate(5deg); opacity: 0.8; filter: brightness(1.5); }
     100% { transform: scale(0); opacity: 0; filter: brightness(2); }
 }
-.poof-animation {
-    animation: poof 0.4s ease-out forwards;
-    pointer-events: none;
-}
+.poof-animation { animation: poof 0.4s ease-out forwards; pointer-events: none; }
 
-/* --- Responsive --- */
+/* ====================================================
+   ========= RESPONSIVE DESIGN (TELEPHONE/TABLETTE) ======
+   ==================================================== */
+
 @media (max-width: 1100px) {
+  /* On passe tout sur une seule colonne */
   #game-container {
     grid-template-columns: 1fr;
-    max-width: 600px;
+    align-items: start; /* On enlève le centrage vertical pour scroller naturellement */
+    padding: 1rem;
+    gap: 1.5rem;
+    max-width: 700px;
   }
-
-  #stats-panel,
-  #shop-panel {
-    position: static;
-    max-height: none;
-  }
-
-  .shop-content {
-    max-height: 400px;
-  }
-
+  
+  /* On force le bloc Aubin/Clicker à apparaître en premier en haut de l'écran */
   #clicker-panel {
     order: -1;
   }
+  
+  /* Le menu de navigation passe au dessus de la boutique */
+  #right-interface {
+    flex-direction: column-reverse;
+    width: 100%;
+  }
+  
+  /* Menu navigation horizontal */
+  #vertical-nav {
+    flex-direction: row;
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+    padding: 0.5rem;
+  }
+  
+  .shop-tab {
+    flex: 1;
+    min-width: 50px;
+    max-width: 70px;
+  }
+  
+  /* Les panneaux prennent 100% de la largeur */
+  #shop-panel, #stats-panel {
+    width: 100%;
+    max-height: none; /* On libère la hauteur */
+  }
+  
+  /* On autorise le scroll à l'intérieur des menus de la boutique si c'est très long */
+  .shop-content {
+    max-height: 50vh;
+  }
 }
 
-@media (max-width: 500px) {
-  #game-header h1 { font-size: 1.8rem; }
-  #click-target { width: 160px; height: 160px; }
-  .stat-grid { grid-template-columns: 1fr; }
+@media (max-width: 600px) {
+  /* Sur très petits écrans, on réduit la taille d'Aubin pour ne pas déborder */
+  #click-target { width: 220px; height: 220px; }
+  .aubin-img { width: 140px; height: 140px; }
+  #puff-orbit { width: 220px; height: 220px; }
+  
+  #game-header h1 { font-size: 2rem; }
+  
+  /* Petites cartes pour l'inventaire mobile */
+  .egg-grid, .inventory-grid, .index-grid {
+    grid-template-columns: repeat(auto-fill, minmax(75px, 1fr)); 
+  }
+  
+  /* Les textes des boutons s'ajustent pour rentrer dans les petites cartes */
+  .pet-card .btn-fuse, .pet-card .btn-equip, .pet-card .btn-sell {
+      font-size: 0.55rem;
+      padding: 0.3rem;
+  }
+  
+  /* Les stats tiennent sur 2 colonnes pour gagner de la place */
+  .stat-grid {
+      grid-template-columns: 1fr 1fr;
+  }
 }
