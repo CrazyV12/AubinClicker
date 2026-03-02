@@ -508,6 +508,38 @@ const MILESTONES = [
 
 const FOOD_EMOJIS = ['🍔', '🍕', '🍟', '🍗', '🌮', '🌯', '🍖', '🍩', '🧁', '🍰', '🥐', '🥪', '🫔', '🍝', '🍜', '💨'];
 
+// ============ ASCENSION SYSTEM ============
+
+const ASCENSION_UPGRADES = [
+    // Building limit upgrades
+    { id: 'building_cap_1', name: 'Capacité Bâtiments +', icon: '🏗️', desc: '+10 au nombre maximum de chaque bâtiment', type: 'buildingCap', value: 10, baseCost: 1, costMult: 2, maxLevel: 10, minAscension: 0 },
+    { id: 'building_cap_2', name: 'Usine Améliorée', icon: '🏭', desc: '+50 au nombre maximum de chaque bâtiment', type: 'buildingCap', value: 50, baseCost: 10, costMult: 2.5, maxLevel: 5, minAscension: 1 },
+    { id: 'building_cap_3', name: 'Complexe Industrial', icon: '🌆', desc: '+200 au nombre maximum de chaque bâtiment', type: 'buildingCap', value: 200, baseCost: 50, costMult: 3, maxLevel: 3, minAscension: 3 },
+    
+    // Pet slot upgrades
+    { id: 'pet_slots_1', name: 'Plus de Pets', icon: '🐾', desc: '+1 slot de pet', type: 'petSlot', value: 1, baseCost: 5, costMult: 3, maxLevel: 5, minAscension: 0 },
+    { id: 'pet_slots_2', name: 'Famille de Pets', icon: '🐱', desc: '+3 slots de pets', type: 'petSlot', value: 3, baseCost: 25, costMult: 4, maxLevel: 3, minAscension: 2 },
+    
+    // Luck upgrades
+    { id: 'luck_1', name: 'Chanceux', icon: '🍀', desc: '+10% de chance aux Pets', type: 'luck', value: 0.1, baseCost: 3, costMult: 2.5, maxLevel: 10, minAscension: 0 },
+    { id: 'luck_2', name: 'Porteur de Chance', icon: '🌟', desc: '+25% de chance aux Pets', type: 'luck', value: 0.25, baseCost: 20, costMult: 3, maxLevel: 5, minAscension: 1 },
+    { id: 'luck_3', name: 'Aimé des Dieux', icon: '🙏', desc: '+50% de chance aux Pets', type: 'luck', value: 0.5, baseCost: 100, costMult: 4, maxLevel: 3, minAscension: 3 },
+    
+    // Click power upgrades
+    { id: 'click_1', name: 'Doigts Puissants', icon: '💪', desc: 'x1.5 au pouvoir de clic', type: 'clickMult', value: 1.5, baseCost: 5, costMult: 3, maxLevel: 5, minAscension: 0 },
+    { id: 'click_2', name: 'Main de Fer', icon: '✊', desc: 'x2 au pouvoir de clic', type: 'clickMult', value: 2, baseCost: 30, costMult: 4, maxLevel: 3, minAscension: 2 },
+    
+    // CPS upgrades
+    { id: 'cps_1', name: 'Production Boost', icon: '📈', desc: 'x1.25 au CPS global', type: 'cpsMult', value: 1.25, baseCost: 10, costMult: 3, maxLevel: 5, minAscension: 0 },
+    { id: 'cps_2', name: 'Efficacité Max', icon: '⚡', desc: 'x1.5 au CPS global', type: 'cpsMult', value: 1.5, baseCost: 50, costMult: 4, maxLevel: 3, minAscension: 2 },
+    
+    // Rebirth token bonus
+    { id: 'rebirth_bonus', name: 'Bonus de Rebirth', icon: '🎁', desc: '+1 Rebirth Token par rebirth', type: 'rebirthBonus', value: 1, baseCost: 100, costMult: 5, maxLevel: 3, minAscension: 4 },
+    
+    // Offline earnings
+    { id: 'offline_1', name: 'Gains Passifs', icon: '🌙', desc: '+25% aux gains hors-ligne', type: 'offlineMult', value: 0.25, baseCost: 15, costMult: 3, maxLevel: 4, minAscension: 1 },
+];
+
 // ============ GAME STATE ============
 
 let state = {
@@ -527,6 +559,10 @@ let state = {
     maxPetSlots: 3,
     bonusPetSlots: 0,
     codesUsed: [],
+    // Ascension
+    ascensionCount: 0,
+    ascensionPoints: 0,
+    ascensionUpgrades: {},
 };
 
 // ============ DOM ELEMENTS ============
@@ -570,7 +606,13 @@ const dom = {
     codeSubmit: document.getElementById('code-submit'),
     codeResult: document.getElementById('code-result'),
     codesTab: document.getElementById('codes-tab'),
-    gamblingTab: document.getElementById('gambling-tab'),
+    // Ascension
+    ascensionCount: document.getElementById('ascension-count'),
+    ascensionPoints: document.getElementById('ascension-points'),
+    ascensionBtn: document.getElementById('ascension-btn'),
+    ascensionRequire: document.getElementById('ascension-require'),
+    ascensionShop: document.getElementById('ascension-shop'),
+    ascensionTab: document.getElementById('ascension-tab'),
 };
 
 // ============ NUMBER FORMATTING ============
@@ -613,7 +655,8 @@ function recalculateCps() {
     }
     state.globalMultiplier = globalMult;
     const petMult = getPetMultiplier();
-    state.cps = totalCps * globalMult * petMult * (typeof DEBUG_MULTIPLIER !== 'undefined' ? DEBUG_MULTIPLIER : 1);
+    const ascensionCpsMult = getCpsMultiplierBonus();
+    state.cps = totalCps * globalMult * petMult * ascensionCpsMult * (typeof DEBUG_MULTIPLIER !== 'undefined' ? DEBUG_MULTIPLIER : 1);
 
     let clickMult = 1;
     for (const u of UPGRADES) {
@@ -621,9 +664,10 @@ function recalculateCps() {
             clickMult *= u.multiplier;
         }
     }
+    const ascensionClickMult = getClickMultiplierBonus();
     state.clickMultiplier = clickMult;
     const petMult2 = getPetMultiplier();
-    state.clickPower = 1 * clickMult * globalMult * petMult2 * (typeof DEBUG_MULTIPLIER !== 'undefined' ? DEBUG_MULTIPLIER : 1);
+    state.clickPower = 1 * clickMult * globalMult * petMult2 * ascensionClickMult * (typeof DEBUG_MULTIPLIER !== 'undefined' ? DEBUG_MULTIPLIER : 1);
 }
 
 // ============ CLICK HANDLER ============
@@ -917,7 +961,8 @@ function checkQuests() {
 // getCalorieCap is now defined above with the data
 
 function recalcMaxPetSlots() {
-    state.maxPetSlots = 3 + Math.floor(state.rebirthCount / 5) + state.bonusPetSlots;
+    const ascensionPetBonus = getPetSlotBonus();
+    state.maxPetSlots = 3 + Math.floor(state.rebirthCount / 5) + state.bonusPetSlots + ascensionPetBonus;
 }
 
 function getPetMultiplier() {
@@ -945,7 +990,8 @@ function doRebirth() {
     if (!confirm(`🔄 REBIRTH !\n\nTu vas :\n- Garder tes pets et tokens\n- Gagner 1 Rebirth Token 🪙\n- Perdre tous tes bâtiments, upgrades et calories\n\nContinuer ?`)) return;
 
     state.rebirthCount++;
-    state.rebirthTokens++;
+    const rebirthBonus = getRebirthBonus();
+    state.rebirthTokens += (1 + rebirthBonus);
     recalcMaxPetSlots();
 
     // Reset progress (but NOT pets/tokens/rebirthCount)
@@ -972,9 +1018,6 @@ function doRebirth() {
     if (state.rebirthCount >= 1 && dom.codesTab) {
         dom.codesTab.style.display = '';
     }
-    if (state.rebirthCount >= 2 && dom.gamblingTab) {
-        dom.gamblingTab.style.display = '';
-    }
     const petInv = document.getElementById('pet-inventory');
     if (state.rebirthCount >= 1 && petInv) {
         petInv.style.display = '';
@@ -999,12 +1042,12 @@ function doRebirth() {
 // ====== Aubin Appearance (image + aura) ======
 // Images: aubin.png, aubin2.png, aubin3.png, aubin4.png, aubin5.png, aubin6.png → cycle of 6
 const AUBIN_IMAGES = [
-    'images/aubin.png',
-    'images/aubin2.png',
-    'images/aubin3.png',
-    'images/aubin4.png',
-    'images/aubin5.png',
-    'images/aubin6.png',
+    'images/aubin/aubin.png',
+    'images/aubin/aubin2.png',
+    'images/aubin/aubin3.png',
+    'images/aubin/aubin4.png',
+    'images/aubin/aubin5.png',
+    'images/aubin/aubin6.png',
 ];
 const AUBIN_CYCLE = AUBIN_IMAGES.length; // 6
 
@@ -1055,6 +1098,268 @@ function updateRebirthUI() {
     dom.calorieBar.style.width = `${pct}%`;
     dom.calorieBar.classList.toggle('capped', state.calories >= cap);
     dom.calorieBarText.textContent = `${formatNumber(state.calories)} / ${formatNumber(cap)}`;
+    
+    // Show ascension UI after first rebirth
+    const ascensionInfo = document.getElementById('ascension-info');
+    const ascensionDetails = document.getElementById('ascension-details');
+    const ascensionBtn = document.getElementById('ascension-btn');
+    const ascensionRequire = document.getElementById('ascension-require');
+    const ascensionTab = document.getElementById('ascension-tab');
+    
+    if (state.rebirthCount >= 10) {
+        if (ascensionInfo) ascensionInfo.style.display = '';
+        if (ascensionDetails) ascensionDetails.style.display = '';
+        if (ascensionBtn) ascensionBtn.style.display = '';
+        if (ascensionRequire) ascensionRequire.style.display = '';
+        if (ascensionTab) ascensionTab.style.display = '';
+    }
+}
+
+// ============ ASCENSION SYSTEM ============
+
+function getAscensionPointsPerRebirth() {
+    // Points d'ascension basés sur le nombre de rebirths effectués
+    return 1 + Math.floor(state.rebirthCount / 10);
+}
+
+function getAscensionCost() {
+    // 10 rebirths = 1 ascension
+    return state.ascensionCount * 10 + 10;
+}
+
+function canAscend() {
+    return state.rebirthCount >= getAscensionCost();
+}
+
+function getAscensionUpgradeCost(upgrade) {
+    const currentLevel = state.ascensionUpgrades[upgrade.id] || 0;
+    return Math.floor(upgrade.baseCost * Math.pow(upgrade.costMult, currentLevel));
+}
+
+function getAscensionUpgradeLevel(upgradeId) {
+    return state.ascensionUpgrades[upgradeId] || 0;
+}
+
+// Calcul des bonus d'ascension
+function getBuildingCapBonus() {
+    let bonus = 0;
+    for (const u of ASCENSION_UPGRADES) {
+        if (u.type === 'buildingCap') {
+            const level = getAscensionUpgradeLevel(u.id);
+            bonus += level * u.value;
+        }
+    }
+    return bonus;
+}
+
+function getPetSlotBonus() {
+    let bonus = 0;
+    for (const u of ASCENSION_UPGRADES) {
+        if (u.type === 'petSlot') {
+            const level = getAscensionUpgradeLevel(u.id);
+            bonus += level * u.value;
+        }
+    }
+    return bonus;
+}
+
+function getLuckBonus() {
+    let bonus = 0;
+    for (const u of ASCENSION_UPGRADES) {
+        if (u.type === 'luck') {
+            const level = getAscensionUpgradeLevel(u.id);
+            bonus += level * u.value;
+        }
+    }
+    return bonus;
+}
+
+function getClickMultiplierBonus() {
+    let mult = 1;
+    for (const u of ASCENSION_UPGRADES) {
+        if (u.type === 'clickMult') {
+            const level = getAscensionUpgradeLevel(u.id);
+            mult *= Math.pow(u.value, level);
+        }
+    }
+    return mult;
+}
+
+function getCpsMultiplierBonus() {
+    let mult = 1;
+    for (const u of ASCENSION_UPGRADES) {
+        if (u.type === 'cpsMult') {
+            const level = getAscensionUpgradeLevel(u.id);
+            mult *= Math.pow(u.value, level);
+        }
+    }
+    return mult;
+}
+
+function getRebirthBonus() {
+    let bonus = 0;
+    for (const u of ASCENSION_UPGRADES) {
+        if (u.type === 'rebirthBonus') {
+            const level = getAscensionUpgradeLevel(u.id);
+            bonus += level * u.value;
+        }
+    }
+    return bonus;
+}
+
+function getOfflineMultiplierBonus() {
+    let mult = 1;
+    for (const u of ASCENSION_UPGRADES) {
+        if (u.type === 'offlineMult') {
+            const level = getAscensionUpgradeLevel(u.id);
+            mult *= (1 + level * u.value);
+        }
+    }
+    return mult;
+}
+
+function doAscension() {
+    if (!canAscend()) return;
+    if (!confirm(`✨ ASCENSION !\n\nTu vas :\n- Recevoir ${getAscensionPointsPerRebirth()} Points d'Ascension ✨\n- Consommer ${getAscensionCost()} Rebirths\n- Garder tes autres bonus d'ascension\n- Recommencer depuis le début (mais avec des永久 bonus !)\n\nContinuer ?`)) return;
+
+    const pointsToAdd = getAscensionPointsPerRebirth();
+    const rebirthsToConsume = getAscensionCost();
+    
+    state.ascensionCount++;
+    state.ascensionPoints += pointsToAdd;
+    state.rebirthCount -= rebirthsToConsume;
+    
+    // Reset tout sauf ascension
+    state.calories = 0;
+    state.totalCalories = 0;
+    state.totalClicks = 0;
+    state.clickPower = 1;
+    state.cps = 0;
+    state.clickMultiplier = 1;
+    state.globalMultiplier = 1;
+    state.milestonesReached = [];
+    state.rebirthTokens = 0;
+    state.pets = [];
+    state.bonusPetSlots = 0;
+    state.codesUsed = [];
+    
+    for (const b of BUILDINGS) b.count = 0;
+    for (const u of UPGRADES) u.purchased = false;
+    for (const q of QUESTS) q.completed = false;
+    
+    currentOrbitCount = -1;
+    dom.puffOrbit.innerHTML = '';
+    
+    // Recalcul des bonus
+    recalcMaxPetSlots();
+    recalculateCps();
+    
+    // Mise à jour de l'interface
+    renderBuildings();
+    renderOrbitPuffs();
+    renderUpgrades();
+    renderQuests();
+    checkQuests();
+    updateRebirthUI();
+    updateAscensionUI();
+    renderAscensionShop();
+    initWheel();
+    updateDisplay();
+    
+    updateAubinAppearance();
+    showMilestone(`✨ Ascension #${state.ascensionCount} ! +${pointsToAdd} Points ✨`);
+    showQuote(`"Aubin a transcendé... sa faim est désormais légendaire."`);
+}
+
+function buyAscensionUpgrade(upgradeId) {
+    const upgrade = ASCENSION_UPGRADES.find(u => u.id === upgradeId);
+    if (!upgrade) return;
+    
+    const currentLevel = getAscensionUpgradeLevel(upgradeId);
+    if (currentLevel >= upgrade.maxLevel) {
+        showQuote("Niveau maximum atteint pour cette amelioration !");
+        return;
+    }
+    
+    const cost = getAscensionUpgradeCost(upgrade);
+    if (state.ascensionPoints < cost) {
+        showQuote("Pas assez de Points d'Ascension !");
+        return;
+    }
+    
+    // Vérifier le niveau d'ascension minimum
+    if (state.ascensionCount < upgrade.minAscension) {
+        showQuote("Atteins l'Ascension " + upgrade.minAscension + " pour cet amelioration !");
+        return;
+    }
+    
+    state.ascensionPoints -= cost;
+    state.ascensionUpgrades[upgradeId] = currentLevel + 1;
+    
+    // Recalcul des bonus
+    recalcMaxPetSlots();
+    recalculateCps();
+    
+    renderAscensionShop();
+    updateAscensionUI();
+    updateRebirthUI();
+    updateDisplay();
+    
+    showMilestone(`${upgrade.icon} ${upgrade.name} niveau ${currentLevel + 1} !`);
+}
+
+function updateAscensionUI() {
+    if (!dom.ascensionCount) return;
+    
+    dom.ascensionCount.textContent = state.ascensionCount;
+    dom.ascensionPoints.textContent = state.ascensionPoints;
+    
+    const ready = canAscend();
+    dom.ascensionBtn.disabled = !ready;
+    dom.ascensionBtn.classList.toggle('ready', ready);
+    
+    if (ready) {
+        dom.ascensionRequire.textContent = 'Tu peux Ascensionner maintenant !';
+    } else {
+        const need = getAscensionCost();
+        dom.ascensionRequire.textContent = `Atteins ${need} Rebirths pour Ascensionner`;
+    }
+}
+
+function renderAscensionShop() {
+    if (!dom.ascensionShop) return;
+    
+    dom.ascensionShop.innerHTML = '';
+    
+    for (const upgrade of ASCENSION_UPGRADES) {
+        const currentLevel = getAscensionUpgradeLevel(upgrade.id);
+        const isMaxed = currentLevel >= upgrade.maxLevel;
+        const isUnlocked = state.ascensionCount >= upgrade.minAscension;
+        const cost = getAscensionUpgradeCost(upgrade);
+        const canAfford = state.ascensionPoints >= cost;
+        
+        const card = document.createElement('div');
+        card.className = `ascension-card ${isMaxed ? 'maxed' : ''} ${!isUnlocked ? 'locked' : ''} ${!canAfford && !isMaxed ? 'cant-afford' : ''}`;
+        
+        card.innerHTML = `
+            <div class="ascension-icon">${upgrade.icon}</div>
+            <div class="ascension-info">
+                <div class="ascension-name">${upgrade.name}</div>
+                <div class="ascension-desc">${upgrade.desc}</div>
+                <div class="ascension-level">Niveau ${currentLevel}/${upgrade.maxLevel}</div>
+                <div class="ascension-bonus">${upgrade.type === 'clickMult' || upgrade.type === 'cpsMult' ? `x${Math.pow(upgrade.value, currentLevel + 1).toFixed(2)}` : `+${upgrade.value * (currentLevel + 1)}${upgrade.type === 'luck' ? '%' : ''}`}</div>
+            </div>
+            <button class="btn ascension-buy-btn" ${isMaxed || !canAfford || !isUnlocked ? 'disabled' : ''}>
+                ${isMaxed ? 'MAX' : !isUnlocked ? `Ascension ${upgrade.minAscension}` : `${cost} ✨`}
+            </button>
+        `;
+        
+        if (!isMaxed && isUnlocked && canAfford) {
+            card.querySelector('.ascension-buy-btn').addEventListener('click', () => buyAscensionUpgrade(upgrade.id));
+        }
+        
+        dom.ascensionShop.appendChild(card);
+    }
 }
 
 // ============ PET SYSTEM ============
@@ -1305,7 +1610,7 @@ function renderOrbitPuffs() {
         puff.className = 'orbit-puff';
         
         const img = document.createElement('img');
-        img.src = 'puff.png';
+        img.src = 'images/puffs/puff_bronze.png';
         img.alt = 'Puff 20K';
         img.draggable = false;
         puff.appendChild(img);
@@ -1371,6 +1676,10 @@ function saveGame() {
         pets: state.pets,
         bonusPetSlots: state.bonusPetSlots,
         codesUsed: state.codesUsed,
+        // Ascension data
+        ascensionCount: state.ascensionCount,
+        ascensionPoints: state.ascensionPoints,
+        ascensionUpgrades: state.ascensionUpgrades,
         savedAt: Date.now(),
     };
     localStorage.setItem('aubinclicker_save', JSON.stringify(saveData));
@@ -1416,6 +1725,10 @@ function loadGame() {
         state.pets = data.pets || [];
         state.bonusPetSlots = data.bonusPetSlots || 0;
         state.codesUsed = data.codesUsed || [];
+        // Load ascension
+        state.ascensionCount = data.ascensionCount || 0;
+        state.ascensionPoints = data.ascensionPoints || 0;
+        state.ascensionUpgrades = data.ascensionUpgrades || {};
         recalcMaxPetSlots();
 
         // Offline earnings
@@ -1424,7 +1737,8 @@ function loadGame() {
             const offlineSeconds = (Date.now() - data.savedAt) / 1000;
             if (offlineSeconds > 5 && state.cps > 0) {
                 const cappedSeconds = Math.min(offlineSeconds, 86400);
-                const offlineGain = state.cps * cappedSeconds * 0.5;
+                const offlineMult = getOfflineMultiplierBonus();
+                const offlineGain = state.cps * cappedSeconds * 0.5 * offlineMult;
                 state.calories += offlineGain;
                 state.totalCalories += offlineGain;
                 const timeText = cappedSeconds > 3600
@@ -1491,6 +1805,10 @@ function resetGame() {
     state.maxPetSlots = 3;
     state.bonusPetSlots = 0;
     state.codesUsed = [];
+    // Reset ascension
+    state.ascensionCount = 0;
+    state.ascensionPoints = 0;
+    state.ascensionUpgrades = {};
     wheelAngle = 0;
     if (dom.wheel) dom.wheel.style.transform = 'rotate(0deg)';
     if (dom.petsTab) dom.petsTab.style.display = 'none';
@@ -1509,215 +1827,6 @@ function resetGame() {
     renderPetInventory();
     updateDisplay();
     showQuote("🔄 C'est reparti ! Aubin a encore faim !");
-}
-
-// ============ GAMBLING ============
-
-const FOOT_TEAMS = [
-    ['PSG', 'OM'], ['Real Madrid', 'Barça'], ['Man City', 'Liverpool'],
-    ['Bayern', 'Dortmund'], ['Juventus', 'Inter'], ['Chelsea', 'Arsenal'],
-    ['Atlético', 'Séville'], ['Ajax', 'Feyenoord'], ['Porto', 'Benfica'],
-    ['Lyon', 'Saint-Étienne'],
-];
-
-const TENNIS_PLAYERS = [
-    ['Djokovic', 'Alcaraz'], ['Nadal', 'Federer'], ['Sinner', 'Medvedev'],
-    ['Zverev', 'Tsitsipas'], ['Rublev', 'Fritz'], ['Auger-Aliassime', 'Tiafoe'],
-    ['Hurkacz', 'Rune'], ['Berrettini', 'Shapovalov'],
-];
-
-const SCRATCH_SYMBOLS = ['🍔', '🍟', '🍕', '🌮', '🍗', '💰', '⭐', '🎯'];
-
-let scratchState = null; // { cells: [...], revealed: [...], active: bool }
-
-function initGambling() {
-    // Pick random teams/players
-    const ft = FOOT_TEAMS[Math.floor(Math.random() * FOOT_TEAMS.length)];
-    document.getElementById('foot-team-a').textContent = ft[0];
-    document.getElementById('foot-team-b').textContent = ft[1];
-    const fo = document.getElementById('foot-choice');
-    fo.options[0].text = `⚽ ${ft[0]} gagne`;
-    fo.options[2].text = `⚽ ${ft[1]} gagne`;
-
-    const tp = TENNIS_PLAYERS[Math.floor(Math.random() * TENNIS_PLAYERS.length)];
-    document.getElementById('tennis-player-a').textContent = tp[0];
-    document.getElementById('tennis-player-b').textContent = tp[1];
-    const to = document.getElementById('tennis-choice');
-    to.options[0].text = `🎾 ${tp[0]} gagne`;
-    to.options[1].text = `🎾 ${tp[1]} gagne`;
-
-    document.getElementById('foot-bet-btn').addEventListener('click', doFootBet);
-    document.getElementById('tennis-bet-btn').addEventListener('click', doTennisBet);
-    document.getElementById('scratch-btn').addEventListener('click', buyScratchTicket);
-}
-
-function doFootBet() {
-    const betVal = parseInt(document.getElementById('foot-bet').value);
-    const choice = document.getElementById('foot-choice').value;
-    const resultEl = document.getElementById('foot-result');
-
-    if (!betVal || betVal <= 0) { resultEl.textContent = '⚠️ Mise invalide !'; resultEl.className = 'gamble-result lose'; return; }
-    if (betVal > state.calories) { resultEl.textContent = '❌ Pas assez de calories !'; resultEl.className = 'gamble-result lose'; return; }
-
-    state.calories -= betVal;
-
-    // Probabilities: A wins 40%, draw 20%, B wins 40%
-    const r = Math.random();
-    let outcome;
-    if (r < 0.40) outcome = 'A';
-    else if (r < 0.60) outcome = 'draw';
-    else outcome = 'B';
-
-    const teamA = document.getElementById('foot-team-a').textContent;
-    const teamB = document.getElementById('foot-team-b').textContent;
-    let outcomeText;
-    if (outcome === 'A') outcomeText = `${teamA} gagne`;
-    else if (outcome === 'B') outcomeText = `${teamB} gagne`;
-    else outcomeText = 'Match nul';
-
-    if (outcome === choice) {
-        let mult = outcome === 'draw' ? 3 : 2;
-        const gain = betVal * mult;
-        state.calories += gain;
-        resultEl.textContent = `✅ ${outcomeText} ! Tu gagnes ${formatNumber(gain)} cal !`;
-        resultEl.className = 'gamble-result win';
-        showMilestone(`🎰 Pari foot gagné ! +${formatNumber(gain)} cal !`);
-    } else {
-        resultEl.textContent = `❌ ${outcomeText}. Tu perds ${formatNumber(betVal)} cal.`;
-        resultEl.className = 'gamble-result lose';
-    }
-
-    // Refresh teams
-    const ft = FOOT_TEAMS[Math.floor(Math.random() * FOOT_TEAMS.length)];
-    document.getElementById('foot-team-a').textContent = ft[0];
-    document.getElementById('foot-team-b').textContent = ft[1];
-    const fo = document.getElementById('foot-choice');
-    fo.options[0].text = `⚽ ${ft[0]} gagne`;
-    fo.options[2].text = `⚽ ${ft[1]} gagne`;
-    document.getElementById('foot-bet').value = '';
-    updateDisplay();
-}
-
-function doTennisBet() {
-    const betVal = parseInt(document.getElementById('tennis-bet').value);
-    const choice = document.getElementById('tennis-choice').value;
-    const resultEl = document.getElementById('tennis-result');
-
-    if (!betVal || betVal <= 0) { resultEl.textContent = '⚠️ Mise invalide !'; resultEl.className = 'gamble-result lose'; return; }
-    if (betVal > state.calories) { resultEl.textContent = '❌ Pas assez de calories !'; resultEl.className = 'gamble-result lose'; return; }
-
-    state.calories -= betVal;
-
-    const outcome = Math.random() < 0.5 ? 'A' : 'B';
-    const playerA = document.getElementById('tennis-player-a').textContent;
-    const playerB = document.getElementById('tennis-player-b').textContent;
-    const winner = outcome === 'A' ? playerA : playerB;
-
-    if (outcome === choice) {
-        const gain = betVal * 2;
-        state.calories += gain;
-        resultEl.textContent = `✅ ${winner} gagne ! +${formatNumber(gain)} cal !`;
-        resultEl.className = 'gamble-result win';
-        showMilestone(`🎾 Pari tennis gagné ! +${formatNumber(gain)} cal !`);
-    } else {
-        resultEl.textContent = `❌ ${winner} gagne. Tu perds ${formatNumber(betVal)} cal.`;
-        resultEl.className = 'gamble-result lose';
-    }
-
-    // Refresh players
-    const tp = TENNIS_PLAYERS[Math.floor(Math.random() * TENNIS_PLAYERS.length)];
-    document.getElementById('tennis-player-a').textContent = tp[0];
-    document.getElementById('tennis-player-b').textContent = tp[1];
-    const to = document.getElementById('tennis-choice');
-    to.options[0].text = `🎾 ${tp[0]} gagne`;
-    to.options[1].text = `🎾 ${tp[1]} gagne`;
-    document.getElementById('tennis-bet').value = '';
-    updateDisplay();
-}
-
-function buyScratchTicket() {
-    const cost = 500;
-    const resultEl = document.getElementById('scratch-result');
-    if (state.calories < cost) {
-        resultEl.textContent = '❌ Pas assez de calories ! (500 cal requis)';
-        resultEl.className = 'gamble-result lose';
-        return;
-    }
-    state.calories -= cost;
-    updateDisplay();
-
-    // Generate 9 symbols (3x3)
-    const symbols = [];
-    for (let i = 0; i < 9; i++) {
-        symbols.push(SCRATCH_SYMBOLS[Math.floor(Math.random() * SCRATCH_SYMBOLS.length)]);
-    }
-    // Chance of jackpot: force 3 identical in a row/col/diag ~20% of the time
-    if (Math.random() < 0.20) {
-        const sym = SCRATCH_SYMBOLS[Math.floor(Math.random() * SCRATCH_SYMBOLS.length)];
-        const line = Math.floor(Math.random() * 3);
-        symbols[line * 3] = sym;
-        symbols[line * 3 + 1] = sym;
-        symbols[line * 3 + 2] = sym;
-    }
-
-    scratchState = { symbols, revealed: Array(9).fill(false), active: true };
-    renderScratchGrid();
-    resultEl.textContent = '🎟️ Gratte les cases !';
-    resultEl.className = 'gamble-result';
-    document.getElementById('scratch-btn').disabled = true;
-}
-
-function renderScratchGrid() {
-    const grid = document.getElementById('scratch-grid');
-    grid.innerHTML = '';
-    if (!scratchState) return;
-    scratchState.symbols.forEach((sym, i) => {
-        const cell = document.createElement('div');
-        cell.className = 'scratch-cell' + (scratchState.revealed[i] ? ' revealed' : ' hidden-cell');
-        cell.textContent = scratchState.revealed[i] ? sym : '';
-        if (!scratchState.revealed[i] && scratchState.active) {
-            cell.addEventListener('click', () => revealScratchCell(i));
-        }
-        grid.appendChild(cell);
-    });
-}
-
-function revealScratchCell(idx) {
-    if (!scratchState || scratchState.revealed[idx]) return;
-    scratchState.revealed[idx] = true;
-    renderScratchGrid();
-
-    if (scratchState.revealed.every(r => r)) {
-        // All revealed – check for win
-        checkScratchWin();
-    }
-}
-
-function checkScratchWin() {
-    const s = scratchState.symbols;
-    const resultEl = document.getElementById('scratch-result');
-    const lines = [
-        [0,1,2],[3,4,5],[6,7,8], // rows
-        [0,3,6],[1,4,7],[2,5,8], // cols
-        [0,4,8],[2,4,6],         // diags
-    ];
-    let won = false;
-    for (const [a,b,c] of lines) {
-        if (s[a] === s[b] && s[b] === s[c]) { won = true; break; }
-    }
-    if (won) {
-        const prize = 500 * 10;
-        state.calories += prize;
-        resultEl.textContent = `🎉 JACKPOT ! +${formatNumber(prize)} cal !`;
-        resultEl.className = 'gamble-result win';
-        showMilestone(`🎟️ JACKPOT au ticket ! +${formatNumber(prize)} cal !`);
-        updateDisplay();
-    } else {
-        resultEl.textContent = '😢 Pas de chance cette fois...';
-        resultEl.className = 'gamble-result lose';
-    }
-    scratchState.active = false;
-    document.getElementById('scratch-btn').disabled = false;
 }
 
 // ============ SHOP TABS ============
@@ -1752,17 +1861,13 @@ function init() {
     initWheel();
     updateDisplay();
     updateAubinAppearance();
-    initGambling();
 
-    // Show pets tab + inventory + codes tab if rebirth >= 1, gambling >= 2
+    // Show pets tab + inventory + codes tab if rebirth >= 1
     if (state.rebirthCount >= 1 && dom.petsTab) {
         dom.petsTab.style.display = '';
     }
     if (state.rebirthCount >= 1 && dom.codesTab) {
         dom.codesTab.style.display = '';
-    }
-    if (state.rebirthCount >= 2 && dom.gamblingTab) {
-        dom.gamblingTab.style.display = '';
     }
     const petInv = document.getElementById('pet-inventory');
     if (petInv) {
@@ -1780,7 +1885,7 @@ function init() {
     // Aubin pressed image
     const _setAubinPressed = () => {
         const imgEl = document.getElementById('aubin-img');
-        if (imgEl) imgEl.src = 'images/aubinappuye.png';
+        if (imgEl) imgEl.src = 'images/aubin/aubinappuye.png';
     };
     const _setAubinReleased = () => {
         const imgEl = document.getElementById('aubin-img');
@@ -1796,12 +1901,19 @@ function init() {
     dom.resetBtn.addEventListener('click', resetGame);
     dom.rebirthBtn.addEventListener('click', doRebirth);
     dom.spinBtn.addEventListener('click', spinWheel);
+    if (dom.ascensionBtn) dom.ascensionBtn.addEventListener('click', doAscension);
     dom.codeSubmit.addEventListener('click', redeemCode);
     dom.codeInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') redeemCode();
     });
 
     initShopTabs();
+    
+    // Initialize ascension UI
+    if (dom.ascensionShop) {
+        renderAscensionShop();
+        updateAscensionUI();
+    }
 
     setInterval(saveGame, 30000);
     window.addEventListener('beforeunload', saveGame);
@@ -1817,6 +1929,7 @@ function init() {
         renderQuests();
         checkQuests();
         updateRebirthUI();
+        updateAscensionUI();
     }, 2000);
 
     requestAnimationFrame(gameLoop);

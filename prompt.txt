@@ -1,0 +1,125 @@
+Si certaines parties du code actuel sont mal structurées ou difficiles à scaler, refactorise-les proprement.
+Priorise une architecture orientée managers ou modules clairs.
+Optimise les performances si nécessaire.
+
+
+
+Tu es un développeur senior spécialisé en jeux idle/clicker.
+
+Tu dois modifier mon code existant pour implémenter les changements ci-dessous.
+
+RÈGLES IMPORTANTES :
+- Ne casse aucune fonctionnalité non mentionnée.
+- Commente les parties importantes.
+
+Avant de coder :
+1. Analyse l’architecture actuelle.
+2. Ensuite seulement, implémente les modifications.
+3. Fournis le code complet modifié.
+
+--------------------------------------------------
+1️⃣ BÂTIMENTS
+--------------------------------------------------
+
+- Limiter le nombre maximum de bâtiments à 100.
+- Ce maximum doit être améliorable via le système d’Ascension.
+- Prévoir une variable dynamique (ex: maxBuildings) modifiable par bonus permanents.
+
+--------------------------------------------------
+2️⃣ SYSTÈME D’ASCENSION
+--------------------------------------------------
+
+- 10 rebirth = 1 Ascension.
+- Une Ascension donne des points d’ascension.
+- Créer un shop dédié aux Ascensions (interface séparée).
+- Les points d’ascension permettent d’acheter des améliorations permanentes :
+    - Augmentation du maximum de bâtiments
+    - Augmentation du maximum d’inventaire de pets
+    - Luck permanente des pets
+    - etc.
+
+Le système doit être évolutif (facile d’ajouter de nouvelles améliorations permanentes).
+
+--------------------------------------------------
+3️⃣ PUFFS
+--------------------------------------------------
+
+- Remplacer les puffs de base par des Puffs 16k.
+- Toutes les 10 puffs achetées → fusion automatique en :
+    - 1 Puff 16k Bronze
+    - 1 Puff 16k Argent
+    - 1 Puff 16k Or
+    - etc.
+
+- Les images seront :
+    - puff_bronze.png
+    - puff_argent.png
+    - puff_or.png
+    - etc.
+
+- Les images animées/tournantes des puffs doivent s’adapter automatiquement au nouveau système.
+
+--------------------------------------------------
+4️⃣ CALORIES
+--------------------------------------------------
+
+- Supprimer toute limite maximale de calories.
+- Même après rebirth, il ne doit plus y avoir de cap.
+
+--------------------------------------------------
+5️⃣ PETS (REMPLACER LA ROUE)
+--------------------------------------------------
+
+- Supprimer complètement la roue de la chance.
+- Remplacer par un système d’œufs.
+
+Chaque œuf :
+- Possède une rareté.
+- Possède un pool de loot dédié.
+
+Ajouter :
+
+A) 🥚 Shop d’œufs
+- Interface dédiée.
+- Système évolutif pour ajouter de nouveaux œufs facilement.
+
+B) 📖 Index des œufs (style Pokédex)
+- Interface dédiée.
+- Si pet non découvert → afficher "?".
+- Si découvert → afficher nom + infos.
+
+C) 🎒 Inventaire de pets
+- Tous les pets non équipés sont stockés.
+- Maximum 100 pets par défaut.
+- Ce maximum est améliorable via le shop d’Ascension.
+- Structure propre pour gérer :
+    - Pets équipés
+    - Pets en inventaire
+    - Limite dynamique
+
+--------------------------------------------------
+7️⃣ REFONTE COMPLÈTE DE L’INTERFACE
+--------------------------------------------------
+
+- Supprimer le gros bloc boutique actuel.
+
+Créer un menu de navigation vertical à droite avec des icônes :
+
+- Bâtiments
+- Améliorations
+- Quêtes
+- Pets
+- Codes
+- Paramètres
+
+Comportement :
+- Les interfaces s’ouvrent à droite de l’écran.
+- Le centre (clicker, calories, etc.) doit être espacé et aéré.
+- Supprimer le bouton reset principal.
+- Ajouter un onglet Paramètres contenant :
+    - Reset sauvegarde
+
+--------------------------------------------------
+
+OBJECTIF FINAL :
+Un code propre, modulaire, scalable et prêt à évoluer.
