@@ -2,8 +2,8 @@
    AubinClicker - Game Logic
    ============================================ */
 
-// >>>>>> DEBUG: Supprimer cette ligne pour retirer le multiplicateur de test <<<<<<
-
+// >>>>>> DEBUG: Vitesse du jeu (1 = normal, 100 = ultra rapide) <<<<<<
+const DEBUG_SPEED = 100000000000000000000000000000000;
 // >>>>>> FIN DEBUG <<<<<<
 
 // ============ GAME DATA ============
@@ -11,7 +11,7 @@
 const BUILDINGS = [
     {
         id: 'puff',
-        name: 'Puff 20K',
+        name: 'Puff 16k',
         icon: '💨',
         desc: 'Un curseur en forme de Puff qui clique automatiquement sur Aubin',
         baseCost: 15,
@@ -138,10 +138,10 @@ const UPGRADES = [
     },
     // Building-specific upgrades
     {
-        id: 'puff_50k',
-        name: 'Puff 50K',
+        id: 'puff_50k', // On garde l'ID d'origine pour ne pas casser la sauvegarde
+        name: 'Puff 32k',
         icon: '🌬️',
-        desc: 'Upgrade les Puffs en 50K ! Triple production',
+        desc: 'Upgrade les Puffs en 32k ! Triple production',
         cost: 200,
         type: 'building',
         target: 'puff',
@@ -296,7 +296,7 @@ const QUESTS = [
         id: 'q_first_puff',
         name: 'La Première Puff',
         icon: '💨',
-        desc: 'Achète ton premier Puff 20K',
+        desc: 'Achète ton premier Puff 16k',
         check: () => BUILDINGS.find(b => b.id === 'puff').count >= 1,
         reward: 50,
         rewardText: '+50 Calories d\'Or',
@@ -492,7 +492,7 @@ const QUOTES = [
     "\"Je mange pas beaucoup, je mange souvent.\"",
     "\"Mon sport préféré c'est la fourchette.\"",
     "\"Passe-moi la puff frérot.\"",
-    "\"20K puffs et j'ai encore la dalle.\"",
+    "\"CLIQUE ! J'ai encore la dalle.\"",
 ];
 
 const MILESTONES = [
@@ -534,10 +534,7 @@ const ASCENSION_UPGRADES = [
     { id: 'cps_2', name: 'Efficacité Max', icon: '⚡', desc: 'x1.5 au CPS global', type: 'cpsMult', value: 1.5, baseCost: 50, costMult: 4, maxLevel: 3, minAscension: 2 },
     
     // Rebirth token bonus
-    { id: 'rebirth_bonus', name: 'Bonus de Rebirth', icon: '🎁', desc: '+1 Rebirth Token par rebirth', type: 'rebirthBonus', value: 1, baseCost: 100, costMult: 5, maxLevel: 3, minAscension: 4 },
-    
-    // Offline earnings
-    { id: 'offline_1', name: 'Gains Passifs', icon: '🌙', desc: '+25% aux gains hors-ligne', type: 'offlineMult', value: 0.25, baseCost: 15, costMult: 3, maxLevel: 4, minAscension: 1 },
+    { id: 'rebirth_bonus', name: 'Bonus de Rebirth', icon: '🎁', desc: '+1 Rebirth Token par rebirth', type: 'rebirthBonus', value: 1, baseCost: 100, costMult: 5, maxLevel: 3, minAscension: 4 }
 ];
 
 // ============ GAME STATE ============
@@ -962,7 +959,8 @@ function checkQuests() {
 
 function recalcMaxPetSlots() {
     const ascensionPetBonus = getPetSlotBonus();
-    state.maxPetSlots = 3 + Math.floor(state.rebirthCount / 5) + state.bonusPetSlots + ascensionPetBonus;
+    // Les slots de base (3) + les slots bonus (codes) + les bonus d'ascension
+    state.maxPetSlots = 3 + state.bonusPetSlots + ascensionPetBonus;
 }
 
 function getPetMultiplier() {
@@ -1008,7 +1006,7 @@ function doRebirth() {
     for (const u of UPGRADES) u.purchased = false;
     for (const q of QUESTS) q.completed = false;
 
-    currentOrbitCount = -1;
+    currentOrbitConfig = ''; // <-- Modification ici
     dom.puffOrbit.innerHTML = '';
 
     // Show pets tab + inventory + codes tab after first rebirth
@@ -1220,16 +1218,14 @@ function getOfflineMultiplierBonus() {
 
 function doAscension() {
     if (!canAscend()) return;
-    if (!confirm(`✨ ASCENSION !\n\nTu vas :\n- Recevoir ${getAscensionPointsPerRebirth()} Points d'Ascension ✨\n- Consommer ${getAscensionCost()} Rebirths\n- Garder tes autres bonus d'ascension\n- Recommencer depuis le début (mais avec des永久 bonus !)\n\nContinuer ?`)) return;
+    if (!confirm(`✨ ASCENSION !\n\nTu vas :\n- Recevoir ${getAscensionPointsPerRebirth()} Points d'Ascension ✨\n- Conserver ton nombre total de Rebirths\n- Garder tes autres bonus d'ascension\n- Recommencer depuis le début (mais avec des bonus permanents !)\n\nContinuer ?`)) return;
 
     const pointsToAdd = getAscensionPointsPerRebirth();
-    const rebirthsToConsume = getAscensionCost();
     
     state.ascensionCount++;
     state.ascensionPoints += pointsToAdd;
-    state.rebirthCount -= rebirthsToConsume;
     
-    // Reset tout sauf ascension
+    // Reset tout sauf ascension et rebirths
     state.calories = 0;
     state.totalCalories = 0;
     state.totalClicks = 0;
@@ -1247,7 +1243,7 @@ function doAscension() {
     for (const u of UPGRADES) u.purchased = false;
     for (const q of QUESTS) q.completed = false;
     
-    currentOrbitCount = -1;
+    currentOrbitConfig = ''; // <-- Modification ici
     dom.puffOrbit.innerHTML = '';
     
     // Recalcul des bonus
@@ -1580,23 +1576,44 @@ function redeemCode() {
 
 // ============ ORBIT PUFFS ============
 
-let currentOrbitCount = 0;
+let currentOrbitConfig = '';
 
 function renderOrbitPuffs() {
     const puffBuilding = BUILDINGS.find(b => b.id === 'puff');
     const count = puffBuilding ? puffBuilding.count : 0;
     
-    // Cap visual puffs at 20 for readability
-    const displayCount = Math.min(count, 20);
+    // On définit les paliers de fusion
+    let remaining = count;
+    const tiers = [
+        { value: 10000, src: 'images/puffs/puff_diamant.png' },
+        { value: 1000, src: 'images/puffs/puff_platine.png' },
+        { value: 100, src: 'images/puffs/puff_or.png' },
+        { value: 10, src: 'images/puffs/puff_argent.png' },
+        { value: 1, src: 'images/puffs/puff_bronze.png' }
+    ];
     
-    if (displayCount === currentOrbitCount) return;
-    currentOrbitCount = displayCount;
+    // On calcule combien de puffs de chaque palier on doit afficher
+    let puffsToRender = [];
+    for (const tier of tiers) {
+        const qty = Math.floor(remaining / tier.value);
+        for (let i = 0; i < qty; i++) {
+            puffsToRender.push(tier.src);
+        }
+        remaining %= tier.value;
+    }
+    
+    // Si la configuration visuelle n'a pas changé, on ne recharge pas le DOM
+    const configString = puffsToRender.join('|');
+    if (configString === currentOrbitConfig) return;
+    currentOrbitConfig = configString;
     
     dom.puffOrbit.innerHTML = '';
     
-    if (displayCount === 0) return;
+    if (puffsToRender.length === 0) return;
     
+    const displayCount = puffsToRender.length;
     const radius = 130; // px from center
+    
     for (let i = 0; i < displayCount; i++) {
         const angle = (360 / displayCount) * i;
         const rad = (angle * Math.PI) / 180;
@@ -1610,8 +1627,8 @@ function renderOrbitPuffs() {
         puff.className = 'orbit-puff';
         
         const img = document.createElement('img');
-        img.src = 'images/puffs/puff_bronze.png';
-        img.alt = 'Puff 20K';
+        img.src = puffsToRender[i];
+        img.alt = 'Puff 16k';
         img.draggable = false;
         puff.appendChild(img);
         
@@ -1645,10 +1662,12 @@ let lastTick = performance.now();
 
 function gameLoop(now) {
     const dt = (now - lastTick) / 1000;
+    // >>>>>> DEBUG: Applied speed multiplier <<<<<<
+    const debugDt = dt * DEBUG_SPEED;
     lastTick = now;
 
     if (state.cps > 0) {
-        const gained = state.cps * dt;
+        const gained = state.cps * debugDt;
         state.calories += gained;
         state.totalCalories += gained;
         enforceCalorieCap();
@@ -1731,25 +1750,6 @@ function loadGame() {
         state.ascensionUpgrades = data.ascensionUpgrades || {};
         recalcMaxPetSlots();
 
-        // Offline earnings
-        if (data.savedAt) {
-            recalculateCps();
-            const offlineSeconds = (Date.now() - data.savedAt) / 1000;
-            if (offlineSeconds > 5 && state.cps > 0) {
-                const cappedSeconds = Math.min(offlineSeconds, 86400);
-                const offlineMult = getOfflineMultiplierBonus();
-                const offlineGain = state.cps * cappedSeconds * 0.5 * offlineMult;
-                state.calories += offlineGain;
-                state.totalCalories += offlineGain;
-                const timeText = cappedSeconds > 3600
-                    ? `${Math.floor(cappedSeconds / 3600)}h`
-                    : `${Math.floor(cappedSeconds / 60)}min`;
-                setTimeout(() => {
-                    showMilestone(`🌙 Gains hors-ligne (${timeText}) : +${formatNumber(offlineGain)} Calories d'Or`);
-                }, 500);
-            }
-        }
-
         return true;
     } catch (e) {
         console.warn('Erreur de chargement:', e);
@@ -1788,7 +1788,7 @@ function resetGame() {
     }
 
     // Reset orbit — force re-render by using sentinel value
-    currentOrbitCount = -1;
+    currentOrbitConfig = ''; // <-- Modification ici
     dom.puffOrbit.innerHTML = '';
 
     // Hide milestone banner

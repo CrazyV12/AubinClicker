@@ -41,25 +41,6 @@ Avant de coder :
 Le système doit être évolutif (facile d’ajouter de nouvelles améliorations permanentes).
 
 --------------------------------------------------
-3️⃣ PUFFS
---------------------------------------------------
-
-- Remplacer les puffs de base par des Puffs 16k.
-- Toutes les 10 puffs achetées → fusion automatique en :
-    - 1 Puff 16k Bronze
-    - 1 Puff 16k Argent
-    - 1 Puff 16k Or
-    - etc.
-
-- Les images seront :
-    - puff_bronze.png
-    - puff_argent.png
-    - puff_or.png
-    - etc.
-
-- Les images animées/tournantes des puffs doivent s’adapter automatiquement au nouveau système.
-
---------------------------------------------------
 4️⃣ CALORIES
 --------------------------------------------------
 
