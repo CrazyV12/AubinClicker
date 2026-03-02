@@ -1,30 +1,19 @@
-# AubinClicker
+# AubinClicker 🍔
 
-Aubin Incremental clicker
+Aubin Incremental clicker. Nourris Aubin. Il a faim. Il a *toujours* faim.
 
-## Arborescence du projet
+## Nouvelle Arborescence du projet (Modulaire ES6)
 
-```
+\`\`\`text
 AubinClicker/
-├── idee.md
 ├── index.html
-├── prompt.txt
-├── README.md
-├── script.js
 ├── style.css
+└── js/
+    ├── main.js      (Point de départ, branchement des clics)
+    ├── state.js     (La sauvegarde et la mémoire)
+    ├── data.js      (Tous les tableaux : buildings, pets, upgrades...)
+    ├── core.js      (Le moteur de jeu, les calculs, fusions, achats)
+    └── ui.js        (L'affichage, textes flottants, animations)
 └── images/
-    ├── aubin/
-    │   ├── aubin.png
-    │   ├── aubin2.png
-    │   ├── aubin3.png
-    │   ├── aubin4.png
-    │   ├── aubin5.png
-    │   ├── aubin6.png
-    │   └── aubinappuye.png
-    └── puffs/
-        ├── puff_argent.png
-        ├── puff_bronze.png
-        ├── puff_diamant.png
-        ├── puff_or.png
-        └── puff_platine.png
-```
+    └── ...
+\`\`\`

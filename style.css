@@ -124,13 +124,11 @@ body {
 /* --- Main Layout --- */
 #game-container {
   display: grid;
-  /* On met 340px des deux côtés pour que la colonne centrale soit PARFAITEMENT au milieu de l'écran */
   grid-template-columns: 340px 1fr 340px; 
   gap: 2rem; 
   max-width: 1500px;
   margin: 0 auto;
   padding: 2rem 1rem;
-  /* Centre verticalement les panneaux latéraux par rapport à l'écran ! */
   align-items: center; 
   position: relative;
   z-index: 1;
