@@ -6,7 +6,6 @@ let lastQuoteIndex = -1;
 let currentOrbitConfig = '';
 
 // ============ DYNAMIC EVENTS ============
-// Fonction magique pour attacher les clics de l'inventaire sans "onclick" dans le HTML
 function bindPetEvents(container) {
     if(!container) return;
     container.querySelectorAll('.pet-card').forEach(card => {
@@ -33,6 +32,92 @@ function bindPetEvents(container) {
     });
 }
 
+// ============ THEMES & DIAMONDS UI ============
+export function applyUniverseTheme() {
+    const u = core.getCurrentUniverse();
+    document.body.className = u.theme;
+    const nameEl = document.getElementById('universe-name');
+    if (nameEl) nameEl.textContent = u.name;
+}
+
+export function updateDiamondUI() {
+    const dc = document.getElementById('diamond-count');
+    if (dc) dc.textContent = core.formatNumber(state.diamonds);
+
+    const dp = document.getElementById('diamond-progress');
+    const dt = document.getElementById('diamond-timer');
+    
+    if (dp || dt) {
+        const speedBonusLvl = state.diamondUpgradesPurchased['diamond_speed'] || 0;
+        const speedMult = 1 + (speedBonusLvl * 0.1);
+        const effectiveTick = 300 / speedMult; // 5 minutes de base
+        
+        if (dp) {
+            const pct = (state.diamondProgress / effectiveTick) * 100;
+            dp.style.width = `${Math.min(pct, 100)}%`;
+        }
+        
+        if (dt) {
+            const remainingSeconds = Math.max(0, effectiveTick - state.diamondProgress);
+            const m = Math.floor(remainingSeconds / 60);
+            const s = Math.floor(remainingSeconds % 60);
+            // Affichage formaté MM:SS
+            dt.textContent = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        }
+    }
+}
+
+export function renderDiamondShop() {
+    const upList = document.getElementById('diamond-upgrades-list');
+    if (upList) {
+        upList.innerHTML = '';
+        for (const u of data.DIAMOND_UPGRADES) {
+            const currentLevel = state.diamondUpgradesPurchased[u.id] || 0;
+            const isMaxed = currentLevel >= u.maxLevel;
+            const cost = Math.floor(u.baseCost * Math.pow(u.costMult, currentLevel));
+            const canAfford = state.diamonds >= cost;
+            
+            const card = document.createElement('div');
+            card.className = `ascension-card ${isMaxed ? 'maxed' : ''} ${!canAfford && !isMaxed ? 'cant-afford' : ''}`;
+            card.innerHTML = `
+                <div class="ascension-icon">${u.icon}</div>
+                <div class="ascension-info">
+                    <div class="ascension-name" style="color:#00d2ff">${u.name}</div>
+                    <div class="ascension-desc">${u.desc}</div>
+                    <div class="ascension-level">Niv. ${currentLevel}/${u.maxLevel}</div>
+                </div>
+                <button class="btn ascension-buy-btn" style="border-color:#00d2ff" ${isMaxed || !canAfford ? 'disabled' : ''}>
+                    ${isMaxed ? 'MAX' : `${core.formatNumber(cost)} 💎`}
+                </button>
+            `;
+            if (!isMaxed && canAfford) card.querySelector('.ascension-buy-btn').addEventListener('click', () => core.buyDiamondUpgrade(u.id));
+            upList.appendChild(card);
+        }
+    }
+
+    const eggList = document.getElementById('diamond-eggs-list');
+    if (eggList) {
+        eggList.innerHTML = '';
+        const maxInv = core.getMaxInventory();
+        const isInvFull = state.inventoryPets.length >= maxInv;
+
+        for (const egg of data.DIAMOND_EGGS) {
+            const canAfford = state.diamonds >= egg.cost;
+            const card = document.createElement('div');
+            card.className = `egg-card ${isInvFull ? 'locked' : ''} ${canAfford && !isInvFull ? 'can-afford' : ''}`;
+            let statusText = isInvFull ? `<div class="egg-req">Inventaire plein !</div>` : `<div class="egg-cost" style="color:#00d2ff">${core.formatNumber(egg.cost)} 💎</div>`;
+
+            card.innerHTML = `<div class="egg-icon">${egg.icon}</div><div class="egg-name">${egg.name}</div>${statusText}`;
+            if (!isInvFull && canAfford) {
+                card.style.cursor = 'pointer';
+                card.style.borderColor = '#00d2ff';
+                card.addEventListener('click', () => core.buyDiamondEgg(egg.id));
+            }
+            eggList.appendChild(card);
+        }
+    }
+}
+
 // ============ RENDER FUNCTIONS ============
 export function updateDisplay() {
     const el = (id) => document.getElementById(id);
@@ -41,7 +126,7 @@ export function updateDisplay() {
     if(el('cal-per-second')) el('cal-per-second').textContent = core.formatNumber(state.cps);
     if(el('cal-per-click')) el('cal-per-click').textContent = core.formatNumber(state.clickPower);
     if(el('total-clicks')) el('total-clicks').textContent = core.formatNumber(state.totalClicks);
-    document.title = `${core.formatNumber(state.calories)} Calories d'Or - AubinClicker 🍔`;
+    document.title = `${core.formatNumber(state.calories)} Calories - AubinClicker`;
 
     const list = el('buildings-list');
     if(list) {
@@ -431,7 +516,8 @@ export function spawnBackgroundParticle() {
     const p = document.getElementById('particles');
     if(!p) return;
     const el = document.createElement('div'); el.className = 'particle';
-    el.textContent = data.FOOD_EMOJIS[Math.floor(Math.random() * data.FOOD_EMOJIS.length)];
+    const emojis = core.getCurrentUniverse().emojis;
+    el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
     el.style.left = `${Math.random() * 100}%`; el.style.animationDuration = `${5 + Math.random() * 8}s`; el.style.animationDelay = `${Math.random() * 2}s`; el.style.fontSize = `${1 + Math.random() * 1.5}rem`;
     p.appendChild(el); setTimeout(() => el.remove(), 15000);
 }
@@ -454,6 +540,8 @@ export function renderAll() {
     renderPetIndex();
     renderQuests();
     renderAscensionShop();
+    renderDiamondShop();
+    updateDiamondUI();
     updateRebirthUI();
     updateAscensionUI();
     updateAubinAppearance();

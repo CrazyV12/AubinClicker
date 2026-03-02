@@ -20,6 +20,12 @@ export let state = {
     ascensionCount: 0,
     ascensionPoints: 0,
     ascensionUpgrades: {},
+    
+    // NOUVEAUTÉ DIAMANTS
+    diamonds: 0,
+    diamondProgress: 0,
+    diamondUpgradesPurchased: {},
+    
     isSelectionMode: false,
     selectedPetsToSell: [],
     sortOrder: 'desc', 

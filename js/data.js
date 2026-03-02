@@ -10,6 +10,28 @@ export const FUSION_BASE_COST = {
     'mythic': 500000000
 };
 
+// ============ NOUVEAUTÉS PHASE 3 ============
+export const UNIVERSES = [
+    { name: "Monde Classique", theme: "theme-classic", emojis: ['🍔', '🍕', '🍟', '🍗'], cpsMult: 1, questMult: 1, diamondRate: 1 },
+    { name: "Cyber-Bouffe 2077", theme: "theme-cyber", emojis: ['🔋', '💊', '🦾', '💾'], cpsMult: 1.5, questMult: 1.5, diamondRate: 2 },
+    { name: "Royaume Sucré", theme: "theme-candy", emojis: ['🍩', '🧁', '🍰', '🍭'], cpsMult: 2.5, questMult: 2.5, diamondRate: 4 },
+    { name: "Cuisine de l'Enfer", theme: "theme-hell", emojis: ['🌶️', '🔥', '🥩', '🌋'], cpsMult: 5, questMult: 5, diamondRate: 8 },
+    { name: "Banquet Divin", theme: "theme-divine", emojis: ['✨', '🍇', '🍞', '🍷'], cpsMult: 12, questMult: 10, diamondRate: 15 },
+    { name: "Dimension Absolue", theme: "theme-absolute", emojis: ['🌌', '⭐', '☄️', '💫'], cpsMult: 25, questMult: 20, diamondRate: 30 }
+];
+
+export const DIAMOND_UPGRADES = [
+    { id: 'inv_space', name: 'Extension Sac', icon: '🎒', desc: '+10 places d\'inventaire', baseCost: 10, costMult: 1.5, type: 'inventory', value: 10, maxLevel: 20 },
+    { id: 'rebirth_cost', name: 'Charisme Divin', icon: '🗣️', desc: '-5% sur l\'objectif de Rebirth', baseCost: 25, costMult: 2.0, type: 'rebirthCost', value: 0.05, maxLevel: 10 },
+    { id: 'diamond_speed', name: 'Sablier Magique', icon: '⏳', desc: '+10% vitesse jauge diamants', baseCost: 50, costMult: 2.5, type: 'diamondSpeed', value: 0.1, maxLevel: 5 }
+];
+
+export const DIAMOND_EGGS = [
+    { id: 'egg_crystal', name: 'Œuf de Cristal', icon: '🔮', cost: 15, pool: [{id: 'dragon', weight: 80}, {id: 'licorne', weight: 20}] },
+    { id: 'egg_void', name: 'Œuf du Néant', icon: '🕳️', cost: 100, pool: [{id: 'licorne', weight: 100}] }
+];
+// ============================================
+
 export const BUILDINGS = [
     { id: 'puff', name: 'Puff 16k', icon: '💨', desc: 'Un curseur en forme de Puff qui clique automatiquement sur Aubin', baseCost: 15, baseCps: 0.5, count: 0, minRebirth: 0, baseMax: 200, costScale: 1.15 },
     { id: 'frite', name: 'Barquette de Frites', icon: '🍟', desc: 'Une bonne grosse barquette bien grasse', baseCost: 100, baseCps: 3, count: 0, minRebirth: 0, baseMax: 150, costScale: 1.15 },
@@ -24,18 +46,18 @@ export const BUILDINGS = [
 ];
 
 export const UPGRADES = [
-    { id: 'double_click', name: 'Doigts Gras', icon: '👆', desc: 'Les doigts gra"ss"ieux d\'Aubin doublent la puissance de clic', cost: 100, type: 'click', multiplier: 2, requirement: { type: 'clicks', value: 50 }, purchased: false },
+    { id: 'double_click', name: 'Doigts Gras', icon: '👆', desc: 'Double la puissance de clic', cost: 100, type: 'click', multiplier: 2, requirement: { type: 'clicks', value: 50 }, purchased: false },
     { id: 'triple_click', name: 'Mains de Beurre', icon: '🧈', desc: 'Triple pouvoir de clic. Ça glisse.', cost: 1000, type: 'click', multiplier: 3, requirement: { type: 'clicks', value: 200 }, purchased: false },
     { id: 'mega_click', name: 'Poing Calorique', icon: '👊', desc: 'x5 puissance de clic brute (ARC SALLE)', cost: 50000, type: 'click', multiplier: 5, requirement: { type: 'calories', value: 25000 }, purchased: false },
-    { id: 'puff_50k', name: 'Puff 32k', icon: '🌬️', desc: 'Upgrade les Puffs en 32k ! Triple production', cost: 200, type: 'building', target: 'puff', multiplier: 3, requirement: { type: 'building', building: 'puff', value: 5 }, purchased: false },
-    { id: 'sauce', name: 'Sauce en Plus', icon: '🫗', desc: 'Toutes les frites produisent x3 Calories d\'Or', cost: 1500, type: 'building', target: 'frite', multiplier: 3, requirement: { type: 'building', building: 'frite', value: 5 }, purchased: false },
-    { id: 'triple_cheese', name: 'Triple Cheese', icon: '🧀', desc: 'Burgers passent au triple fromage ! x3', cost: 5000, type: 'building', target: 'burger', multiplier: 3, requirement: { type: 'building', building: 'burger', value: 5 }, purchased: false },
-    { id: 'galette', name: 'Galette Maison', icon: '🫓', desc: 'Kebabs avec galette artisanale x3', cost: 20000, type: 'building', target: 'kebab', multiplier: 3, requirement: { type: 'building', building: 'kebab', value: 5 }, purchased: false },
+    { id: 'puff_50k', name: 'Puff 32k', icon: '🌬️', desc: 'Upgrade les Puffs ! Triple production', cost: 200, type: 'building', target: 'puff', multiplier: 3, requirement: { type: 'building', building: 'puff', value: 5 }, purchased: false },
+    { id: 'sauce', name: 'Sauce en Plus', icon: '🫗', desc: 'Les frites produisent x3', cost: 1500, type: 'building', target: 'frite', multiplier: 3, requirement: { type: 'building', building: 'frite', value: 5 }, purchased: false },
+    { id: 'triple_cheese', name: 'Triple Cheese', icon: '🧀', desc: 'Burgers au triple fromage ! x3', cost: 5000, type: 'building', target: 'burger', multiplier: 3, requirement: { type: 'building', building: 'burger', value: 5 }, purchased: false },
+    { id: 'galette', name: 'Galette Maison', icon: '🫓', desc: 'Kebabs artisanaux x3', cost: 20000, type: 'building', target: 'kebab', multiplier: 3, requirement: { type: 'building', building: 'kebab', value: 5 }, purchased: false },
     { id: 'aile_en_plus', name: 'Aile en Plus', icon: '🦴', desc: 'Chaque bucket contient 50% d\'ailes en plus x3', cost: 80000, type: 'building', target: 'poulet', multiplier: 3, requirement: { type: 'building', building: 'poulet', value: 5 }, purchased: false },
     { id: 'four_a_bois', name: 'Four à Bois', icon: '🪵', desc: 'Pizzas cuites au feu de bois = x3', cost: 300000, type: 'building', target: 'pizza', multiplier: 3, requirement: { type: 'building', building: 'pizza', value: 5 }, purchased: false },
-    { id: 'appetit_leger', name: 'Gros Appétit', icon: '😋', desc: 'Aubin a encore plus faim ! Tout x2 !', cost: 10000, type: 'global', multiplier: 2, requirement: { type: 'calories', value: 5000 }, purchased: false },
-    { id: 'trou_noir', name: 'Estomac sans Fond', icon: '🕳️', desc: 'La science ne peut pas expliquer où ça va. Tout x3', cost: 500000, type: 'global', multiplier: 3, requirement: { type: 'calories', value: 200000 }, purchased: false },
-    { id: 'dimension_bouffe', name: 'Dimension Bouffe', icon: '🌌', desc: 'Aubin transcende la réalité. Tout x5', cost: 5000000, type: 'global', multiplier: 5, requirement: { type: 'calories', value: 2000000 }, purchased: false },
+    { id: 'appetit_leger', name: 'Gros Appétit', icon: '😋', desc: 'Tout x2 !', cost: 10000, type: 'global', multiplier: 2, requirement: { type: 'calories', value: 5000 }, purchased: false },
+    { id: 'trou_noir', name: 'Estomac sans Fond', icon: '🕳️', desc: 'Tout x3', cost: 500000, type: 'global', multiplier: 3, requirement: { type: 'calories', value: 200000 }, purchased: false },
+    { id: 'dimension_bouffe', name: 'Dimension Bouffe', icon: '🌌', desc: 'Tout x5', cost: 5000000, type: 'global', multiplier: 5, requirement: { type: 'calories', value: 2000000 }, purchased: false },
 ];
 
 export const ASCENSION_UPGRADES = [
@@ -114,5 +136,4 @@ export const AUBIN_IMAGES = [
     'images/aubin/aubin4.png', 'images/aubin/aubin5.png', 'images/aubin/aubin6.png',
 ];
 
-// L'EXPORT MANQUANT EST ICI 👇
 export const AUBIN_CYCLE = AUBIN_IMAGES.length;

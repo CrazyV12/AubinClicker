@@ -8,10 +8,25 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=1.2">
+    <link rel="stylesheet" href="style.css?v=1.3">
 </head>
-<body>
+<body class="theme-classic">
     <div id="particles"></div>
+
+    <div id="universe-display" class="glass-panel" style="position:fixed; top:20px; left:20px; z-index:100; display:flex; gap:10px; align-items:center; padding: 0.5rem 1rem;">
+        🌍 <span id="universe-name" style="font-weight:bold;">Monde Classique</span>
+    </div>
+
+    <div id="diamond-container" class="glass-panel diamond-ui">
+        <div class="diamond-info">
+            <span>💎</span>
+            <span id="diamond-count">0</span>
+        </div>
+        <div class="diamond-progress-bg">
+            <div id="diamond-progress" class="diamond-progress-fill"></div>
+        </div>
+        <div id="diamond-timer" class="diamond-timer">05:00</div>
+    </div>
 
     <main id="game-container">
         
@@ -109,10 +124,9 @@
             <div id="pet-inventory" class="glass-panel" style="display:none;">
                 <div class="inventory-header">
                     <h3>🐾 Pets Équipés <span id="pet-count-display">(0/3)</span></h3>
-                    <button id="btn-equip-best" class="btn btn-save" style="font-size: 0.8rem; padding: 0.5rem;">⭐ Équiper les meilleurs</button>
+                    <button id="btn-equip-best" class="btn btn-save" style="font-size: 0.8rem; padding: 0.5rem;">⭐ Équiper</button>
                 </div>
-                <div id="pet-slots" class="egg-grid">
-                    </div>
+                <div id="pet-slots" class="egg-grid"></div>
             </div>
 
             <div id="milestone-banner" class="glass-panel hidden">
@@ -125,14 +139,12 @@
                 <h2 id="panel-title">🏗️ Bâtiments</h2>
                 
                 <div id="buildings-list" class="shop-content active"></div>
-
                 <div id="upgrades-list" class="shop-content"></div>
-
                 <div id="quests-list" class="shop-content"></div>
 
                 <div id="eggs-list" class="shop-content">
                     <div class="ascension-section">
-                        <p class="ascension-intro">Achète des œufs avec tes Calories d'Or. Fais des Rebirths pour en débloquer de nouveaux !</p>
+                        <p class="ascension-intro">Achète des œufs avec tes Calories d'Or.</p>
                         <div id="egg-shop-grid" class="egg-grid"></div>
                     </div>
                 </div>
@@ -143,7 +155,7 @@
                             <span class="inventory-stats">Stock : <span id="inventory-count">0</span> / <span id="inventory-max">100</span></span>
                         </div>
                         <div class="inventory-actions" style="display:flex; gap:0.5rem; flex-wrap: wrap;">
-                            <button id="btn-sort-inventory" class="btn btn-save" style="font-size: 0.7rem; padding: 0.4rem; flex: 1;">🔽 Trier (Max)</button>
+                            <button id="btn-sort-inventory" class="btn btn-save" style="font-size: 0.7rem; padding: 0.4rem; flex: 1;">🔽 Trier</button>
                             <button id="btn-auto-fuse" class="btn" style="font-size: 0.7rem; padding: 0.4rem; background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #1a1a1a; font-weight: bold; border: none; flex: 1;">✨ Auto-Fusion</button>
                             <button id="btn-selection-mode" class="btn btn-save" style="font-size: 0.7rem; padding: 0.4rem; flex: 1;">Sélect. Multiple</button>
                             <button id="btn-delete-selected" class="btn btn-sell hidden" style="font-size: 0.7rem; padding: 0.4rem; background: var(--danger); color:white; display:none; flex: 1;">Vendre (0)</button>
@@ -159,6 +171,23 @@
                     </div>
                 </div>
                 
+                <div id="ascension-list" class="shop-content">
+                    <div id="ascension-section">
+                        <p class="ascension-intro">Améliorations permanentes avec tes Points d'Ascension !</p>
+                        <div id="ascension-shop"></div>
+                    </div>
+                </div>
+
+                <div id="diamonds-list" class="shop-content">
+                    <div id="diamonds-section">
+                        <p class="ascension-intro" style="color:#00d2ff; font-weight:bold;">Dépense tes Diamants gagnés passivement !</p>
+                        <h3 style="margin-bottom:10px; font-size:1rem;">Améliorations Permanentes</h3>
+                        <div id="diamond-upgrades-list" style="display:flex; flex-direction:column; gap:10px;"></div>
+                        <h3 style="margin-top:20px; margin-bottom:10px; font-size:1rem;">Œufs Exclusifs</h3>
+                        <div id="diamond-eggs-list" class="egg-grid"></div>
+                    </div>
+                </div>
+
                 <div id="codes-list" class="shop-content">
                     <div id="codes-section">
                         <p class="codes-intro">Entre un code pour des récompenses exclusives !</p>
@@ -167,14 +196,6 @@
                             <button id="code-submit" class="btn btn-code">✔ Valider</button>
                         </div>
                         <p id="code-result" class="code-result"></p>
-                    </div>
-                </div>
-                
-                <div id="ascension-list" class="shop-content">
-                    <div id="ascension-section">
-                        <p class="ascension-intro">Achète des améliorations permanentes avec tes Points d'Ascension !</p>
-                        <div id="ascension-shop">
-                            </div>
                     </div>
                 </div>
 
@@ -194,6 +215,7 @@
                 <button class="shop-tab" data-tab="inventory" id="inventory-tab" style="display:none;" data-title="🎒 Inventaire Pets" title="Inventaire">🎒</button>
                 <button class="shop-tab" data-tab="index" id="index-tab" style="display:none;" data-title="📖 Index Pets" title="Index">📖</button>
                 <button class="shop-tab" data-tab="ascension" id="ascension-tab" style="display:none;" data-title="✨ Ascension" title="Ascension">✨</button>
+                <button class="shop-tab" data-tab="diamonds" id="diamonds-tab" style="display:none;" data-title="💎 Marché Noir" title="Marché Noir">💎</button>
                 <button class="shop-tab" data-tab="codes" id="codes-tab" style="display:none;" data-title="🔑 Codes" title="Codes">🔑</button>
                 <button class="shop-tab" data-tab="settings" data-title="⚙️ Paramètres" title="Paramètres">⚙️</button>
             </nav>

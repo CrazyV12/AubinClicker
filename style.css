@@ -1,5 +1,5 @@
 /* ============================================
-   AubinClicker - Modern Dark Theme
+   AubinClicker - Modern Dark Theme & Universes
    ============================================ */
 
 /* --- CSS Variables / Design Tokens --- */
@@ -37,6 +37,55 @@
   --transition-slow: 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* --- THEMES D'UNIVERS (Phase 3) --- */
+body.theme-classic {
+  --bg-primary: #0d0d0d; --bg-secondary: #1a1a2e;
+  --bg-gradient: linear-gradient(135deg, #0d0d0d 0%, #1a1a2e 50%, #16213e 100%);
+  --accent-primary: #ff6b35; --accent-secondary: #ffc947;
+  --accent-glow: rgba(255, 107, 53, 0.3);
+  --accent-gradient: linear-gradient(135deg, #ff6b35, #ffc947);
+}
+
+body.theme-cyber {
+  --bg-primary: #050510; --bg-secondary: #0a0a2a;
+  --bg-gradient: linear-gradient(135deg, #050510 0%, #0a0a2a 50%, #100a20 100%);
+  --accent-primary: #00ffcc; --accent-secondary: #ff00ff;
+  --accent-glow: rgba(0, 255, 204, 0.3);
+  --accent-gradient: linear-gradient(135deg, #00ffcc, #ff00ff);
+}
+
+body.theme-candy {
+  --bg-primary: #2a0815; --bg-secondary: #401025;
+  --bg-gradient: linear-gradient(135deg, #2a0815 0%, #401025 50%, #301525 100%);
+  --accent-primary: #ff66b2; --accent-secondary: #ffb366;
+  --accent-glow: rgba(255, 102, 178, 0.3);
+  --accent-gradient: linear-gradient(135deg, #ff66b2, #ffb366);
+}
+
+body.theme-hell {
+  --bg-primary: #1a0000; --bg-secondary: #330000;
+  --bg-gradient: linear-gradient(135deg, #1a0000 0%, #330000 50%, #200505 100%);
+  --accent-primary: #ff3300; --accent-secondary: #ff9900;
+  --accent-glow: rgba(255, 51, 0, 0.3);
+  --accent-gradient: linear-gradient(135deg, #ff3300, #ff9900);
+}
+
+body.theme-divine {
+  --bg-primary: #101015; --bg-secondary: #202030;
+  --bg-gradient: linear-gradient(135deg, #1a1a25 0%, #2a2a40 50%, #1f1f30 100%);
+  --accent-primary: #ffdd44; --accent-secondary: #ffffff;
+  --accent-glow: rgba(255, 221, 68, 0.3);
+  --accent-gradient: linear-gradient(135deg, #ffdd44, #ffffff);
+}
+
+body.theme-absolute {
+  --bg-primary: #000000; --bg-secondary: #111111;
+  --bg-gradient: radial-gradient(circle, #222 0%, #000 100%);
+  --accent-primary: #ffffff; --accent-secondary: #aaaaaa;
+  --accent-glow: rgba(255, 255, 255, 0.3);
+  --accent-gradient: linear-gradient(135deg, #ffffff, #aaaaaa);
+}
+
 /* --- Reset & Base --- */
 *,
 *::before,
@@ -54,13 +103,34 @@ html {
 body {
   font-family: var(--font);
   background: var(--bg-gradient);
+  background-attachment: fixed;
   color: var(--text-primary);
   min-height: 100vh;
   overflow-x: hidden;
   position: relative;
   user-select: none;
   -webkit-user-select: none;
+  transition: background 1s ease;
 }
+
+/* --- UI Diamants (Phase 3) --- */
+.diamond-ui {
+  position: fixed; bottom: 20px; right: 20px; z-index: 1000;
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 10px 15px; border-radius: 12px;
+  border-color: rgba(0, 210, 255, 0.3) !important;
+  background: rgba(0, 0, 0, 0.5) !important;
+}
+.diamond-timer {
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+  font-variant-numeric: tabular-nums; /* Empêche le texte de trembler quand les secondes défilent */
+}
+.diamond-info { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 1.2rem; font-weight: bold; color: #00d2ff; text-shadow: 0 0 10px rgba(0, 210, 255, 0.5); }
+.diamond-progress-bg { width: 120px; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; }
+.diamond-progress-fill { width: 0%; height: 100%; background: #00d2ff; transition: width 0.1s linear; }
 
 /* --- Animated background particles --- */
 #particles {
@@ -99,6 +169,7 @@ body {
   font-weight: 900;
   letter-spacing: -1px;
   text-shadow: 0 0 40px var(--accent-glow);
+  transition: text-shadow 1s ease;
 }
 
 #game-header .accent {
@@ -106,6 +177,7 @@ body {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  transition: background 1s ease;
 }
 
 .subtitle {
@@ -119,14 +191,15 @@ body {
   color: var(--accent-secondary);
   font-style: italic;
   font-weight: 600;
+  transition: color 1s ease;
 }
 
 /* --- Main Layout --- */
 #game-container {
   display: grid;
-  grid-template-columns: 340px 1fr 340px; 
+  grid-template-columns: 340px 1fr 380px; 
   gap: 2rem; 
-  max-width: 1500px;
+  max-width: 1550px;
   margin: 0 auto;
   padding: 2rem 1rem;
   align-items: center; 
@@ -139,7 +212,8 @@ body {
 #right-interface {
   display: flex;
   gap: 1rem;
-  align-items: flex-start;
+  align-items: center; /* Centre les panneaux verticalement */
+  justify-content: flex-end; /* Garde la nav à droite quand la boutique est fermée */
   width: 100%;
 }
 
@@ -219,6 +293,7 @@ body {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  transition: color 1s ease;
 }
 
 .stat-unit {
@@ -313,7 +388,7 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 0.75rem;
-  margin-top: 2.5rem; /* Espace pour ne pas toucher le compteur de calories ! */
+  margin-top: 2.5rem;
 }
 
 #click-target {
@@ -373,7 +448,6 @@ body {
   transition: all 0.6s ease;
 }
 
-/* Auras... */
 #aubin-aura.aura-1 { box-shadow: 0 0 20px 8px rgba(150, 200, 255, 0.5), 0 0 50px 20px rgba(100, 160, 255, 0.25); animation: aura-pulse-1 2.5s ease-in-out infinite; }
 @keyframes aura-pulse-1 { 0%, 100% { box-shadow: 0 0 20px 8px rgba(150,200,255,0.5), 0 0 50px 20px rgba(100,160,255,0.25); } 50% { box-shadow: 0 0 35px 15px rgba(150,200,255,0.75), 0 0 70px 30px rgba(100,160,255,0.4); } }
 #aubin-aura.aura-2 { box-shadow: 0 0 25px 10px rgba(255, 180, 30, 0.65), 0 0 60px 25px rgba(255, 100, 10, 0.35); animation: aura-pulse-2 2s ease-in-out infinite; }
@@ -437,6 +511,7 @@ body {
   border: 2px solid var(--accent-primary);
   opacity: 0.15;
   animation: pulseRing 2.5s ease-out infinite;
+  transition: border-color 1s ease;
 }
 
 .ring-2 { animation-delay: 1.25s; }
@@ -500,7 +575,7 @@ body {
 #shop-panel {
   width: 100%;
   flex: 1;
-  max-height: 85vh; /* Empêche le panneau d'être plus grand que l'écran */
+  max-height: 85vh; /* Le panneau peut s'étirer verticalement */
   display: flex;
   flex-direction: column;
   margin: 0;
@@ -511,6 +586,7 @@ body {
   flex-direction: column;
   gap: 0.75rem;
   padding: 1rem 0.5rem;
+  flex-shrink: 0; /* La navbar ne s'écrase pas */
 }
 
 .shop-tab {
@@ -576,7 +652,7 @@ body {
   display: none;
   flex-direction: column;
   gap: 0.5rem;
-  overflow-y: auto; /* Permet le scroll dans le panneau */
+  overflow-y: auto; /* Permet le scroll à l'intérieur */
   flex: 1;
   padding-right: 0.25rem;
 }
@@ -1228,24 +1304,24 @@ body {
   /* On passe tout sur une seule colonne */
   #game-container {
     grid-template-columns: 1fr;
-    align-items: start; /* On enlève le centrage vertical pour scroller naturellement */
+    align-items: start;
     padding: 1rem;
     gap: 1.5rem;
     max-width: 700px;
   }
   
-  /* On force le bloc Aubin/Clicker à apparaître en premier en haut de l'écran */
   #clicker-panel {
     order: -1;
   }
   
-  /* Le menu de navigation passe au dessus de la boutique */
   #right-interface {
-    flex-direction: column-reverse;
+    height: auto; /* Sur mobile, on désactive la hauteur fixe */
+    flex-direction: column-reverse; /* La nav au dessus de la boutique */
+    align-items: stretch;
+    justify-content: flex-start;
     width: 100%;
   }
   
-  /* Menu navigation horizontal */
   #vertical-nav {
     flex-direction: row;
     width: 100%;
@@ -1260,38 +1336,32 @@ body {
     max-width: 70px;
   }
   
-  /* Les panneaux prennent 100% de la largeur */
   #shop-panel, #stats-panel {
     width: 100%;
-    max-height: none; /* On libère la hauteur */
+    max-height: none; 
   }
   
-  /* On autorise le scroll à l'intérieur des menus de la boutique si c'est très long */
   .shop-content {
-    max-height: 50vh;
+    max-height: 50vh; /* Permet le défilement sur petit écran */
   }
 }
 
 @media (max-width: 600px) {
-  /* Sur très petits écrans, on réduit la taille d'Aubin pour ne pas déborder */
   #click-target { width: 220px; height: 220px; }
   .aubin-img { width: 140px; height: 140px; }
   #puff-orbit { width: 220px; height: 220px; }
   
   #game-header h1 { font-size: 2rem; }
   
-  /* Petites cartes pour l'inventaire mobile */
   .egg-grid, .inventory-grid, .index-grid {
     grid-template-columns: repeat(auto-fill, minmax(75px, 1fr)); 
   }
   
-  /* Les textes des boutons s'ajustent pour rentrer dans les petites cartes */
   .pet-card .btn-fuse, .pet-card .btn-equip, .pet-card .btn-sell {
       font-size: 0.55rem;
       padding: 0.3rem;
   }
   
-  /* Les stats tiennent sur 2 colonnes pour gagner de la place */
   .stat-grid {
       grid-template-columns: 1fr 1fr;
   }

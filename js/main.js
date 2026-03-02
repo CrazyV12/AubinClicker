@@ -6,14 +6,25 @@ import * as ui from './ui.js';
 function initShopTabs() {
     const tabs = document.querySelectorAll('.shop-tab');
     const panelTitle = document.getElementById('panel-title');
+    const shopPanel = document.getElementById('shop-panel');
+    
     tabs.forEach(tab => {
         tab.addEventListener('click', () => {
+            const wasActive = tab.classList.contains('active');
+            
             tabs.forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-            if(panelTitle) panelTitle.textContent = tab.dataset.title;
             document.querySelectorAll('.shop-content').forEach(c => c.classList.remove('active'));
-            const targetEl = document.getElementById(`${tab.dataset.tab}-list`);
-            if (targetEl) targetEl.classList.add('active');
+            
+            if (wasActive) {
+                if(shopPanel) shopPanel.style.display = 'none';
+            } 
+            else {
+                tab.classList.add('active');
+                if(panelTitle) panelTitle.textContent = tab.dataset.title;
+                const targetEl = document.getElementById(`${tab.dataset.tab}-list`);
+                if (targetEl) targetEl.classList.add('active');
+                if(shopPanel) shopPanel.style.display = 'flex';
+            }
         });
     });
 }
@@ -24,6 +35,20 @@ function gameLoop(now) {
     const debugDt = dt * data.DEBUG_SPEED;
     lastTick = now;
     state.stats.timePlayed += debugDt;
+
+    // Logique Diamants Passifs
+    state.diamondProgress += debugDt;
+    const speedBonusLvl = state.diamondUpgradesPurchased['diamond_speed'] || 0;
+    const speedMult = 1 + (speedBonusLvl * 0.1);
+    const effectiveTick = 300 / speedMult; // 300s = 5 minutes
+
+    if (state.diamondProgress >= effectiveTick) {
+        state.diamondProgress -= effectiveTick;
+        const u = core.getCurrentUniverse();
+        state.diamonds += u.diamondRate;
+        ui.showMilestone(`💎 +${u.diamondRate} Diamants récoltés !`);
+        ui.updateDiamondUI();
+    }
 
     if (state.cps > 0) {
         const gained = state.cps * debugDt;
@@ -37,13 +62,14 @@ function gameLoop(now) {
 
 function init() {
     core.loadGame();
+    ui.applyUniverseTheme();
     core.recalculateCps();
     core.generateQuests();
     ui.renderAll();
 
     // Onglets dynamiques (affichés si rebirth > 0)
     if (state.rebirthCount >= 1) {
-        ['eggs-tab', 'inventory-tab', 'index-tab', 'codes-tab', 'pet-inventory'].forEach(id => {
+        ['eggs-tab', 'inventory-tab', 'index-tab', 'codes-tab', 'pet-inventory', 'diamonds-tab'].forEach(id => {
             const el = document.getElementById(id);
             if(el) el.style.display = '';
         });
@@ -101,6 +127,7 @@ function init() {
     setInterval(ui.spawnBackgroundParticle, 2000);
     for (let i = 0; i < 5; i++) setTimeout(() => ui.spawnBackgroundParticle(), i * 400);
     
+    // RAFRAÎCHISSEMENT DE L'INTERFACE TOUTES LES SECONDES (1000ms au lieu de 2000ms)
     setInterval(() => {
         ui.renderBuildings();
         ui.renderUpgrades();
@@ -109,7 +136,9 @@ function init() {
         ui.updateRebirthUI();
         ui.updateAscensionUI();
         ui.renderEggs(); 
-    }, 2000);
+        ui.renderDiamondShop();
+        ui.updateDiamondUI();
+    }, 1000);
 
     requestAnimationFrame(gameLoop);
 }

@@ -14,6 +14,11 @@ export function formatNumber(n) {
     return scaled.toFixed(scaled < 10 ? 2 : scaled < 100 ? 1 : 0) + suffix;
 }
 
+export function getCurrentUniverse() {
+    const idx = Math.min(state.ascensionCount, data.UNIVERSES.length - 1);
+    return data.UNIVERSES[idx];
+}
+
 // ============ ENGINE ============
 export let clickTimestamps = [];
 
@@ -53,9 +58,12 @@ export function recalculateCps() {
         if (u.purchased && u.type === 'global') globalMult *= u.multiplier;
     }
     state.globalMultiplier = globalMult;
+    
     const petMult = getPetMultiplier();
     const ascensionCpsMult = getCpsMultiplierBonus();
-    state.cps = totalCps * globalMult * petMult * ascensionCpsMult;
+    const universeCpsMult = getCurrentUniverse().cpsMult; // Bonus Univers
+
+    state.cps = totalCps * globalMult * petMult * ascensionCpsMult * universeCpsMult;
 
     let clickMult = 1;
     for (const u of data.UPGRADES) {
@@ -63,7 +71,7 @@ export function recalculateCps() {
     }
     const ascensionClickMult = getClickMultiplierBonus();
     state.clickMultiplier = clickMult;
-    state.clickPower = 1 * clickMult * globalMult * petMult * ascensionClickMult;
+    state.clickPower = 1 * clickMult * globalMult * petMult * ascensionClickMult * universeCpsMult;
 }
 
 export function handleClick(e) {
@@ -121,7 +129,12 @@ export function getRebirthBonus() {
 export function recalcMaxPetSlots() {
     state.maxPetSlots = 3 + state.bonusPetSlots + getPetSlotBonus();
 }
-export function getRebirthTarget() { return 100000 * Math.pow(5, state.rebirthCount); }
+
+export function getRebirthTarget() { 
+    const base = 100000 * Math.pow(5, state.rebirthCount); 
+    const discountLvl = state.diamondUpgradesPurchased['rebirth_cost'] || 0;
+    return base * (1 - (discountLvl * 0.05)); // Jusqu'à -50% avec les diamants
+}
 export function canRebirth() { return state.calories >= getRebirthTarget(); }
 export function getAscensionCost() { return state.ascensionCount * 10 + 10; }
 export function canAscend() { return state.rebirthCount >= getAscensionCost(); }
@@ -154,7 +167,7 @@ export function doRebirth() {
 
 export function doAscension() {
     if (!canAscend()) return;
-    if (!confirm(`✨ ASCENSION !\nTu vas recevoir ${getAscensionPointsPerRebirth()} Points d'Ascension !\nRecommencer depuis le début ?`)) return;
+    if (!confirm(`✨ ASCENSION !\nTu vas :\n- Changer d'Univers !\n- Recevoir ${getAscensionPointsPerRebirth()} Points d'Ascension ✨\n- Recommencer depuis le début (mais avec tes bonus permanents !)\n\nContinuer ?`)) return;
 
     state.ascensionCount++;
     state.ascensionPoints += getAscensionPointsPerRebirth();
@@ -168,11 +181,13 @@ export function doAscension() {
     for (const b of data.BUILDINGS) b.count = 0;
     for (const u of data.UPGRADES) u.purchased = false;
     
+    ui.applyUniverseTheme();
     recalcMaxPetSlots();
     recalculateCps();
     generateQuests();
     ui.updateAubinAppearance();
-    ui.showMilestone(`✨ Ascension #${state.ascensionCount} ! ✨`);
+    ui.showMilestone(`✨ Ascension #${state.ascensionCount} ! Nouveau Monde ! ✨`);
+    ui.showQuote(`"Ce monde a un goût... différent."`);
     ui.renderAll();
 }
 
@@ -194,11 +209,62 @@ export function buyAscensionUpgrade(upgradeId) {
     ui.renderAll();
 }
 
+// ============ MARCHÉ NOIR (DIAMANTS) ============
+export function buyDiamondUpgrade(uId) {
+    const u = data.DIAMOND_UPGRADES.find(x => x.id === uId);
+    if (!u) return;
+    const currentLevel = state.diamondUpgradesPurchased[u.id] || 0;
+    if (currentLevel >= u.maxLevel) return;
+    
+    const cost = Math.floor(u.baseCost * Math.pow(u.costMult, currentLevel));
+    if (state.diamonds >= cost) {
+        state.diamonds -= cost;
+        state.diamondUpgradesPurchased[u.id] = currentLevel + 1;
+        recalcMaxPetSlots();
+        ui.updateDiamondUI();
+        ui.renderDiamondShop();
+        ui.updateRebirthUI();
+        ui.renderPetInventory();
+        ui.showMilestone(`💎 Amélioration achetée : ${u.name}`);
+    }
+}
+
+export function buyDiamondEgg(eggId) {
+    const egg = data.DIAMOND_EGGS.find(x => x.id === eggId);
+    if (!egg) return;
+    if (state.diamonds < egg.cost) return;
+    if (state.inventoryPets.length >= getMaxInventory()) { ui.showQuote("Inventaire plein !"); return; }
+
+    state.diamonds -= egg.cost;
+    state.stats.eggsOpened++;
+
+    const totalWeight = egg.pool.reduce((sum, p) => sum + p.weight, 0);
+    let rand = Math.random() * totalWeight;
+    let selectedId = egg.pool[0].id;
+    for (const p of egg.pool) {
+        rand -= p.weight;
+        if (rand <= 0) { selectedId = p.id; break; }
+    }
+
+    const petData = data.PETS.find(p => p.id === selectedId);
+    if (!state.discoveredPets.includes(selectedId)) state.discoveredPets.push(selectedId);
+
+    state.inventoryPets.push({ uid: Date.now() + Math.random(), id: selectedId, fusionLevel: 0 });
+    
+    ui.showMilestone(`💎 Éclosion Divine : ${petData.icon} ${petData.name} !`);
+    ui.updateDiamondUI();
+    ui.renderDiamondShop();
+    if (state.sortOrder) toggleSortInventory(true); else ui.renderPetInventory();
+    ui.renderPetIndex();
+}
+
 // ============ PETS & GACHA ============
 export function getMaxInventory() {
     let bonus = 0;
     const u = state.ascensionUpgrades['inventory_cap'];
     if (u) bonus += u * 50;
+    const diaU = state.diamondUpgradesPurchased['inv_space'];
+    if (diaU) bonus += diaU * 10;
     return 100 + bonus;
 }
 
@@ -216,7 +282,7 @@ export function getPetMultiplier() {
 
 export function buyEgg(egg) {
     if (state.calories < egg.cost) return;
-    if (state.inventoryPets.length >= getMaxInventory()) { ui.showQuote("Inventaire plein !"); return; }
+    if (state.inventoryPets.length >= getMaxInventory()) { ui.showQuote("Inventaire plein ! Vends des pets d'abord."); return; }
 
     state.calories -= egg.cost;
     state.stats.eggsOpened++;
@@ -224,6 +290,7 @@ export function buyEgg(egg) {
     const totalWeight = egg.pool.reduce((sum, p) => sum + p.weight, 0);
     let rand = Math.random() * totalWeight;
     let selectedId = egg.pool[0].id;
+
     for (const p of egg.pool) {
         rand -= p.weight;
         if (rand <= 0) { selectedId = p.id; break; }
@@ -237,6 +304,7 @@ export function buyEgg(egg) {
 
     state.inventoryPets.push({ uid: Date.now() + Math.random(), id: selectedId, fusionLevel: 0 });
     ui.showMilestone(`🥚 Éclosion : ${petData.icon} ${petData.name} !`);
+    
     ui.updateDisplay();
     ui.renderEggs();
     if (state.sortOrder) toggleSortInventory(true); else ui.renderPetInventory();
@@ -435,13 +503,16 @@ export function getStatValue(statName) {
 export function generateQuests() {
     const maxQuests = 4;
     const r = state.rebirthCount;
+    const uniQuestMult = getCurrentUniverse().questMult; // Bonus Univers
+
     while (state.activeQuests.length < maxQuests) {
         const availableTemplates = data.QUEST_TEMPLATES.filter(t => !state.lastQuestTypes.includes(t.id));
         const template = availableTemplates[Math.floor(Math.random() * availableTemplates.length)];
         const target = Math.max(1, template.calcTarget(r));
         const avgTarget = Math.max(1, template.calcTarget(r)); 
         const difficultyMult = target / avgTarget; 
-        const reward = Math.floor(template.baseReward * Math.pow(5, r) * difficultyMult);
+        
+        const reward = Math.floor(template.baseReward * Math.pow(5, r) * difficultyMult * uniQuestMult);
         
         state.activeQuests.push({
             uid: Date.now() + Math.random(), templateId: template.id, name: template.name,
@@ -534,6 +605,8 @@ export function saveGame() {
         sortOrder: state.sortOrder, completedQuests: state.completedQuests,
         activeQuests: state.activeQuests, lastQuestTypes: state.lastQuestTypes,
         stats: state.stats, savedAt: Date.now(),
+        // Diamants
+        diamonds: state.diamonds, diamondProgress: state.diamondProgress, diamondUpgradesPurchased: state.diamondUpgradesPurchased
     };
     localStorage.setItem('aubinclicker_save', JSON.stringify(saveData));
     ui.showQuote("💾 Partie sauvegardée !");
@@ -558,6 +631,8 @@ export function loadGame() {
         state.lastQuestTypes = d.lastQuestTypes || []; state.stats = d.stats || { eggsOpened: 0, petsFused: 0, petsSold: 0, timePlayed: 0 };
         state.equippedPets = d.equippedPets || []; state.inventoryPets = d.inventoryPets || []; state.discoveredPets = d.discoveredPets || [];
         
+        state.diamonds = d.diamonds || 0; state.diamondProgress = d.diamondProgress || 0; state.diamondUpgradesPurchased = d.diamondUpgradesPurchased || {};
+
         const migrateFusion = (p) => { if (p.isFused) { p.fusionLevel = 1; delete p.isFused; } if (p.fusionLevel === undefined) p.fusionLevel = 0; };
         state.equippedPets.forEach(migrateFusion); state.inventoryPets.forEach(migrateFusion);
         state.ascensionCount = d.ascensionCount || 0; state.ascensionPoints = d.ascensionPoints || 0; state.ascensionUpgrades = d.ascensionUpgrades || {};
@@ -582,7 +657,9 @@ export function resetGame() {
     state.bonusPetSlots = 0; state.codesUsed = []; state.sortOrder = 'desc';
     state.ascensionCount = 0; state.ascensionPoints = 0; state.ascensionUpgrades = {};
     state.isSelectionMode = false; state.selectedPetsToSell = [];
+    state.diamonds = 0; state.diamondProgress = 0; state.diamondUpgradesPurchased = {};
     
+    ui.applyUniverseTheme();
     recalculateCps();
     generateQuests();
     ui.renderAll();
