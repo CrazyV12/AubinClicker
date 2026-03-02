@@ -608,12 +608,15 @@ export function saveGame() {
         // Diamants
         diamonds: state.diamonds, diamondProgress: state.diamondProgress, diamondUpgradesPurchased: state.diamondUpgradesPurchased
     };
-    localStorage.setItem('aubinclicker_save', JSON.stringify(saveData));
+    
+    // ON FORCE LE CHANGEMENT DE NOM DE CLE ICI :
+    localStorage.setItem('aubinclicker_save_v2', JSON.stringify(saveData));
     ui.showQuote("💾 Partie sauvegardée !");
 }
 
 export function loadGame() {
-    const raw = localStorage.getItem('aubinclicker_save');
+    // ON CHERCHE LA NOUVELLE CLE ICI AUSSI :
+    const raw = localStorage.getItem('aubinclicker_save_v2');
     if (!raw) return false;
     try {
         const d = JSON.parse(raw);
@@ -643,7 +646,10 @@ export function loadGame() {
 
 export function resetGame() {
     if (!confirm("⚠️ Tout effacer ? Aubin va devoir recommencer son régime...")) return;
-    localStorage.removeItem('aubinclicker_save');
+    
+    // ON NETTOIE LA NOUVELLE CLE :
+    localStorage.removeItem('aubinclicker_save_v2');
+    
     state.calories = 0; state.totalCalories = 0; state.totalClicks = 0; state.clickPower = 1;
     state.cps = 0; state.clickMultiplier = 1; state.globalMultiplier = 1;
     state.milestonesReached = []; state.startTime = Date.now();
