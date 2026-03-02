@@ -138,7 +138,7 @@ const UPGRADES = [
     },
     // Building-specific upgrades
     {
-        id: 'puff_50k', // On garde l'ID d'origine pour ne pas casser la sauvegarde
+        id: 'puff_50k', 
         name: 'Puff 32k',
         icon: '🌬️',
         desc: 'Upgrade les Puffs en 32k ! Triple production',
@@ -195,7 +195,6 @@ const UPGRADES = [
         target: 'poulet',
         multiplier: 3,
         requirement: { type: 'building', building: 'poulet', value: 5 },
-        requiresQuest: 'q_unlock_poulet_upgrade',
         purchased: false,
     },
     {
@@ -208,7 +207,6 @@ const UPGRADES = [
         target: 'pizza',
         multiplier: 3,
         requirement: { type: 'building', building: 'pizza', value: 5 },
-        requiresQuest: 'q_unlock_pizza_upgrade',
         purchased: false,
     },
     // Global multipliers
@@ -232,7 +230,6 @@ const UPGRADES = [
         type: 'global',
         multiplier: 3,
         requirement: { type: 'calories', value: 200000 },
-        requiresQuest: 'q_unlock_estomac',
         purchased: false,
     },
     {
@@ -244,229 +241,31 @@ const UPGRADES = [
         type: 'global',
         multiplier: 5,
         requirement: { type: 'calories', value: 2000000 },
-        requiresQuest: 'q_unlock_dimension',
         purchased: false,
     },
 ];
 
-const QUESTS = [
-    // Click quests
-    {
-        id: 'q_first_click',
-        name: 'Première Bouchée',
-        icon: '🍽️',
-        desc: 'Clique 1 fois sur Aubin',
-        check: () => state.totalClicks >= 1,
-        reward: 10,
-        rewardText: '+10 Calories d\'Or',
-        completed: false,
-    },
-    {
-        id: 'q_click_50',
-        name: 'Échauffement',
-        icon: '🏋️',
-        desc: 'Clique 50 fois',
-        check: () => state.totalClicks >= 50,
-        reward: 100,
-        rewardText: '+100 Calories d\'Or',
-        completed: false,
-    },
-    {
-        id: 'q_click_500',
-        name: 'Tendinite du Pouce',
-        icon: '👍',
-        desc: 'Clique 500 fois',
-        check: () => state.totalClicks >= 500,
-        reward: 2000,
-        rewardText: '+2 000 Calories d\'Or',
-        completed: false,
-    },
-    {
-        id: 'q_click_2000',
-        name: 'Doigt Olympique',
-        icon: '🥇',
-        desc: 'Clique 2 000 fois',
-        check: () => state.totalClicks >= 2000,
-        reward: 15000,
-        rewardText: '+15 000 Calories d\'Or',
-        completed: false,
-    },
-    // Building quests
-    {
-        id: 'q_first_puff',
-        name: 'La Première Puff',
-        icon: '💨',
-        desc: 'Achète ton premier Puff 16k',
-        check: () => BUILDINGS.find(b => b.id === 'puff').count >= 1,
-        reward: 50,
-        rewardText: '+50 Calories d\'Or',
-        completed: false,
-    },
-    {
-        id: 'q_puff_10',
-        name: 'Nuage Toxique',
-        icon: '☁️',
-        desc: 'Accumule 10 Puffs',
-        check: () => BUILDINGS.find(b => b.id === 'puff').count >= 10,
-        reward: 500,
-        rewardText: '+500 Calories d\'Or',
-        completed: false,
-    },
-    {
-        id: 'q_first_burger',
-        name: 'Menu Best Of',
-        icon: '🍔',
-        desc: 'Achète un Burger Double',
-        check: () => BUILDINGS.find(b => b.id === 'burger').count >= 1,
-        reward: 300,
-        rewardText: '+300 Calories d\'Or',
-        completed: false,
-    },
-    {
-        id: 'q_first_kebab',
-        name: 'Chez Ali',
-        icon: '🥙',
-        desc: 'Achète un Kebab Ketchup',
-        check: () => BUILDINGS.find(b => b.id === 'kebab').count >= 1,
-        reward: 1500,
-        rewardText: '+1 500 Calories d\'Or',
-        completed: false,
-    },
-    {
-        id: 'q_all_buildings',
-        name: 'Collectionneur Glouton',
-        icon: '🏆',
-        desc: 'Possède au moins 1 de chaque bâtiment',
-        check: () => BUILDINGS.every(b => b.count >= 1),
-        reward: 100000,
-        rewardText: '+100 000 Calories d\'Or',
-        completed: false,
-    },
-    // Calorie milestones
-    {
-        id: 'q_cal_1k',
-        name: 'Casse-croûte',
-        icon: '🥪',
-        desc: 'Gagne 1 000 Calories d\'Or au total',
-        check: () => state.totalCalories >= 1000,
-        reward: 200,
-        rewardText: '+200 Calories d\'Or',
-        completed: false,
-    },
-    {
-        id: 'q_cal_100k',
-        name: 'Repas de Roi',
-        icon: '👑',
-        desc: 'Gagne 100 000 Calories d\'Or au total',
-        check: () => state.totalCalories >= 100000,
-        reward: 10000,
-        rewardText: '+10 000 Calories d\'Or',
-        completed: false,
-    },
-    {
-        id: 'q_cal_1m',
-        name: 'Empereur du Gras',
-        icon: '🫅',
-        desc: 'Gagne 1 000 000 Calories d\'Or au total',
-        check: () => state.totalCalories >= 1000000,
-        reward: 100000,
-        rewardText: '+100 000 Calories d\'Or',
-        completed: false,
-    },
-    // CPS quests
-    {
-        id: 'q_cps_10',
-        name: 'Ça commence à chier',
-        icon: '📈',
-        desc: 'Atteins 10 cal/s',
-        check: () => state.cps >= 10,
-        reward: 500,
-        rewardText: '+500 Calories d\'Or',
-        completed: false,
-    },
-    {
-        id: 'q_cps_1000',
-        name: 'Usine à Ventre',
-        icon: '🏭',
-        desc: 'Atteins 1 000 cal/s',
-        check: () => state.cps >= 1000,
-        reward: 25000,
-        rewardText: '+25 000 Calories d\'Or',
-        completed: false,
-    },
-    // Special quests
-    {
-        id: 'q_upgrade_3',
-        name: 'Investisseur Malin',
-        icon: '💡',
-        desc: 'Achète 3 améliorations',
-        check: () => UPGRADES.filter(u => u.purchased).length >= 3,
-        reward: 5000,
-        rewardText: '+5 000 Calories d\'Or',
-        completed: false,
-    },
-    // Unlock quests for advanced upgrades
-    {
-        id: 'q_unlock_poulet_upgrade',
-        name: 'Roi du Poulet',
-        icon: '🍗',
-        desc: 'Possède 3 Buckets et 1 Buffet',
-        check: () => BUILDINGS.find(b => b.id === 'poulet').count >= 3 && BUILDINGS.find(b => b.id === 'buffet').count >= 1,
-        reward: 5000,
-        rewardText: '+5 000 cal + Débloque "Aile en Plus"',
-        completed: false,
-    },
-    {
-        id: 'q_unlock_pizza_upgrade',
-        name: 'Maître Pizzaïolo',
-        icon: '🍕',
-        desc: 'Possède 3 Pizzas et 1 Buffet',
-        check: () => BUILDINGS.find(b => b.id === 'pizza').count >= 3 && BUILDINGS.find(b => b.id === 'buffet').count >= 1,
-        reward: 10000,
-        rewardText: '+10 000 cal + Débloque "Four à Bois"',
-        completed: false,
-    },
-    {
-        id: 'q_unlock_estomac',
-        name: 'Ventre sans Limites',
-        icon: '🕳️',
-        desc: 'Atteins 100 000 cal totales et possède 5 bâtiments différents',
-        check: () => state.totalCalories >= 100000 && BUILDINGS.filter(b => b.count >= 1).length >= 5,
-        reward: 20000,
-        rewardText: '+20 000 cal + Débloque "Estomac sans Fond"',
-        completed: false,
-    },
-    {
-        id: 'q_unlock_dimension',
-        name: 'Transcendance Alimentaire',
-        icon: '🌌',
-        desc: 'Fais 1 Rebirth et possède 1 Usine à Tacos',
-        check: () => state.rebirthCount >= 1 && BUILDINGS.find(b => b.id === 'usine').count >= 1,
-        reward: 50000,
-        rewardText: '+50 000 cal + Débloque "Dimension Bouffe"',
-        completed: false,
-    },
-];
-
 const PETS = [
-    { id: 'hamster', name: 'Hamster Boulimique', icon: '🐹', mult: 1.2, rarity: 'common', weight: 30, minRebirth: 1 },
-    { id: 'chat', name: 'Chat Glouton', icon: '🐱', mult: 1.3, rarity: 'common', weight: 25, minRebirth: 1 },
-    { id: 'chien', name: 'Chien Pataud', icon: '🐶', mult: 1.5, rarity: 'rare', weight: 18, minRebirth: 2 },
-    { id: 'grenouille', name: 'Grenouille Grasse', icon: '🐸', mult: 1.6, rarity: 'rare', weight: 12, minRebirth: 3 },
-    { id: 'renard', name: 'Renard Malin', icon: '🦊', mult: 1.8, rarity: 'epic', weight: 8, minRebirth: 4 },
-    { id: 'cochon', name: 'Cochon d\'Or', icon: '🐷', mult: 2.0, rarity: 'epic', weight: 4, minRebirth: 5 },
-    { id: 'lion', name: 'Lion Affamé', icon: '🦁', mult: 2.5, rarity: 'legendary', weight: 2, minRebirth: 6 },
-    { id: 'dragon', name: 'Dragon Calorique', icon: '🐉', mult: 3.0, rarity: 'legendary', weight: 1, minRebirth: 6 },
-    { id: 'licorne', name: 'Licorne Calorique', icon: '🦄', mult: 5.0, rarity: 'mythic', weight: 0, minRebirth: Infinity },
+    { id: 'hamster', name: 'Hamster Boulimique', icon: '🐹', mult: 1.2, rarity: 'common', sellPrice: 500 },
+    { id: 'chat', name: 'Chat Glouton', icon: '🐱', mult: 1.3, rarity: 'common', sellPrice: 1000 },
+    { id: 'chien', name: 'Chien Pataud', icon: '🐶', mult: 1.5, rarity: 'rare', sellPrice: 5000 },
+    { id: 'grenouille', name: 'Grenouille Grasse', icon: '🐸', mult: 1.8, rarity: 'rare', sellPrice: 15000 },
+    { id: 'renard', name: 'Renard Malin', icon: '🦊', mult: 2.2, rarity: 'epic', sellPrice: 50000 },
+    { id: 'cochon', name: 'Cochon d\'Or', icon: '🐷', mult: 3.0, rarity: 'epic', sellPrice: 200000 },
+    { id: 'lion', name: 'Lion Affamé', icon: '🦁', mult: 5.0, rarity: 'legendary', sellPrice: 1000000 },
+    { id: 'dragon', name: 'Dragon Calorique', icon: '🐉', mult: 10.0, rarity: 'legendary', sellPrice: 5000000 },
+    { id: 'licorne', name: 'Licorne Calorique', icon: '🦄', mult: 25.0, rarity: 'mythic', sellPrice: 50000000 },
 ];
 
-// Returns only pets unlocked at current rebirth level (excludes weight-0 pets like licorne)
-function getUnlockedPets() {
-    return PETS.filter(p => p.minRebirth <= state.rebirthCount && p.weight > 0);
-}
+const EGGS = [
+    { id: 'egg_wood', name: 'Œuf en Bois', icon: '🥚', cost: 15000, minRebirth: 0, pool: [{id: 'hamster', weight: 70}, {id: 'chat', weight: 30}] },
+    { id: 'egg_iron', name: 'Œuf en Fer', icon: '🍳', cost: 100000, minRebirth: 1, pool: [{id: 'chat', weight: 50}, {id: 'chien', weight: 40}, {id: 'grenouille', weight: 10}] },
+    { id: 'egg_gold', name: 'Œuf en Or', icon: '✨', cost: 5000000, minRebirth: 3, pool: [{id: 'grenouille', weight: 60}, {id: 'renard', weight: 30}, {id: 'cochon', weight: 10}] },
+    { id: 'egg_diamond', name: 'Œuf de Diamant', icon: '💎', cost: 150000000, minRebirth: 5, pool: [{id: 'cochon', weight: 60}, {id: 'lion', weight: 35}, {id: 'dragon', weight: 5}] },
+    { id: 'egg_mythic', name: 'Œuf Cosmique', icon: '🌌', cost: 5000000000, minRebirth: 10, pool: [{id: 'dragon', weight: 90}, {id: 'licorne', weight: 10}] }
+];
 
-// Rebirth cap = 100K × 5^rebirthCount (chaque rebirth ×5, plus accessible)
-function getCalorieCap() {
+function getRebirthTarget() {
     return 100000 * Math.pow(5, state.rebirthCount);
 }
 
@@ -511,30 +310,20 @@ const FOOD_EMOJIS = ['🍔', '🍕', '🍟', '🍗', '🌮', '🌯', '🍖', '�
 // ============ ASCENSION SYSTEM ============
 
 const ASCENSION_UPGRADES = [
-    // Building limit upgrades
     { id: 'building_cap_1', name: 'Capacité Bâtiments +', icon: '🏗️', desc: '+10 au nombre maximum de chaque bâtiment', type: 'buildingCap', value: 10, baseCost: 1, costMult: 2, maxLevel: 10, minAscension: 0 },
     { id: 'building_cap_2', name: 'Usine Améliorée', icon: '🏭', desc: '+50 au nombre maximum de chaque bâtiment', type: 'buildingCap', value: 50, baseCost: 10, costMult: 2.5, maxLevel: 5, minAscension: 1 },
     { id: 'building_cap_3', name: 'Complexe Industrial', icon: '🌆', desc: '+200 au nombre maximum de chaque bâtiment', type: 'buildingCap', value: 200, baseCost: 50, costMult: 3, maxLevel: 3, minAscension: 3 },
-    
-    // Pet slot upgrades
     { id: 'pet_slots_1', name: 'Plus de Pets', icon: '🐾', desc: '+1 slot de pet', type: 'petSlot', value: 1, baseCost: 5, costMult: 3, maxLevel: 5, minAscension: 0 },
     { id: 'pet_slots_2', name: 'Famille de Pets', icon: '🐱', desc: '+3 slots de pets', type: 'petSlot', value: 3, baseCost: 25, costMult: 4, maxLevel: 3, minAscension: 2 },
-    
-    // Luck upgrades
     { id: 'luck_1', name: 'Chanceux', icon: '🍀', desc: '+10% de chance aux Pets', type: 'luck', value: 0.1, baseCost: 3, costMult: 2.5, maxLevel: 10, minAscension: 0 },
     { id: 'luck_2', name: 'Porteur de Chance', icon: '🌟', desc: '+25% de chance aux Pets', type: 'luck', value: 0.25, baseCost: 20, costMult: 3, maxLevel: 5, minAscension: 1 },
     { id: 'luck_3', name: 'Aimé des Dieux', icon: '🙏', desc: '+50% de chance aux Pets', type: 'luck', value: 0.5, baseCost: 100, costMult: 4, maxLevel: 3, minAscension: 3 },
-    
-    // Click power upgrades
     { id: 'click_1', name: 'Doigts Puissants', icon: '💪', desc: 'x1.5 au pouvoir de clic', type: 'clickMult', value: 1.5, baseCost: 5, costMult: 3, maxLevel: 5, minAscension: 0 },
     { id: 'click_2', name: 'Main de Fer', icon: '✊', desc: 'x2 au pouvoir de clic', type: 'clickMult', value: 2, baseCost: 30, costMult: 4, maxLevel: 3, minAscension: 2 },
-    
-    // CPS upgrades
     { id: 'cps_1', name: 'Production Boost', icon: '📈', desc: 'x1.25 au CPS global', type: 'cpsMult', value: 1.25, baseCost: 10, costMult: 3, maxLevel: 5, minAscension: 0 },
     { id: 'cps_2', name: 'Efficacité Max', icon: '⚡', desc: 'x1.5 au CPS global', type: 'cpsMult', value: 1.5, baseCost: 50, costMult: 4, maxLevel: 3, minAscension: 2 },
-    
-    // Rebirth token bonus
-    { id: 'rebirth_bonus', name: 'Bonus de Rebirth', icon: '🎁', desc: '+1 Rebirth Token par rebirth', type: 'rebirthBonus', value: 1, baseCost: 100, costMult: 5, maxLevel: 3, minAscension: 4 }
+    { id: 'rebirth_bonus', name: 'Bonus de Rebirth', icon: '🎁', desc: '+1 Rebirth Token par rebirth', type: 'rebirthBonus', value: 1, baseCost: 100, costMult: 5, maxLevel: 3, minAscension: 4 },
+    { id: 'inventory_cap', name: 'Sac sans Fond', icon: '🎒', desc: '+50 places dans l\'inventaire de pets', type: 'inventoryCap', value: 50, baseCost: 10, costMult: 2, maxLevel: 5, minAscension: 1 }
 ];
 
 // ============ GAME STATE ============
@@ -551,15 +340,17 @@ let state = {
     startTime: Date.now(),
     milestonesReached: [],
     rebirthCount: 0,
-    rebirthTokens: 0,
-    pets: [],
+    rebirthTokens: 0, 
+    equippedPets: [], 
+    inventoryPets: [], 
+    discoveredPets: [], 
     maxPetSlots: 3,
     bonusPetSlots: 0,
     codesUsed: [],
-    // Ascension
     ascensionCount: 0,
     ascensionPoints: 0,
     ascensionUpgrades: {},
+    completedQuests: [], 
 };
 
 // ============ DOM ELEMENTS ============
@@ -582,7 +373,7 @@ const dom = {
     puffOrbit: document.getElementById('puff-orbit'),
     saveBtn: document.getElementById('save-btn'),
     resetBtn: document.getElementById('reset-btn'),
-    // Rebirth
+    
     rebirthCount: document.getElementById('rebirth-count'),
     rebirthBtn: document.getElementById('rebirth-btn'),
     rebirthRequire: document.getElementById('rebirth-require'),
@@ -590,26 +381,25 @@ const dom = {
     petMultDisplay: document.getElementById('pet-multiplier-display'),
     calorieBar: document.getElementById('calorie-bar'),
     calorieBarText: document.getElementById('calorie-bar-text'),
-    // Pets
+    
     petSlots: document.getElementById('pet-slots'),
     petCountDisplay: document.getElementById('pet-count-display'),
-    petsTab: document.getElementById('pets-tab'),
-    wheel: document.getElementById('wheel'),
-    spinBtn: document.getElementById('spin-btn'),
-    spinResult: document.getElementById('spin-result'),
-    rebirthTokensDisplay: document.getElementById('rebirth-tokens'),
-    // Codes
+    
     codeInput: document.getElementById('code-input'),
     codeSubmit: document.getElementById('code-submit'),
     codeResult: document.getElementById('code-result'),
     codesTab: document.getElementById('codes-tab'),
-    // Ascension
+    
     ascensionCount: document.getElementById('ascension-count'),
     ascensionPoints: document.getElementById('ascension-points'),
     ascensionBtn: document.getElementById('ascension-btn'),
     ascensionRequire: document.getElementById('ascension-require'),
     ascensionShop: document.getElementById('ascension-shop'),
     ascensionTab: document.getElementById('ascension-tab'),
+
+    eggsTab: document.getElementById('eggs-tab'),
+    inventoryTab: document.getElementById('inventory-tab'),
+    indexTab: document.getElementById('index-tab')
 };
 
 // ============ NUMBER FORMATTING ============
@@ -673,27 +463,22 @@ function handleClick(e) {
     const amount = state.clickPower;
     state.calories += amount;
     state.totalCalories += amount;
-    enforceCalorieCap();
     state.totalClicks++;
 
-    // Bump animation
     dom.calorieCount.classList.add('bump');
     setTimeout(() => dom.calorieCount.classList.remove('bump'), 100);
 
-    // Aubin bounce
     const img = dom.clickTarget.querySelector('.aubin-img');
     if (img) {
         img.classList.add('clicked');
         setTimeout(() => img.classList.remove('clicked'), 150);
     }
 
-    // Burst ring
     const burst = document.createElement('div');
     burst.className = 'click-burst';
     dom.clickTarget.appendChild(burst);
     setTimeout(() => burst.remove(), 500);
 
-    // Floating text
     spawnFloatText(e, `+${formatNumber(amount)}`);
 
     updateDisplay();
@@ -721,29 +506,316 @@ function spawnFloatText(e, text) {
     setTimeout(() => el.remove(), 1000);
 }
 
+// ============ MAX BUILDINGS CALCULATION ============
+
+function getMaxBuildings() {
+    return 100 + getBuildingCapBonus();
+}
+
+// ============ PET SYSTEM OVERHAUL ============
+
+function getMaxInventory() {
+    let bonus = 0;
+    for (const u of ASCENSION_UPGRADES) {
+        if (u.type === 'inventoryCap') {
+            const level = getAscensionUpgradeLevel(u.id);
+            bonus += level * u.value;
+        }
+    }
+    return 100 + bonus;
+}
+
+function getPetMultiplier() {
+    let mult = 1;
+    for (const pInfo of state.equippedPets) {
+        const pet = PETS.find(p => p.id === pInfo.id);
+        if (pet) mult *= pet.mult;
+    }
+    return mult;
+}
+
+function renderEggs() {
+    const container = document.getElementById('egg-shop-grid');
+    if(!container) return;
+    container.innerHTML = '';
+
+    const maxInv = getMaxInventory();
+    const isInvFull = state.inventoryPets.length >= maxInv;
+
+    for (const egg of EGGS) {
+        const isLocked = state.rebirthCount < egg.minRebirth;
+        const canAfford = state.calories >= egg.cost;
+
+        const card = document.createElement('div');
+        // On ajoute la classe 'locked' si l'œuf est bloqué OU si l'inventaire est plein
+        card.className = `egg-card ${isLocked || isInvFull ? 'locked' : ''} ${canAfford && !isInvFull ? 'can-afford' : ''}`;
+        
+        let statusText = '';
+        if (isLocked) {
+            statusText = `<div class="egg-req">Rebirth ${egg.minRebirth} requis</div>`;
+        } else if (isInvFull) {
+            statusText = `<div class="egg-req">Inventaire plein !</div>`;
+        } else {
+            statusText = `<div class="egg-cost">${formatNumber(egg.cost)} cal</div>`;
+        }
+
+        card.innerHTML = `
+            <div class="egg-icon">${egg.icon}</div>
+            <div class="egg-name">${egg.name}</div>
+            ${statusText}
+        `;
+
+        if (!isLocked && !isInvFull && canAfford) {
+            card.style.cursor = 'pointer';
+            card.addEventListener('click', () => buyEgg(egg));
+        }
+        container.appendChild(card);
+    }
+}
+
+function buyEgg(egg) {
+    if (state.calories < egg.cost) return;
+    if (state.inventoryPets.length >= getMaxInventory()) {
+        showQuote("Inventaire plein ! Vends des pets d'abord.");
+        return;
+    }
+
+    state.calories -= egg.cost;
+
+    const totalWeight = egg.pool.reduce((sum, p) => sum + p.weight, 0);
+    let rand = Math.random() * totalWeight;
+    let selectedId = egg.pool[0].id;
+
+    for (const p of egg.pool) {
+        rand -= p.weight;
+        if (rand <= 0) {
+            selectedId = p.id;
+            break;
+        }
+    }
+
+    const petData = PETS.find(p => p.id === selectedId);
+    
+    if (!state.discoveredPets.includes(selectedId)) {
+        state.discoveredPets.push(selectedId);
+        showMilestone(`📖 Nouveau Pet découvert : ${petData.name} !`);
+    }
+
+    state.inventoryPets.push({
+        uid: Date.now() + Math.random(),
+        id: selectedId
+    });
+
+    showMilestone(`🥚 Tu as fait éclore : ${petData.icon} ${petData.name} !`);
+    
+    updateDisplay();
+    renderEggs();
+    renderPetInventory();
+    renderPetIndex();
+}
+
+function togglePetActions(uid) {
+    const allCards = document.querySelectorAll('.pet-card');
+    allCards.forEach(c => {
+        if (c.dataset.uid === String(uid)) {
+            c.classList.toggle('selected');
+        } else {
+            c.classList.remove('selected');
+        }
+    });
+}
+
+function equipPet(uid) {
+    if (state.equippedPets.length >= state.maxPetSlots) {
+        showQuote("Tu ne peux pas équiper plus de pets !");
+        return;
+    }
+    const index = state.inventoryPets.findIndex(p => p.uid === uid);
+    if (index > -1) {
+        const pet = state.inventoryPets.splice(index, 1)[0];
+        state.equippedPets.push(pet);
+        recalculateCps();
+        renderPetInventory();
+        renderEggs(); // Met à jour le shop d'oeufs instantanément
+        updateDisplay();
+        updateRebirthUI();
+    }
+}
+
+function unequipPet(uid) {
+    if (state.inventoryPets.length >= getMaxInventory()) {
+        showQuote("Inventaire plein ! Impossible de déséquiper.");
+        return;
+    }
+    const index = state.equippedPets.findIndex(p => p.uid === uid);
+    if (index > -1) {
+        const pet = state.equippedPets.splice(index, 1)[0];
+        state.inventoryPets.push(pet);
+        recalculateCps();
+        renderPetInventory();
+        renderEggs(); // Met à jour le shop d'oeufs instantanément
+        updateDisplay();
+        updateRebirthUI();
+    }
+}
+
+function sellPet(uid, fromEquipped = false) {
+    const list = fromEquipped ? state.equippedPets : state.inventoryPets;
+    const index = list.findIndex(p => p.uid === uid);
+    if (index > -1) {
+        const petData = PETS.find(p => p.id === list[index].id);
+        if(!confirm(`Vendre ${petData.icon} ${petData.name} pour ${formatNumber(petData.sellPrice)} cal ?`)) return;
+        
+        list.splice(index, 1);
+        state.calories += petData.sellPrice;
+        state.totalCalories += petData.sellPrice;
+        
+        recalculateCps();
+        renderPetInventory();
+        renderEggs(); // Met à jour le shop d'oeufs instantanément
+        updateDisplay();
+        updateRebirthUI();
+    }
+}
+
+function equipBestPets() {
+    while(state.equippedPets.length > 0) {
+        state.inventoryPets.push(state.equippedPets.pop());
+    }
+    
+    state.inventoryPets.sort((a, b) => {
+        const petA = PETS.find(p => p.id === a.id);
+        const petB = PETS.find(p => p.id === b.id);
+        return petB.mult - petA.mult;
+    });
+
+    const toEquip = Math.min(state.maxPetSlots, state.inventoryPets.length);
+    for(let i=0; i<toEquip; i++) {
+        state.equippedPets.push(state.inventoryPets.shift());
+    }
+
+    recalculateCps();
+    renderPetInventory();
+    renderEggs(); // Met à jour le shop d'oeufs instantanément
+    updateDisplay();
+    updateRebirthUI();
+}
+
+function renderPetInventory() {
+    const equippedContainer = document.getElementById('pet-slots');
+    if (equippedContainer) {
+        equippedContainer.innerHTML = '';
+        for (let i = 0; i < state.maxPetSlots; i++) {
+            const card = document.createElement('div');
+            if (i < state.equippedPets.length) {
+                const pInfo = state.equippedPets[i];
+                const pet = PETS.find(p => p.id === pInfo.id);
+                card.className = `pet-card rarity-${pet.rarity}`;
+                card.dataset.uid = pInfo.uid;
+                card.onclick = () => togglePetActions(pInfo.uid);
+                
+                card.innerHTML = `
+                    <div class="pet-rarity rarity-${pet.rarity}">${pet.rarity}</div>
+                    <div class="pet-icon">${pet.icon}</div>
+                    <div class="pet-name">${pet.name}</div>
+                    <div class="pet-mult">x${pet.mult}</div>
+                    <div class="btn-group">
+                        <button class="btn-equip" onclick="event.stopPropagation(); unequipPet(${pInfo.uid})">Retirer</button>
+                        <button class="btn-sell" onclick="event.stopPropagation(); sellPet(${pInfo.uid}, true)">Vendre</button>
+                    </div>
+                `;
+            } else {
+                card.className = 'pet-card';
+                card.style.cursor = 'default';
+                card.innerHTML = `<div class="pet-icon" style="opacity:0.2;">🐾</div><div class="pet-name" style="opacity:0.5;">Vide</div>`;
+            }
+            equippedContainer.appendChild(card);
+        }
+        document.getElementById('pet-count-display').textContent = `(${state.equippedPets.length}/${state.maxPetSlots})`;
+    }
+
+    const invContainer = document.getElementById('pet-inventory-grid');
+    if (invContainer) {
+        invContainer.innerHTML = '';
+        for (const pInfo of state.inventoryPets) {
+            const pet = PETS.find(p => p.id === pInfo.id);
+            const card = document.createElement('div');
+            card.className = `pet-card rarity-${pet.rarity}`;
+            card.dataset.uid = pInfo.uid;
+            card.onclick = () => togglePetActions(pInfo.uid);
+            
+            card.innerHTML = `
+                <div class="pet-rarity rarity-${pet.rarity}">${pet.rarity}</div>
+                <div class="pet-icon">${pet.icon}</div>
+                <div class="pet-name">${pet.name}</div>
+                <div class="pet-mult">x${pet.mult}</div>
+                <div class="btn-group">
+                    <button class="btn-equip" onclick="event.stopPropagation(); equipPet(${pInfo.uid})">Équiper</button>
+                    <button class="btn-sell" onclick="event.stopPropagation(); sellPet(${pInfo.uid}, false)">Vendre</button>
+                </div>
+            `;
+            invContainer.appendChild(card);
+        }
+        
+        const maxInv = getMaxInventory();
+        document.getElementById('inventory-count').textContent = state.inventoryPets.length;
+        document.getElementById('inventory-max').textContent = maxInv;
+    }
+}
+
+function renderPetIndex() {
+    const container = document.getElementById('pet-index-grid');
+    if(!container) return;
+    container.innerHTML = '';
+
+    for (const pet of PETS) {
+        const discovered = state.discoveredPets.includes(pet.id);
+        const card = document.createElement('div');
+        
+        if (discovered) {
+            card.className = `index-card rarity-${pet.rarity}`;
+            card.innerHTML = `
+                <div class="index-icon">${pet.icon}</div>
+                <div class="egg-name">${pet.name}</div>
+                <div class="pet-mult">x${pet.mult}</div>
+            `;
+        } else {
+            card.className = `index-card unknown`;
+            card.innerHTML = `
+                <div class="index-icon">❓</div>
+                <div class="egg-name">Inconnu</div>
+            `;
+        }
+        container.appendChild(card);
+    }
+}
+
 // ============ SHOP RENDERING ============
 
 function renderBuildings() {
     dom.buildingsList.innerHTML = '';
+    const maxBuildings = getMaxBuildings();
+    
     for (const b of BUILDINGS) {
         const cost = getBuildingCost(b);
-        const canAfford = state.calories >= cost;
+        const isMaxed = b.count >= maxBuildings;
+        const canAfford = state.calories >= cost && !isMaxed;
         const isLocked = state.totalCalories < b.baseCost * 0.5 && b.count === 0;
 
         const item = document.createElement('div');
-        item.className = `shop-item ${canAfford ? 'can-afford' : ''} ${isLocked ? 'locked' : ''}`;
+        item.className = `shop-item ${canAfford ? 'can-afford' : ''} ${isLocked ? 'locked' : ''} ${isMaxed ? 'locked maxed' : ''}`;
         item.dataset.id = b.id;
 
         item.innerHTML = `
             <div class="shop-item-icon">${b.icon}</div>
             <div class="shop-item-info">
                 <div class="shop-item-name">${isLocked ? '???' : b.name}</div>
-                <div class="shop-item-cost ${canAfford ? '' : 'too-expensive'}">${formatNumber(cost)} cal</div>
+                <div class="shop-item-cost ${canAfford || isMaxed ? '' : 'too-expensive'}">${isMaxed ? 'MAX' : formatNumber(cost) + ' cal'}</div>
             </div>
-            <div class="shop-item-count">${b.count}</div>
+            <div class="shop-item-count">${b.count} / ${maxBuildings}</div>
         `;
 
-        if (!isLocked) {
+        if (!isLocked && !isMaxed) {
             item.addEventListener('click', () => buyBuilding(b));
         }
         dom.buildingsList.appendChild(item);
@@ -753,11 +825,6 @@ function renderBuildings() {
 function renderUpgrades() {
     dom.upgradesList.innerHTML = '';
     for (const u of UPGRADES) {
-        // Hide quest-gated upgrades until quest is completed
-        if (u.requiresQuest) {
-            const quest = QUESTS.find(q => q.id === u.requiresQuest);
-            if (quest && !quest.completed) continue;
-        }
         const isVisible = checkRequirement(u.requirement);
         if (!isVisible && !u.purchased) continue;
 
@@ -798,6 +865,8 @@ function checkRequirement(req) {
 // ============ BUY ACTIONS ============
 
 function buyBuilding(building) {
+    if (building.count >= getMaxBuildings()) return;
+
     const cost = getBuildingCost(building);
     if (state.calories < cost) return;
 
@@ -842,16 +911,34 @@ function updateDisplay() {
 
     document.title = `${formatNumber(state.calories)} Calories d'Or - AubinClicker 🍔`;
 
+    const maxBuildings = getMaxBuildings();
     const items = dom.buildingsList.querySelectorAll('.shop-item');
+    
     items.forEach(item => {
         const b = BUILDINGS.find(b => b.id === item.dataset.id);
         if (!b) return;
+        
+        const isMaxed = b.count >= maxBuildings;
         const cost = getBuildingCost(b);
-        const canAfford = state.calories >= cost;
+        const canAfford = state.calories >= cost && !isMaxed;
+        
         item.classList.toggle('can-afford', canAfford);
+        item.classList.toggle('locked', isMaxed || (state.totalCalories < b.baseCost * 0.5 && b.count === 0));
+        
         const costEl = item.querySelector('.shop-item-cost');
         if (costEl) {
-            costEl.classList.toggle('too-expensive', !canAfford);
+            if (isMaxed) {
+                costEl.textContent = 'MAX';
+                costEl.classList.remove('too-expensive');
+            } else {
+                costEl.textContent = `${formatNumber(cost)} cal`;
+                costEl.classList.toggle('too-expensive', !canAfford);
+            }
+        }
+        
+        const countEl = item.querySelector('.shop-item-count');
+        if (countEl) {
+            countEl.textContent = `${b.count} / ${maxBuildings}`;
         }
     });
 }
@@ -896,12 +983,52 @@ function showQuote(customQuote) {
     });
 }
 
-// ============ QUESTS ============
+// ============ EVOLVING QUESTS SYSTEM ============
+
+function getActiveQuests() {
+    const r = state.rebirthCount;
+    return [
+        {
+            id: 'q_variety',
+            name: `Menu Varié (Palier ${r + 1})`,
+            icon: '🍽️',
+            desc: `Posséder au moins 1 exemplaire de ${Math.min(2 + Math.floor(r / 2), 10)} bâtiments différents.`,
+            check: () => BUILDINGS.filter(b => b.count >= 1).length >= Math.min(2 + Math.floor(r / 2), 10),
+            reward: Math.floor(1000 * Math.pow(5, r)),
+        },
+        {
+            id: 'q_buildings',
+            name: `Empire Immobilier (Palier ${r + 1})`,
+            icon: '🏗️',
+            desc: `Posséder un total de ${20 + r * 10} bâtiments.`,
+            check: () => BUILDINGS.reduce((sum, b) => sum + b.count, 0) >= 20 + r * 10,
+            reward: Math.floor(5000 * Math.pow(5, r)),
+        },
+        {
+            id: 'q_upgrades',
+            name: `Acheteur Compulsif (Palier ${r + 1})`,
+            icon: '💡',
+            desc: `Posséder ${Math.min(2 + r, 9)} améliorations.`,
+            check: () => UPGRADES.filter(u => u.purchased).length >= Math.min(2 + r, 9),
+            reward: Math.floor(10000 * Math.pow(5, r)),
+        },
+        {
+            id: 'q_cps',
+            name: `Usine à Calories (Palier ${r + 1})`,
+            icon: '📈',
+            desc: `Atteindre ${formatNumber(Math.floor(10 * Math.pow(5, r)))} cal/s.`,
+            check: () => state.cps >= 10 * Math.pow(5, r),
+            reward: Math.floor(15000 * Math.pow(5, r)),
+        }
+    ];
+}
 
 function renderQuests() {
     dom.questsList.innerHTML = '';
-    for (const q of QUESTS) {
-        const done = q.completed;
+    const activeQuests = getActiveQuests();
+    
+    for (const q of activeQuests) {
+        const done = state.completedQuests.includes(q.id);
         const ready = !done && q.check();
 
         const item = document.createElement('div');
@@ -913,7 +1040,7 @@ function renderQuests() {
                 <div class="quest-name">${q.name}</div>
                 <div class="quest-desc">${q.desc}</div>
                 <div class="quest-reward ${done ? 'quest-claimed' : ''}">
-                    ${done ? '✅ Réclamé' : '🎁 ' + q.rewardText}
+                    ${done ? '✅ Terminée' : '🎁 +' + formatNumber(q.reward) + ' cal'}
                 </div>
             </div>
             ${ready ? '<button class="quest-claim-btn">Réclamer</button>' : ''}
@@ -928,71 +1055,64 @@ function renderQuests() {
 }
 
 function claimQuest(quest) {
-    if (quest.completed || !quest.check()) return;
-    quest.completed = true;
+    if (state.completedQuests.includes(quest.id) || !quest.check()) return;
+    state.completedQuests.push(quest.id);
     state.calories += quest.reward;
     state.totalCalories += quest.reward;
-    showMilestone(`🎯 Quête terminée : ${quest.name} ! ${quest.rewardText}`);
-    showQuote(`"${quest.name}" accompli ! Aubin est fier ! 🎉`);
+    showMilestone(`🎯 Quête terminée : ${quest.name} !`);
+    showQuote(`"Une quête de plus de finie... ça donne faim."`);
     renderQuests();
     updateDisplay();
+    updateRebirthUI(); 
 }
 
 function checkQuests() {
     let hasNew = false;
-    for (const q of QUESTS) {
-        if (!q.completed && q.check()) {
+    const activeQuests = getActiveQuests();
+    for (const q of activeQuests) {
+        if (!state.completedQuests.includes(q.id) && q.check()) {
             hasNew = true;
             break;
         }
     }
-    // Update tab badge
     const questTab = document.querySelector('[data-tab="quests"]');
     if (questTab) {
-        questTab.textContent = hasNew ? '🎯 Quêtes ❗' : '🎯 Quêtes';
+        if(hasNew) {
+            questTab.innerHTML = '🎯<span class="badge">!</span>';
+        } else {
+            questTab.innerHTML = '🎯';
+        }
     }
 }
 
 // ============ REBIRTH SYSTEM ============
 
-// getCalorieCap is now defined above with the data
-
 function recalcMaxPetSlots() {
     const ascensionPetBonus = getPetSlotBonus();
-    // Les slots de base (3) + les slots bonus (codes) + les bonus d'ascension
     state.maxPetSlots = 3 + state.bonusPetSlots + ascensionPetBonus;
 }
 
-function getPetMultiplier() {
-    let mult = 1;
-    for (const petId of state.pets) {
-        const pet = PETS.find(p => p.id === petId);
-        if (pet) mult *= pet.mult;
-    }
-    return mult;
-}
-
-function enforceCalorieCap() {
-    const cap = getCalorieCap();
-    if (state.calories > cap) {
-        state.calories = cap;
-    }
-}
-
 function canRebirth() {
-    return state.calories >= getCalorieCap();
+    if (state.calories < getRebirthTarget()) return false;
+    
+    const activeQuests = getActiveQuests();
+    for (const q of activeQuests) {
+        if (!state.completedQuests.includes(q.id)) {
+            return false;
+        }
+    }
+    return true;
 }
 
 function doRebirth() {
     if (!canRebirth()) return;
-    if (!confirm(`🔄 REBIRTH !\n\nTu vas :\n- Garder tes pets et tokens\n- Gagner 1 Rebirth Token 🪙\n- Perdre tous tes bâtiments, upgrades et calories\n\nContinuer ?`)) return;
+    if (!confirm(`🔄 REBIRTH !\n\nTu vas :\n- Garder tes pets et tokens\n- Gagner 1 Rebirth Token 🪙\n- Perdre tous tes bâtiments, améliorations et calories\n\nContinuer ?`)) return;
 
     state.rebirthCount++;
     const rebirthBonus = getRebirthBonus();
     state.rebirthTokens += (1 + rebirthBonus);
     recalcMaxPetSlots();
 
-    // Reset progress (but NOT pets/tokens/rebirthCount)
     state.calories = 0;
     state.totalCalories = 0;
     state.totalClicks = 0;
@@ -1001,25 +1121,21 @@ function doRebirth() {
     state.clickMultiplier = 1;
     state.globalMultiplier = 1;
     state.milestonesReached = [];
+    state.completedQuests = [];
 
     for (const b of BUILDINGS) b.count = 0;
     for (const u of UPGRADES) u.purchased = false;
-    for (const q of QUESTS) q.completed = false;
 
-    currentOrbitConfig = ''; // <-- Modification ici
+    currentOrbitConfig = ''; 
     dom.puffOrbit.innerHTML = '';
 
-    // Show pets tab + inventory + codes tab after first rebirth
-    if (state.rebirthCount >= 1 && dom.petsTab) {
-        dom.petsTab.style.display = '';
-    }
-    if (state.rebirthCount >= 1 && dom.codesTab) {
-        dom.codesTab.style.display = '';
-    }
+    if (state.rebirthCount >= 1 && dom.eggsTab) dom.eggsTab.style.display = '';
+    if (state.rebirthCount >= 1 && dom.inventoryTab) dom.inventoryTab.style.display = '';
+    if (state.rebirthCount >= 1 && dom.indexTab) dom.indexTab.style.display = '';
+    if (state.rebirthCount >= 1 && dom.codesTab) dom.codesTab.style.display = '';
+    
     const petInv = document.getElementById('pet-inventory');
-    if (state.rebirthCount >= 1 && petInv) {
-        petInv.style.display = '';
-    }
+    if (state.rebirthCount >= 1 && petInv) petInv.style.display = '';
 
     recalculateCps();
     renderBuildings();
@@ -1028,8 +1144,9 @@ function doRebirth() {
     renderQuests();
     checkQuests();
     updateRebirthUI();
+    renderEggs();
     renderPetInventory();
-    initWheel();
+    renderPetIndex();
     updateDisplay();
 
     updateAubinAppearance();
@@ -1038,7 +1155,6 @@ function doRebirth() {
 }
 
 // ====== Aubin Appearance (image + aura) ======
-// Images: aubin.png, aubin2.png, aubin3.png, aubin4.png, aubin5.png, aubin6.png → cycle of 6
 const AUBIN_IMAGES = [
     'images/aubin/aubin.png',
     'images/aubin/aubin2.png',
@@ -1047,7 +1163,7 @@ const AUBIN_IMAGES = [
     'images/aubin/aubin5.png',
     'images/aubin/aubin6.png',
 ];
-const AUBIN_CYCLE = AUBIN_IMAGES.length; // 6
+const AUBIN_CYCLE = AUBIN_IMAGES.length;
 
 function getAubinBaseSrc() {
     const cyclePos = state.rebirthCount % AUBIN_CYCLE;
@@ -1055,14 +1171,13 @@ function getAubinBaseSrc() {
 }
 
 function updateAubinAppearance() {
-    const cycleNum = Math.floor(state.rebirthCount / AUBIN_CYCLE); // 0 = no aura
+    const cycleNum = Math.floor(state.rebirthCount / AUBIN_CYCLE); 
 
     const imgEl = document.getElementById('aubin-img');
     if (imgEl) {
         imgEl.src = getAubinBaseSrc();
     }
 
-    // Aura: no aura on first cycle, then levels 1-4 (capped at 4)
     const auraEl = document.getElementById('aubin-aura');
     if (auraEl) {
         auraEl.className = '';
@@ -1074,30 +1189,39 @@ function updateAubinAppearance() {
 }
 
 function updateRebirthUI() {
-    const cap = getCalorieCap();
+    const target = getRebirthTarget();
     const ready = canRebirth();
 
     dom.rebirthCount.textContent = state.rebirthCount;
-    dom.calorieCapDisplay.textContent = cap === Infinity ? '∞' : formatNumber(cap);
+    dom.calorieCapDisplay.textContent = target === Infinity ? '∞' : formatNumber(target);
+    
+    if (dom.calorieCapDisplay.previousElementSibling) {
+        dom.calorieCapDisplay.previousElementSibling.textContent = 'Objectif Rebirth';
+    }
+
     dom.petMultDisplay.textContent = `x${getPetMultiplier().toFixed(1)}`;
-    dom.rebirthTokensDisplay.textContent = state.rebirthTokens;
 
     dom.rebirthBtn.disabled = !ready;
     dom.rebirthBtn.classList.toggle('ready', ready);
 
+    const activeQuests = getActiveQuests();
+    const questsDone = activeQuests.every(q => state.completedQuests.includes(q.id));
+
     if (ready) {
         dom.rebirthRequire.textContent = 'Tu peux Rebirth maintenant !';
-    } else {
-        dom.rebirthRequire.textContent = `Atteins ${formatNumber(cap)} cal pour Rebirth`;
+    } else if (state.calories < target && !questsDone) {
+        dom.rebirthRequire.textContent = `Atteins ${formatNumber(target)} cal et réclame tes quêtes`;
+    } else if (state.calories < target) {
+        dom.rebirthRequire.textContent = `Atteins ${formatNumber(target)} cal pour Rebirth`;
+    } else if (!questsDone) {
+        dom.rebirthRequire.textContent = `Réclame tes quêtes pour Rebirth`;
     }
 
-    // Calorie bar
-    const pct = Math.min((state.calories / cap) * 100, 100);
+    const pct = Math.min((state.calories / target) * 100, 100);
     dom.calorieBar.style.width = `${pct}%`;
-    dom.calorieBar.classList.toggle('capped', state.calories >= cap);
-    dom.calorieBarText.textContent = `${formatNumber(state.calories)} / ${formatNumber(cap)}`;
+    dom.calorieBar.classList.remove('capped'); 
+    dom.calorieBarText.textContent = `${formatNumber(state.calories)} / ${formatNumber(target)}`;
     
-    // Show ascension UI after first rebirth
     const ascensionInfo = document.getElementById('ascension-info');
     const ascensionDetails = document.getElementById('ascension-details');
     const ascensionBtn = document.getElementById('ascension-btn');
@@ -1116,12 +1240,10 @@ function updateRebirthUI() {
 // ============ ASCENSION SYSTEM ============
 
 function getAscensionPointsPerRebirth() {
-    // Points d'ascension basés sur le nombre de rebirths effectués
     return 1 + Math.floor(state.rebirthCount / 10);
 }
 
 function getAscensionCost() {
-    // 10 rebirths = 1 ascension
     return state.ascensionCount * 10 + 10;
 }
 
@@ -1138,7 +1260,6 @@ function getAscensionUpgradeLevel(upgradeId) {
     return state.ascensionUpgrades[upgradeId] || 0;
 }
 
-// Calcul des bonus d'ascension
 function getBuildingCapBonus() {
     let bonus = 0;
     for (const u of ASCENSION_UPGRADES) {
@@ -1225,7 +1346,6 @@ function doAscension() {
     state.ascensionCount++;
     state.ascensionPoints += pointsToAdd;
     
-    // Reset tout sauf ascension et rebirths
     state.calories = 0;
     state.totalCalories = 0;
     state.totalClicks = 0;
@@ -1235,22 +1355,18 @@ function doAscension() {
     state.globalMultiplier = 1;
     state.milestonesReached = [];
     state.rebirthTokens = 0;
-    state.pets = [];
-    state.bonusPetSlots = 0;
+    state.completedQuests = [];
     state.codesUsed = [];
     
     for (const b of BUILDINGS) b.count = 0;
     for (const u of UPGRADES) u.purchased = false;
-    for (const q of QUESTS) q.completed = false;
     
-    currentOrbitConfig = ''; // <-- Modification ici
+    currentOrbitConfig = '';
     dom.puffOrbit.innerHTML = '';
     
-    // Recalcul des bonus
     recalcMaxPetSlots();
     recalculateCps();
     
-    // Mise à jour de l'interface
     renderBuildings();
     renderOrbitPuffs();
     renderUpgrades();
@@ -1259,7 +1375,6 @@ function doAscension() {
     updateRebirthUI();
     updateAscensionUI();
     renderAscensionShop();
-    initWheel();
     updateDisplay();
     
     updateAubinAppearance();
@@ -1283,7 +1398,6 @@ function buyAscensionUpgrade(upgradeId) {
         return;
     }
     
-    // Vérifier le niveau d'ascension minimum
     if (state.ascensionCount < upgrade.minAscension) {
         showQuote("Atteins l'Ascension " + upgrade.minAscension + " pour cet amelioration !");
         return;
@@ -1292,7 +1406,6 @@ function buyAscensionUpgrade(upgradeId) {
     state.ascensionPoints -= cost;
     state.ascensionUpgrades[upgradeId] = currentLevel + 1;
     
-    // Recalcul des bonus
     recalcMaxPetSlots();
     recalculateCps();
     
@@ -1300,6 +1413,7 @@ function buyAscensionUpgrade(upgradeId) {
     updateAscensionUI();
     updateRebirthUI();
     updateDisplay();
+    renderPetInventory(); 
     
     showMilestone(`${upgrade.icon} ${upgrade.name} niveau ${currentLevel + 1} !`);
 }
@@ -1358,188 +1472,28 @@ function renderAscensionShop() {
     }
 }
 
-// ============ PET SYSTEM ============
-
-let wheelSpinning = false;
-let wheelAngle = 0;
-
-// Rarity color map for conic-gradient segments
-const RARITY_COLORS = {
-    common:    ['rgba(160,160,176,0.25)', 'rgba(160,160,176,0.12)'],
-    rare:      ['rgba(56,189,248,0.25)',  'rgba(56,189,248,0.12)'],
-    epic:      ['rgba(168,85,247,0.25)',  'rgba(168,85,247,0.12)'],
-    legendary: ['rgba(255,201,71,0.25)',  'rgba(255,201,71,0.12)'],
-    mythic:    ['rgba(236,72,153,0.25)',  'rgba(236,72,153,0.12)'],
-};
-
-function initWheel() {
-    // Remove old labels
-    dom.wheel.querySelectorAll('.wheel-label').forEach(el => el.remove());
-
-    const unlocked = getUnlockedPets();
-    const segCount = unlocked.length;
-
-    // Fallback: if no pets unlocked, show a placeholder wheel
-    if (segCount === 0) {
-        dom.wheel.style.background = 'rgba(255,255,255,0.05)';
-        return;
-    }
-
-    const segAngle = 360 / segCount;
-    const radius = 100;
-
-    // Build dynamic conic-gradient based on unlocked pets' rarities
-    let gradientParts = [];
-    for (let i = 0; i < segCount; i++) {
-        const colors = RARITY_COLORS[unlocked[i].rarity] || RARITY_COLORS.common;
-        const startDeg = segAngle * i;
-        const midDeg = startDeg + segAngle / 2;
-        const endDeg = startDeg + segAngle;
-        gradientParts.push(`${colors[0]} ${startDeg}deg ${midDeg}deg`);
-        gradientParts.push(`${colors[1]} ${midDeg}deg ${endDeg}deg`);
-    }
-    dom.wheel.style.background = `conic-gradient(${gradientParts.join(', ')})`;
-
-    // Place emoji labels
-    for (let i = 0; i < segCount; i++) {
-        const angle = segAngle * i + segAngle / 2;
-        const rad = ((angle - 90) * Math.PI) / 180;
-        const x = Math.cos(rad) * radius;
-        const y = Math.sin(rad) * radius;
-
-        const label = document.createElement('span');
-        label.className = 'wheel-label';
-        label.textContent = unlocked[i].icon;
-        label.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
-        dom.wheel.appendChild(label);
-    }
-}
-
-function spinWheel() {
-    if (wheelSpinning) return;
-    if (state.rebirthTokens <= 0) {
-        showQuote("\"Pas assez de tokens ! Fais un Rebirth d'abord.\"");
-        return;
-    }
-    if (state.pets.length >= state.maxPetSlots) {
-        showQuote("\"Inventaire plein ! Vends un pet d'abord.\"");
-        return;
-    }
-
-    const unlocked = getUnlockedPets();
-    if (unlocked.length === 0) {
-        showQuote("\"Aucun pet disponible !\"");
-        return;
-    }
-
-    wheelSpinning = true;
-    state.rebirthTokens--;
-    dom.spinBtn.disabled = true;
-    dom.spinResult.classList.add('hidden');
-
-    // Weighted random selection among unlocked pets only
-    const totalWeight = unlocked.reduce((sum, p) => sum + p.weight, 0);
-    let rand = Math.random() * totalWeight;
-    let selectedIndex = 0;
-    for (let i = 0; i < unlocked.length; i++) {
-        rand -= unlocked[i].weight;
-        if (rand <= 0) { selectedIndex = i; break; }
-    }
-
-    const segAngle = 360 / unlocked.length;
-    // Calculate target angle: the selected segment should end up at top (pointer)
-    const targetSegCenter = segAngle * selectedIndex + segAngle / 2;
-    const extraSpins = 5 + Math.floor(Math.random() * 3); // 5-7 full rotations
-    const targetAngle = 360 * extraSpins + (360 - targetSegCenter);
-
-    wheelAngle += targetAngle;
-    dom.wheel.style.transform = `rotate(${wheelAngle}deg)`;
-
-    setTimeout(() => {
-        const pet = unlocked[selectedIndex];
-        addPet(pet);
-        dom.spinResult.textContent = `${pet.icon} ${pet.name} (x${pet.mult}) !`;
-        dom.spinResult.classList.remove('hidden');
-        dom.spinBtn.disabled = false;
-        wheelSpinning = false;
-        updateRebirthUI();
-        renderPetInventory();
-        recalculateCps();
-        updateDisplay();
-        showMilestone(`🐾 Nouveau pet : ${pet.icon} ${pet.name} (x${pet.mult}) !`);
-    }, 4200); // matches CSS transition duration + buffer
-}
-
-function addPet(pet) {
-    if (state.pets.length >= state.maxPetSlots) return;
-    state.pets.push(pet.id);
-}
-
-function sellPet(index) {
-    if (index < 0 || index >= state.pets.length) return;
-    const petId = state.pets[index];
-    const pet = PETS.find(p => p.id === petId);
-    if (!pet) return;
-
-    // Sell price: some flat calories based on rarity
-    const sellPrices = { common: 500, rare: 2000, epic: 10000, legendary: 50000 };
-    const price = sellPrices[pet.rarity] || 500;
-
-    if (!confirm(`Vendre ${pet.icon} ${pet.name} pour ${formatNumber(price)} Calories d'Or ?`)) return;
-
-    state.pets.splice(index, 1);
-    state.calories += price;
-    state.totalCalories += price;
-
-    recalculateCps();
-    renderPetInventory();
-    updateDisplay();
-    showQuote(`"${pet.name}" vendu ! +${formatNumber(price)} Calories d'Or`);
-}
-
-function renderPetInventory() {
-    // Dynamically generate slots based on maxPetSlots
-    dom.petSlots.innerHTML = '';
-    for (let i = 0; i < state.maxPetSlots; i++) {
-        const slot = document.createElement('div');
-        if (i < state.pets.length) {
-            const pet = PETS.find(p => p.id === state.pets[i]);
-            if (!pet) continue;
-            slot.className = `pet-slot filled rarity-${pet.rarity}`;
-            slot.innerHTML = `
-                <button class="pet-sell-btn" title="Vendre">✕</button>
-                <div class="pet-slot-icon">${pet.icon}</div>
-                <div class="pet-slot-name">${pet.name}</div>
-                <div class="pet-slot-mult">x${pet.mult}</div>
-            `;
-            const idx = i;
-            slot.querySelector('.pet-sell-btn').addEventListener('click', (e) => {
-                e.stopPropagation();
-                sellPet(idx);
-            });
-        } else {
-            slot.className = 'pet-slot empty';
-            slot.innerHTML = '<span class="pet-slot-empty">Vide</span>';
-        }
-        dom.petSlots.appendChild(slot);
-    }
-    dom.petCountDisplay.textContent = `(${state.pets.length}/${state.maxPetSlots})`;
-}
-
 // ============ CODES SYSTEM ============
 
 const CODES = {
     'ROMAINJTM': {
-        desc: 'Code de Romain - Licorne Calorique x5 + slot bonus',
+        desc: 'Code de Romain - Licorne Calorique + slot bonus',
         action: () => {
-            // Add mythic pet + extra slot
             state.bonusPetSlots++;
             recalcMaxPetSlots();
-            state.pets.push('licorne');
+            
+            state.inventoryPets.push({
+                uid: Date.now() + Math.random(),
+                id: 'licorne'
+            });
+            if (!state.discoveredPets.includes('licorne')) {
+                state.discoveredPets.push('licorne');
+            }
+            
             recalculateCps();
             renderPetInventory();
+            renderPetIndex();
             updateDisplay();
-            return '🦄 Licorne Calorique x5 ajoutée + 1 slot bonus !';
+            return '🦄 Licorne Calorique ajoutée + 1 slot bonus !';
         }
     }
 };
@@ -1582,7 +1536,6 @@ function renderOrbitPuffs() {
     const puffBuilding = BUILDINGS.find(b => b.id === 'puff');
     const count = puffBuilding ? puffBuilding.count : 0;
     
-    // On définit les paliers de fusion
     let remaining = count;
     const tiers = [
         { value: 10000, src: 'images/puffs/puff_diamant.png' },
@@ -1592,7 +1545,6 @@ function renderOrbitPuffs() {
         { value: 1, src: 'images/puffs/puff_bronze.png' }
     ];
     
-    // On calcule combien de puffs de chaque palier on doit afficher
     let puffsToRender = [];
     for (const tier of tiers) {
         const qty = Math.floor(remaining / tier.value);
@@ -1602,7 +1554,6 @@ function renderOrbitPuffs() {
         remaining %= tier.value;
     }
     
-    // Si la configuration visuelle n'a pas changé, on ne recharge pas le DOM
     const configString = puffsToRender.join('|');
     if (configString === currentOrbitConfig) return;
     currentOrbitConfig = configString;
@@ -1612,7 +1563,7 @@ function renderOrbitPuffs() {
     if (puffsToRender.length === 0) return;
     
     const displayCount = puffsToRender.length;
-    const radius = 130; // px from center
+    const radius = 130; 
     
     for (let i = 0; i < displayCount; i++) {
         const angle = (360 / displayCount) * i;
@@ -1620,7 +1571,6 @@ function renderOrbitPuffs() {
         const x = 50 + (radius / 260) * 100 * Math.cos(rad);
         const y = 50 + (radius / 260) * 100 * Math.sin(rad);
         
-        // Rotation: mouthpiece points UP by default, rotate so it aims at center
         const rotation = angle - 90;
         
         const puff = document.createElement('div');
@@ -1662,7 +1612,6 @@ let lastTick = performance.now();
 
 function gameLoop(now) {
     const dt = (now - lastTick) / 1000;
-    // >>>>>> DEBUG: Applied speed multiplier <<<<<<
     const debugDt = dt * DEBUG_SPEED;
     lastTick = now;
 
@@ -1670,7 +1619,7 @@ function gameLoop(now) {
         const gained = state.cps * debugDt;
         state.calories += gained;
         state.totalCalories += gained;
-        enforceCalorieCap();
+        
         updateDisplay();
         checkMilestones();
     }
@@ -1689,13 +1638,14 @@ function saveGame() {
         milestonesReached: state.milestonesReached,
         buildings: BUILDINGS.map(b => ({ id: b.id, count: b.count })),
         upgrades: UPGRADES.filter(u => u.purchased).map(u => u.id),
-        quests: QUESTS.filter(q => q.completed).map(q => q.id),
+        completedQuests: state.completedQuests,
         rebirthCount: state.rebirthCount,
         rebirthTokens: state.rebirthTokens,
-        pets: state.pets,
+        equippedPets: state.equippedPets,
+        inventoryPets: state.inventoryPets,
+        discoveredPets: state.discoveredPets,
         bonusPetSlots: state.bonusPetSlots,
         codesUsed: state.codesUsed,
-        // Ascension data
         ascensionCount: state.ascensionCount,
         ascensionPoints: state.ascensionPoints,
         ascensionUpgrades: state.ascensionUpgrades,
@@ -1731,23 +1681,32 @@ function loadGame() {
             }
         }
 
-        if (data.quests) {
-            for (const id of data.quests) {
-                const q = QUESTS.find(q => q.id === id);
-                if (q) q.completed = true;
+        state.completedQuests = data.completedQuests || [];
+        state.rebirthCount = data.rebirthCount || 0;
+        state.rebirthTokens = data.rebirthTokens || 0;
+        state.bonusPetSlots = data.bonusPetSlots || 0;
+        state.codesUsed = data.codesUsed || [];
+        
+        state.equippedPets = data.equippedPets || [];
+        state.inventoryPets = data.inventoryPets || [];
+        state.discoveredPets = data.discoveredPets || [];
+        
+        if (data.pets && Array.isArray(data.pets) && data.pets.length > 0 && state.equippedPets.length === 0 && state.inventoryPets.length === 0) {
+            for(let petId of data.pets) {
+                state.inventoryPets.push({
+                    uid: Date.now() + Math.random(),
+                    id: petId
+                });
+                if(!state.discoveredPets.includes(petId)) {
+                    state.discoveredPets.push(petId);
+                }
             }
         }
 
-        // Load rebirth & pets
-        state.rebirthCount = data.rebirthCount || 0;
-        state.rebirthTokens = data.rebirthTokens || 0;
-        state.pets = data.pets || [];
-        state.bonusPetSlots = data.bonusPetSlots || 0;
-        state.codesUsed = data.codesUsed || [];
-        // Load ascension
         state.ascensionCount = data.ascensionCount || 0;
         state.ascensionPoints = data.ascensionPoints || 0;
         state.ascensionUpgrades = data.ascensionUpgrades || {};
+        
         recalcMaxPetSlots();
 
         return true;
@@ -1761,7 +1720,6 @@ function resetGame() {
     if (!confirm("⚠️ Tout effacer ? Aubin va devoir recommencer son régime... enfin non, recommencer à manger.")) return;
     localStorage.removeItem('aubinclicker_save');
 
-    // Reset state
     state.calories = 0;
     state.totalCalories = 0;
     state.totalClicks = 0;
@@ -1771,52 +1729,39 @@ function resetGame() {
     state.globalMultiplier = 1;
     state.milestonesReached = [];
     state.startTime = Date.now();
+    state.completedQuests = [];
 
-    // Reset buildings
-    for (const b of BUILDINGS) {
-        b.count = 0;
-    }
+    for (const b of BUILDINGS) b.count = 0;
+    for (const u of UPGRADES) u.purchased = false;
 
-    // Reset upgrades
-    for (const u of UPGRADES) {
-        u.purchased = false;
-    }
-
-    // Reset quests
-    for (const q of QUESTS) {
-        q.completed = false;
-    }
-
-    // Reset orbit — force re-render by using sentinel value
-    currentOrbitConfig = ''; // <-- Modification ici
+    currentOrbitConfig = ''; 
     dom.puffOrbit.innerHTML = '';
-
-    // Hide milestone banner
     dom.mileStoneBanner.classList.add('hidden');
 
-    // Reset quest tab badge
     const questTab = document.querySelector('[data-tab="quests"]');
-    if (questTab) questTab.textContent = '🎯 Quêtes';
+    if (questTab) questTab.innerHTML = '🎯';
 
-    // Reset rebirth & pets
     state.rebirthCount = 0;
     state.rebirthTokens = 0;
-    state.pets = [];
+    state.equippedPets = [];
+    state.inventoryPets = [];
+    state.discoveredPets = [];
     state.maxPetSlots = 3;
     state.bonusPetSlots = 0;
     state.codesUsed = [];
-    // Reset ascension
+    
     state.ascensionCount = 0;
     state.ascensionPoints = 0;
     state.ascensionUpgrades = {};
-    wheelAngle = 0;
-    if (dom.wheel) dom.wheel.style.transform = 'rotate(0deg)';
-    if (dom.petsTab) dom.petsTab.style.display = 'none';
+    
+    if (dom.eggsTab) dom.eggsTab.style.display = 'none';
+    if (dom.inventoryTab) dom.inventoryTab.style.display = 'none';
+    if (dom.indexTab) dom.indexTab.style.display = 'none';
+    if (dom.codesTab) dom.codesTab.style.display = 'none';
+    
     const petInv = document.getElementById('pet-inventory');
     if (petInv) petInv.style.display = 'none';
-    dom.spinResult.classList.add('hidden');
 
-    // Re-render everything
     recalculateCps();
     renderBuildings();
     renderOrbitPuffs();
@@ -1824,7 +1769,9 @@ function resetGame() {
     renderQuests();
     checkQuests();
     updateRebirthUI();
+    renderEggs();
     renderPetInventory();
+    renderPetIndex();
     updateDisplay();
     showQuote("🔄 C'est reparti ! Aubin a encore faim !");
 }
@@ -1833,14 +1780,19 @@ function resetGame() {
 
 function initShopTabs() {
     const tabs = document.querySelectorAll('.shop-tab');
+    const panelTitle = document.getElementById('panel-title');
+    
     tabs.forEach(tab => {
         tab.addEventListener('click', () => {
             tabs.forEach(t => t.classList.remove('active'));
             tab.classList.add('active');
 
+            if(panelTitle) panelTitle.textContent = tab.dataset.title;
+
             document.querySelectorAll('.shop-content').forEach(c => c.classList.remove('active'));
             const target = tab.dataset.tab;
-            document.getElementById(`${target}-list`).classList.add('active');
+            const targetEl = document.getElementById(`${target}-list`);
+            if (targetEl) targetEl.classList.add('active');
         });
     });
 }
@@ -1857,32 +1809,23 @@ function init() {
     renderQuests();
     checkQuests();
     updateRebirthUI();
+    renderEggs();
     renderPetInventory();
-    initWheel();
+    renderPetIndex();
     updateDisplay();
     updateAubinAppearance();
 
-    // Show pets tab + inventory + codes tab if rebirth >= 1
-    if (state.rebirthCount >= 1 && dom.petsTab) {
-        dom.petsTab.style.display = '';
-    }
-    if (state.rebirthCount >= 1 && dom.codesTab) {
-        dom.codesTab.style.display = '';
-    }
-    const petInv = document.getElementById('pet-inventory');
-    if (petInv) {
-        petInv.style.display = state.rebirthCount >= 1 ? '' : 'none';
+    if (state.rebirthCount >= 1) {
+        if(dom.eggsTab) dom.eggsTab.style.display = '';
+        if(dom.inventoryTab) dom.inventoryTab.style.display = '';
+        if(dom.indexTab) dom.indexTab.style.display = '';
+        if(dom.codesTab) dom.codesTab.style.display = '';
+        const petInv = document.getElementById('pet-inventory');
+        if(petInv) petInv.style.display = '';
     }
 
     dom.clickTarget.addEventListener('click', handleClick);
-    dom.clickTarget.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            handleClick(null);
-        }
-    });
-
-    // Aubin pressed image
+    
     const _setAubinPressed = () => {
         const imgEl = document.getElementById('aubin-img');
         if (imgEl) imgEl.src = 'images/aubin/aubinappuye.png';
@@ -1891,38 +1834,54 @@ function init() {
         const imgEl = document.getElementById('aubin-img');
         if (imgEl) imgEl.src = getAubinBaseSrc();
     };
+    
     dom.clickTarget.addEventListener('mousedown', _setAubinPressed);
     dom.clickTarget.addEventListener('mouseup', _setAubinReleased);
     dom.clickTarget.addEventListener('mouseleave', _setAubinReleased);
     dom.clickTarget.addEventListener('touchstart', _setAubinPressed, { passive: true });
     dom.clickTarget.addEventListener('touchend', _setAubinReleased);
+    
+    dom.clickTarget.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleClick(null);
+        }
+    });
 
     dom.saveBtn.addEventListener('click', saveGame);
     dom.resetBtn.addEventListener('click', resetGame);
     dom.rebirthBtn.addEventListener('click', doRebirth);
-    dom.spinBtn.addEventListener('click', spinWheel);
     if (dom.ascensionBtn) dom.ascensionBtn.addEventListener('click', doAscension);
     dom.codeSubmit.addEventListener('click', redeemCode);
     dom.codeInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') redeemCode();
     });
 
-    initShopTabs();
+    const btnEquipBest = document.getElementById('btn-equip-best');
+    if(btnEquipBest) btnEquipBest.addEventListener('click', equipBestPets);
     
-    // Initialize ascension UI
+    initShopTabs();
     if (dom.ascensionShop) {
         renderAscensionShop();
         updateAscensionUI();
     }
 
+    // Gestion du clic extérieur pour fermer les menus de Pets
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.pet-card')) {
+            document.querySelectorAll('.pet-card.selected').forEach(c => c.classList.remove('selected'));
+        }
+    });
+
     setInterval(saveGame, 30000);
     window.addEventListener('beforeunload', saveGame);
     setInterval(() => showQuote(), 30000);
+    
     setInterval(spawnBackgroundParticle, 2000);
     for (let i = 0; i < 5; i++) {
         setTimeout(() => spawnBackgroundParticle(), i * 400);
     }
-
+    
     setInterval(() => {
         renderBuildings();
         renderUpgrades();
@@ -1930,11 +1889,10 @@ function init() {
         checkQuests();
         updateRebirthUI();
         updateAscensionUI();
+        renderEggs(); 
     }, 2000);
 
     requestAnimationFrame(gameLoop);
-
-    console.log("🍔 AubinClicker chargé ! Bon appétit !");
 }
 
 document.addEventListener('DOMContentLoaded', init);

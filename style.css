@@ -134,14 +134,24 @@ body {
 /* --- Main Layout --- */
 #game-container {
   display: grid;
-  grid-template-columns: 280px 1fr 360px;
-  gap: 1rem;
+  grid-template-columns: 280px 1fr auto; /* On passe la colonne de droite en "auto" pour s'adapter au menu */
+  gap: 1.5rem; /* On augmente un peu l'espacement global pour aérer */
   max-width: 1400px;
   margin: 0.5rem auto;
   padding: 0 1rem 2rem;
   position: relative;
   z-index: 1;
   min-height: calc(100vh - 100px);
+}
+
+/* --- Right Interface (Wrapper) --- */
+#right-interface {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  height: fit-content;
+  position: sticky;
+  top: 1rem;
 }
 
 /* --- Glass Panel --- */
@@ -598,49 +608,82 @@ body {
 
 /* --- Shop Panel (Right) --- */
 #shop-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  height: fit-content;
-  position: sticky;
-  top: 1rem;
+  width: 320px;
+  position: static; /* Géré par le parent right-interface maintenant */
+  margin: 0;
   max-height: calc(100vh - 2rem);
 }
 
 .shop-tabs {
+  display: none;
+}
+
+#vertical-nav {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem;
-  background: rgba(0, 0, 0, 0.2);
-  padding: 0.25rem;
-  border-radius: var(--radius-sm);
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem 0.5rem;
 }
 
 .shop-tab {
-  flex: 1 1 auto;
-  min-width: 0;
-  padding: 0.35rem 0.4rem;
-  border: none;
-  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 45px;
+  height: 45px;
+  padding: 0;
+  font-size: 1.5rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--text-muted);
-  font-family: var(--font);
-  font-size: 0.7rem;
-  font-weight: 600;
   cursor: pointer;
   transition: all var(--transition-fast);
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  overflow: hidden;
+  position: relative;
 }
 
 .shop-tab:hover {
-  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.05);
+  transform: scale(1.1);
 }
 
 .shop-tab.active {
   background: rgba(255, 107, 53, 0.15);
-  color: var(--accent-primary);
+  border: 1px solid rgba(255, 107, 53, 0.3);
+  box-shadow: 0 0 10px rgba(255, 107, 53, 0.1);
+}
+
+/* Petit point rouge de notification pour les quêtes */
+.shop-tab .badge {
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  background: var(--danger);
+  color: white;
+  border-radius: 50%;
+  font-size: 0.6rem;
+  font-weight: bold;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 5px rgba(244, 63, 94, 0.5);
+}
+
+/* Settings content */
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  align-items: center;
+  padding: 2rem 0;
+}
+
+.settings-intro {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  text-align: center;
 }
 
 .shop-content {
@@ -1002,6 +1045,123 @@ body {
   font-size: 1.2rem;
   flex-shrink: 0;
 }
+
+/* ============ EGG SHOP, INVENTORY & INDEX ============ */
+.egg-grid, .inventory-grid, .index-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); /* Cartes beaucoup plus petites */
+    gap: 0.5rem;
+    padding: 0.25rem;
+}
+
+.egg-card, .pet-card, .index-card {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-sm);
+    padding: 0.5rem;
+    text-align: center;
+    transition: all var(--transition-fast);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.egg-card:hover { border-color: var(--accent-primary); }
+.egg-card.locked { opacity: 0.5; filter: grayscale(1); pointer-events: none; }
+
+.egg-icon, .index-icon, .pet-card .pet-icon { 
+    font-size: 2rem; 
+    line-height: 1;
+}
+
+.egg-name, .index-card .egg-name { 
+    font-weight: bold; 
+    font-size: 0.75rem; 
+    line-height: 1.1;
+    margin-top: 0.25rem;
+}
+.egg-cost { color: var(--accent-secondary); font-size: 0.75rem; font-weight: bold;}
+.egg-req { font-size: 0.65rem; color: var(--danger); }
+
+.inventory-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+.inventory-stats { font-size: 0.8rem; color: var(--text-secondary); }
+
+/* --- Pet Cards (Compact & Interactive) --- */
+.pet-card { 
+    position: relative; 
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.pet-card .pet-name { font-weight: bold; font-size: 0.7rem; margin-top: 0.2rem; line-height: 1.1; }
+.pet-card .pet-mult { color: var(--success); font-weight: 800; font-size: 0.7rem; }
+.pet-card .pet-rarity { 
+    font-size: 0.55rem; 
+    text-transform: uppercase; 
+    letter-spacing: 1px; 
+    padding: 2px 4px; 
+    border-radius: 4px; 
+    margin-bottom: 0.2rem; 
+}
+
+/* Nouveau Menu de sélection au clic */
+.pet-card .btn-group {
+    position: absolute;
+    inset: 0;
+    background: rgba(13, 13, 13, 0.85);
+    backdrop-filter: blur(3px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--transition-fast);
+    padding: 0.5rem;
+    z-index: 10;
+}
+
+.pet-card.selected .btn-group {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.pet-card .btn-equip, .pet-card .btn-sell {
+    width: 100%;
+    padding: 0.4rem;
+    border-radius: var(--radius-sm);
+    border: none;
+    font-weight: 800;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: transform 0.1s ease;
+    font-family: var(--font);
+}
+
+.pet-card .btn-equip:active, .pet-card .btn-sell:active { transform: scale(0.95); }
+
+.pet-card .btn-equip { background: var(--success); color: #0d0d0d; }
+.pet-card .btn-sell { background: rgba(244, 63, 94, 0.1); border: 1px solid var(--danger); color: var(--danger); }
+
+/* Index (Pokédex) */
+.index-card.unknown { opacity: 0.6; }
+.index-card.unknown .index-icon { filter: brightness(0); opacity: 0.5; }
+
+/* Rarity colors */
+.rarity-common { background: rgba(160, 160, 176, 0.1); border-color: rgba(160, 160, 176, 0.3); color: #a0a0b0; }
+.rarity-rare { background: rgba(56, 189, 248, 0.1); border-color: rgba(56, 189, 248, 0.3); color: #38bdf8; }
+.rarity-epic { background: rgba(168, 85, 247, 0.1); border-color: rgba(168, 85, 247, 0.3); color: #a855f7; }
+.rarity-legendary { background: rgba(255, 201, 71, 0.1); border-color: rgba(255, 201, 71, 0.3); color: #ffc947; }
+.rarity-mythic { background: rgba(236, 72, 153, 0.1); border-color: rgba(236, 72, 153, 0.3); color: #ec4899; box-shadow: 0 0 15px rgba(236, 72, 153, 0.2); }
+
 
 /* --- Rebirth Section --- */
 #rebirth-info {

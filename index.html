@@ -11,19 +11,15 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Particles container -->
     <div id="particles"></div>
 
-    <!-- Header -->
     <header id="game-header">
         <h1>🍔 Aubin<span class="accent">Clicker</span> 🍔</h1>
         <p class="subtitle">Nourris Aubin. Il a faim. Il a <em>toujours</em> faim.</p>
     </header>
 
-    <!-- Main Game Layout -->
     <main id="game-container">
         
-        <!-- Left Panel - Stats -->
         <section id="stats-panel" class="glass-panel">
             <h2>📊 Statistiques</h2>
             <div class="stat-grid">
@@ -47,7 +43,6 @@
                 </div>
             </div>
 
-            <!-- Rebirth Info -->
             <div id="rebirth-info" class="glass-panel-inner">
                 <div class="rebirth-header">
                     <span>🔄 Rebirth</span>
@@ -55,7 +50,7 @@
                 </div>
                 <div class="rebirth-details">
                     <div class="rebirth-cap">
-                        <span class="stat-label">Cap calories</span>
+                        <span class="stat-label">Objectif Rebirth</span>
                         <span id="calorie-cap-display" class="stat-value">1M</span>
                     </div>
                     <div class="rebirth-mult">
@@ -66,7 +61,6 @@
                 <button id="rebirth-btn" class="btn btn-rebirth" disabled>🔄 Rebirth</button>
                 <p id="rebirth-require" class="rebirth-require-text"></p>
                 
-                <!-- Ascension Info -->
                 <div id="ascension-info" class="ascension-header" style="display:none;">
                     <span>✨ Ascension</span>
                     <span id="ascension-count" class="ascension-badge">0</span>
@@ -81,19 +75,15 @@
                 <p id="ascension-require" class="ascension-require-text" style="display:none;"></p>
             </div>
 
-            <!-- Aubin Quote -->
             <div id="quote-box" class="glass-panel-inner">
                 <p id="aubin-quote">"J'ai un petit creux..."</p>
             </div>
 
-            <!-- Save Controls -->
             <div class="save-controls">
-                <button id="save-btn" class="btn btn-save" title="Sauvegarder">💾 Save</button>
-                <button id="reset-btn" class="btn btn-reset" title="Tout recommencer">🗑️ Reset</button>
+                <button id="save-btn" class="btn btn-save" title="Sauvegarder">💾 Sauvegarder la partie</button>
             </div>
         </section>
 
-        <!-- Center Panel - The Clicker -->
         <section id="clicker-panel">
             <div id="calorie-display" class="glass-panel">
                 <span id="calorie-count">0</span>
@@ -115,86 +105,92 @@
                 <p class="click-hint">Clique sur Aubin pour gagner des Calories d'Or !</p>
             </div>
 
-            <!-- Pet Inventory -->
             <div id="pet-inventory" class="glass-panel" style="display:none;">
-                <h3>🐾 Tes Pets <span id="pet-count-display">(0/4)</span></h3>
-                <div id="pet-slots">
-                    <!-- Generated dynamically by JS -->
+                <div class="inventory-header">
+                    <h3>🐾 Pets Équipés <span id="pet-count-display">(0/3)</span></h3>
+                    <button id="btn-equip-best" class="btn btn-save" style="font-size: 0.8rem; padding: 0.5rem;">⭐ Équiper les meilleurs</button>
                 </div>
+                <div id="pet-slots" class="egg-grid">
+                    </div>
             </div>
 
-            <!-- Milestones ticker -->
             <div id="milestone-banner" class="glass-panel hidden">
                 <span id="milestone-text"></span>
             </div>
         </section>
 
-        <!-- Right Panel - Shop -->
-        <section id="shop-panel" class="glass-panel">
-            <h2>🛒 Boutique</h2>
-            
-            <!-- Tab navigation -->
-            <div class="shop-tabs">
-                <button class="shop-tab active" data-tab="buildings">🏗️ Bâtiments</button>
-                <button class="shop-tab" data-tab="upgrades">⬆️ Améliorations</button>
-                <button class="shop-tab" data-tab="quests">🎯 Quêtes</button>
-                <button class="shop-tab" data-tab="pets" id="pets-tab" style="display:none;">🐾 Pets</button>
-                <button class="shop-tab" data-tab="codes" id="codes-tab" style="display:none;">🔑 Codes</button>
-                <button class="shop-tab" data-tab="ascension" id="ascension-tab" style="display:none;">✨ Ascension</button>
-            </div>
+        <div id="right-interface">
+            <section id="shop-panel" class="glass-panel">
+                <h2 id="panel-title">🏗️ Bâtiments</h2>
+                
+                <div id="buildings-list" class="shop-content active"></div>
 
-            <!-- Buildings list -->
-            <div id="buildings-list" class="shop-content active">
-            </div>
+                <div id="upgrades-list" class="shop-content"></div>
 
-            <!-- Upgrades list -->
-            <div id="upgrades-list" class="shop-content">
-            </div>
+                <div id="quests-list" class="shop-content"></div>
 
-            <!-- Quests list -->
-            <div id="quests-list" class="shop-content">
-            </div>
+                <div id="eggs-list" class="shop-content">
+                    <div class="ascension-section">
+                        <p class="ascension-intro">Achète des œufs avec tes Calories d'Or. Fais des Rebirths pour en débloquer de nouveaux !</p>
+                        <div id="egg-shop-grid" class="egg-grid"></div>
+                    </div>
+                </div>
 
-            <!-- Pets shop (wheel) -->
-            <div id="pets-list" class="shop-content">
-                <div id="wheel-section">
-                    <p class="wheel-intro">Tourne la roue pour gagner un Pet !</p>
-                    <div id="wheel-container">
-                        <div id="wheel-pointer">▼</div>
-                        <div id="wheel">
-                            <!-- Segments populated by JS -->
+                <div id="inventory-list" class="shop-content">
+                    <div class="inventory-header">
+                        <span class="inventory-stats">Stock : <span id="inventory-count">0</span> / <span id="inventory-max">100</span></span>
+                    </div>
+                    <div id="pet-inventory-grid" class="inventory-grid"></div>
+                </div>
+
+                <div id="index-list" class="shop-content">
+                    <div class="ascension-section">
+                        <p class="ascension-intro">Collectionne-les tous !</p>
+                        <div id="pet-index-grid" class="index-grid"></div>
+                    </div>
+                </div>
+                
+                <div id="codes-list" class="shop-content">
+                    <div id="codes-section">
+                        <p class="codes-intro">Entre un code pour des récompenses exclusives !</p>
+                        <div class="code-input-group">
+                            <input type="text" id="code-input" placeholder="Ton code ici..." autocomplete="off" spellcheck="false">
+                            <button id="code-submit" class="btn btn-code">✔ Valider</button>
                         </div>
-                    </div>
-                    <button id="spin-btn" class="btn btn-spin">🎰 Tourner (1 Rebirth Token)</button>
-                    <p id="spin-result" class="spin-result hidden"></p>
-                    <p id="rebirth-tokens-display" class="tokens-display">Tokens: <span id="rebirth-tokens">0</span> 🪙</p>
-                </div>
-            </div>
-            <!-- Codes panel -->
-            <div id="codes-list" class="shop-content">
-                <div id="codes-section">
-                    <p class="codes-intro">Entre un code pour des récompenses exclusives !</p>
-                    <div class="code-input-group">
-                        <input type="text" id="code-input" placeholder="Ton code ici..." autocomplete="off" spellcheck="false">
-                        <button id="code-submit" class="btn btn-code">✔ Valider</button>
-                    </div>
-                    <p id="code-result" class="code-result"></p>
-                </div>
-            </div>
-            
-            <!-- Ascension shop panel -->
-            <div id="ascension-list" class="shop-content">
-                <div id="ascension-section">
-                    <p class="ascension-intro">Achete des ameliorations permanentes avec tes Points d'Ascension !</p>
-                    <div id="ascension-shop">
-                        <!-- Generated dynamically by JS -->
+                        <p id="code-result" class="code-result"></p>
                     </div>
                 </div>
-            </div>
-        </section>
+                
+                <div id="ascension-list" class="shop-content">
+                    <div id="ascension-section">
+                        <p class="ascension-intro">Achète des améliorations permanentes avec tes Points d'Ascension !</p>
+                        <div id="ascension-shop">
+                            </div>
+                    </div>
+                </div>
+
+                <div id="settings-list" class="shop-content">
+                    <div class="settings-section">
+                        <p class="settings-intro">Gère ta sauvegarde ici.</p>
+                        <button id="reset-btn" class="btn btn-reset">🗑️ Reset Sauvegarde</button>
+                    </div>
+                </div>
+            </section>
+
+            <nav id="vertical-nav" class="glass-panel">
+                <button class="shop-tab active" data-tab="buildings" data-title="🏗️ Bâtiments" title="Bâtiments">🏗️</button>
+                <button class="shop-tab" data-tab="upgrades" data-title="⬆️ Améliorations" title="Améliorations">⬆️</button>
+                <button class="shop-tab" data-tab="quests" data-title="🎯 Quêtes" title="Quêtes">🎯</button>
+                <button class="shop-tab" data-tab="eggs" id="eggs-tab" style="display:none;" data-title="🥚 Boutique d'Œufs" title="Boutique d'Œufs">🥚</button>
+                <button class="shop-tab" data-tab="inventory" id="inventory-tab" style="display:none;" data-title="🎒 Inventaire Pets" title="Inventaire">🎒</button>
+                <button class="shop-tab" data-tab="index" id="index-tab" style="display:none;" data-title="📖 Index Pets" title="Index">📖</button>
+                <button class="shop-tab" data-tab="ascension" id="ascension-tab" style="display:none;" data-title="✨ Ascension" title="Ascension">✨</button>
+                <button class="shop-tab" data-tab="codes" id="codes-tab" style="display:none;" data-title="🔑 Codes" title="Codes">🔑</button>
+                <button class="shop-tab" data-tab="settings" data-title="⚙️ Paramètres" title="Paramètres">⚙️</button>
+            </nav>
+        </div>
     </main>
 
-    <!-- Float notifications -->
     <div id="float-text-container"></div>
 
     <script src="script.js"></script>
