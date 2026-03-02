@@ -3,246 +3,40 @@
    ============================================ */
 
 // >>>>>> DEBUG: Vitesse du jeu (1 = normal, 100 = ultra rapide) <<<<<<
-// const DEBUG_SPEED = 100000000000000000000000000000000;
+const DEBUG_SPEED = 1;
 // >>>>>> FIN DEBUG <<<<<<
+
+// Noms pour chaque palier de fusion
+const FUSION_NAMES = ["", "❄️ Éveillé", "🔥 Ardent", "🔮 Mystique", "👑 Divin"];
 
 // ============ GAME DATA ============
 
 const BUILDINGS = [
-    {
-        id: 'puff',
-        name: 'Puff 16k',
-        icon: '💨',
-        desc: 'Un curseur en forme de Puff qui clique automatiquement sur Aubin',
-        baseCost: 15,
-        baseCps: 0.5,
-        count: 0,
-    },
-    {
-        id: 'frite',
-        name: 'Barquette de Frites',
-        icon: '🍟',
-        desc: 'Une bonne grosse barquette bien grasse',
-        baseCost: 100,
-        baseCps: 3,
-        count: 0,
-    },
-    {
-        id: 'burger',
-        name: 'Burger Double',
-        icon: '🍔',
-        desc: 'Double steak, double cheese, double Aubin',
-        baseCost: 500,
-        baseCps: 15,
-        count: 0,
-    },
-    {
-        id: 'kebab',
-        name: 'Kebab Ketchup',
-        icon: '🥙',
-        desc: 'Kebab au ketchup (Oui c\'est dégueulasse mais on dira rien)',
-        baseCost: 2000,
-        baseCps: 50,
-        count: 0,
-    },
-    {
-        id: 'poulet',
-        name: 'Bucket de Poulet',
-        icon: '🍗',
-        desc: 'Le seau familial... pour Aubin tout seul',
-        baseCost: 8000,
-        baseCps: 150,
-        count: 0,
-    },
-    {
-        id: 'pizza',
-        name: 'Pizza 4 Fromages',
-        icon: '🍕',
-        desc: 'Aubin pourrait en manger 3 d\'affilée',
-        baseCost: 30000,
-        baseCps: 500,
-        count: 0,
-    },
-    {
-        id: 'buffet',
-        name: 'Buffet à Volonté',
-        icon: '🍖',
-        desc: 'Le patron le reconnaît et pleure quand il arrive',
-        baseCost: 120000,
-        baseCps: 2000,
-        count: 0,
-    },
-    {
-        id: 'usine',
-        name: 'Usine à Tacos',
-        icon: '🏭',
-        desc: 'Production industrielle pour les besoins d\'Aubin',
-        baseCost: 500000,
-        baseCps: 8000,
-        count: 0,
-    },
-    {
-        id: 'labo',
-        name: 'Labo de Calories',
-        icon: '🧪',
-        desc: 'Des scientifiques synthétisent de la calorie pure',
-        baseCost: 2000000,
-        baseCps: 30000,
-        count: 0,
-    },
-    {
-        id: 'portail',
-        name: 'Portail Gastronomique',
-        icon: '🌀',
-        desc: 'Un portail vers une dimension 100% bouffe',
-        baseCost: 10000000,
-        baseCps: 100000,
-        count: 0,
-    },
+    { id: 'puff', name: 'Puff 16k', icon: '💨', desc: 'Un curseur en forme de Puff qui clique automatiquement sur Aubin', baseCost: 15, baseCps: 0.5, count: 0 },
+    { id: 'frite', name: 'Barquette de Frites', icon: '🍟', desc: 'Une bonne grosse barquette bien grasse', baseCost: 100, baseCps: 3, count: 0 },
+    { id: 'burger', name: 'Burger Double', icon: '🍔', desc: 'Double steak, double cheese, double Aubin', baseCost: 500, baseCps: 15, count: 0 },
+    { id: 'kebab', name: 'Kebab Ketchup', icon: '🥙', desc: 'Kebab au ketchup (Oui c\'est dégueulasse mais on dira rien)', baseCost: 2000, baseCps: 50, count: 0 },
+    { id: 'poulet', name: 'Bucket de Poulet', icon: '🍗', desc: 'Le seau familial... pour Aubin tout seul', baseCost: 8000, baseCps: 150, count: 0 },
+    { id: 'pizza', name: 'Pizza 4 Fromages', icon: '🍕', desc: 'Aubin pourrait en manger 3 d\'affilée', baseCost: 30000, baseCps: 500, count: 0 },
+    { id: 'buffet', name: 'Buffet à Volonté', icon: '🍖', desc: 'Le patron le reconnaît et pleure quand il arrive', baseCost: 120000, baseCps: 2000, count: 0 },
+    { id: 'usine', name: 'Usine à Tacos', icon: '🏭', desc: 'Production industrielle pour les besoins d\'Aubin', baseCost: 500000, baseCps: 8000, count: 0 },
+    { id: 'labo', name: 'Labo de Calories', icon: '🧪', desc: 'Des scientifiques synthétisent de la calorie pure', baseCost: 2000000, baseCps: 30000, count: 0 },
+    { id: 'portail', name: 'Portail Gastronomique', icon: '🌀', desc: 'Un portail vers une dimension 100% bouffe', baseCost: 10000000, baseCps: 100000, count: 0 },
 ];
 
 const UPGRADES = [
-    // Click power upgrades
-    {
-        id: 'double_click',
-        name: 'Doigts Gras',
-        icon: '👆',
-        desc: 'Les doigts gra"ss"ieux d\'Aubin doublent la puissance de clic',
-        cost: 100,
-        type: 'click',
-        multiplier: 2,
-        requirement: { type: 'clicks', value: 50 },
-        purchased: false,
-    },
-    {
-        id: 'triple_click',
-        name: 'Mains de Beurre',
-        icon: '🧈',
-        desc: 'Triple pouvoir de clic. Ça glisse.',
-        cost: 1000,
-        type: 'click',
-        multiplier: 3,
-        requirement: { type: 'clicks', value: 200 },
-        purchased: false,
-    },
-    {
-        id: 'mega_click',
-        name: 'Poing Calorique',
-        icon: '👊',
-        desc: 'x5 puissance de clic brute (ARC SALLE)',
-        cost: 50000,
-        type: 'click',
-        multiplier: 5,
-        requirement: { type: 'calories', value: 25000 },
-        purchased: false,
-    },
-    // Building-specific upgrades
-    {
-        id: 'puff_50k', 
-        name: 'Puff 32k',
-        icon: '🌬️',
-        desc: 'Upgrade les Puffs en 32k ! Triple production',
-        cost: 200,
-        type: 'building',
-        target: 'puff',
-        multiplier: 3,
-        requirement: { type: 'building', building: 'puff', value: 5 },
-        purchased: false,
-    },
-    {
-        id: 'sauce',
-        name: 'Sauce en Plus',
-        icon: '🫗',
-        desc: 'Toutes les frites produisent x3 Calories d\'Or',
-        cost: 1500,
-        type: 'building',
-        target: 'frite',
-        multiplier: 3,
-        requirement: { type: 'building', building: 'frite', value: 5 },
-        purchased: false,
-    },
-    {
-        id: 'triple_cheese',
-        name: 'Triple Cheese',
-        icon: '🧀',
-        desc: 'Burgers passent au triple fromage ! x3 (Aubin ne prend plus de Mc Smart)',
-        cost: 5000,
-        type: 'building',
-        target: 'burger',
-        multiplier: 3,
-        requirement: { type: 'building', building: 'burger', value: 5 },
-        purchased: false,
-    },
-    {
-        id: 'galette',
-        name: 'Galette Maison',
-        icon: '🫓',
-        desc: 'Kebabs avec galette artisanale x3',
-        cost: 20000,
-        type: 'building',
-        target: 'kebab',
-        multiplier: 3,
-        requirement: { type: 'building', building: 'kebab', value: 5 },
-        purchased: false,
-    },
-    {
-        id: 'aile_en_plus',
-        name: 'Aile en Plus',
-        icon: '🦴',
-        desc: 'Chaque bucket contient 50% d\'ailes en plus x3',
-        cost: 80000,
-        type: 'building',
-        target: 'poulet',
-        multiplier: 3,
-        requirement: { type: 'building', building: 'poulet', value: 5 },
-        purchased: false,
-    },
-    {
-        id: 'four_a_bois',
-        name: 'Four à Bois',
-        icon: '🪵',
-        desc: 'Pizzas cuites au feu de bois = x3',
-        cost: 300000,
-        type: 'building',
-        target: 'pizza',
-        multiplier: 3,
-        requirement: { type: 'building', building: 'pizza', value: 5 },
-        purchased: false,
-    },
-    // Global multipliers
-    {
-        id: 'appetit_leger',
-        name: 'Gros Appétit',
-        icon: '😋',
-        desc: 'Aubin a encore plus faim ! Tout x2 !',
-        cost: 10000,
-        type: 'global',
-        multiplier: 2,
-        requirement: { type: 'calories', value: 5000 },
-        purchased: false,
-    },
-    {
-        id: 'trou_noir',
-        name: 'Estomac sans Fond',
-        icon: '🕳️',
-        desc: 'La science ne peut pas expliquer où ça va. Tout x3',
-        cost: 500000,
-        type: 'global',
-        multiplier: 3,
-        requirement: { type: 'calories', value: 200000 },
-        purchased: false,
-    },
-    {
-        id: 'dimension_bouffe',
-        name: 'Dimension Bouffe',
-        icon: '🌌',
-        desc: 'Aubin transcende la réalité. Tout x5',
-        cost: 5000000,
-        type: 'global',
-        multiplier: 5,
-        requirement: { type: 'calories', value: 2000000 },
-        purchased: false,
-    },
+    { id: 'double_click', name: 'Doigts Gras', icon: '👆', desc: 'Les doigts gra"ss"ieux d\'Aubin doublent la puissance de clic', cost: 100, type: 'click', multiplier: 2, requirement: { type: 'clicks', value: 50 }, purchased: false },
+    { id: 'triple_click', name: 'Mains de Beurre', icon: '🧈', desc: 'Triple pouvoir de clic. Ça glisse.', cost: 1000, type: 'click', multiplier: 3, requirement: { type: 'clicks', value: 200 }, purchased: false },
+    { id: 'mega_click', name: 'Poing Calorique', icon: '👊', desc: 'x5 puissance de clic brute (ARC SALLE)', cost: 50000, type: 'click', multiplier: 5, requirement: { type: 'calories', value: 25000 }, purchased: false },
+    { id: 'puff_50k', name: 'Puff 32k', icon: '🌬️', desc: 'Upgrade les Puffs en 32k ! Triple production', cost: 200, type: 'building', target: 'puff', multiplier: 3, requirement: { type: 'building', building: 'puff', value: 5 }, purchased: false },
+    { id: 'sauce', name: 'Sauce en Plus', icon: '🫗', desc: 'Toutes les frites produisent x3 Calories d\'Or', cost: 1500, type: 'building', target: 'frite', multiplier: 3, requirement: { type: 'building', building: 'frite', value: 5 }, purchased: false },
+    { id: 'triple_cheese', name: 'Triple Cheese', icon: '🧀', desc: 'Burgers passent au triple fromage ! x3', cost: 5000, type: 'building', target: 'burger', multiplier: 3, requirement: { type: 'building', building: 'burger', value: 5 }, purchased: false },
+    { id: 'galette', name: 'Galette Maison', icon: '🫓', desc: 'Kebabs avec galette artisanale x3', cost: 20000, type: 'building', target: 'kebab', multiplier: 3, requirement: { type: 'building', building: 'kebab', value: 5 }, purchased: false },
+    { id: 'aile_en_plus', name: 'Aile en Plus', icon: '🦴', desc: 'Chaque bucket contient 50% d\'ailes en plus x3', cost: 80000, type: 'building', target: 'poulet', multiplier: 3, requirement: { type: 'building', building: 'poulet', value: 5 }, purchased: false },
+    { id: 'four_a_bois', name: 'Four à Bois', icon: '🪵', desc: 'Pizzas cuites au feu de bois = x3', cost: 300000, type: 'building', target: 'pizza', multiplier: 3, requirement: { type: 'building', building: 'pizza', value: 5 }, purchased: false },
+    { id: 'appetit_leger', name: 'Gros Appétit', icon: '😋', desc: 'Aubin a encore plus faim ! Tout x2 !', cost: 10000, type: 'global', multiplier: 2, requirement: { type: 'calories', value: 5000 }, purchased: false },
+    { id: 'trou_noir', name: 'Estomac sans Fond', icon: '🕳️', desc: 'La science ne peut pas expliquer où ça va. Tout x3', cost: 500000, type: 'global', multiplier: 3, requirement: { type: 'calories', value: 200000 }, purchased: false },
+    { id: 'dimension_bouffe', name: 'Dimension Bouffe', icon: '🌌', desc: 'Aubin transcende la réalité. Tout x5', cost: 5000000, type: 'global', multiplier: 5, requirement: { type: 'calories', value: 2000000 }, purchased: false },
 ];
 
 const PETS = [
@@ -270,28 +64,13 @@ function getRebirthTarget() {
 }
 
 const QUOTES = [
-    "\"J'ai un petit creux...\"",
-    "\"On passe au McDo ?\"",
-    "\"C'est pas gras, c'est du gras sain.\"",
-    "\"J'ai mangé et je mange avec vous.\"",
-    "\"Un kebab sans la sauce d'Ali c'est pas un kebab.\"",
-    "\"J'ai déjà mangé, mais j'ai RE-faim.\"",
-    "\"C'est les os qui sont lourds.\"",
-    "\"Je suis pas gros, téma les bras.\"",
-    "\"Le régime commence lundi. Comme chaque semaine.\"",
-    "\"Faut manger pour vivre !... et vivre pour manger.\"",
-    "\"5 fruits et légumes ? La pizza a de la tomate dessus.\"",
-    "\"Mon péché mignon c'est la nourriture. Toute.\"",
-    "\"J'ai pas mangé depuis 20 minutes, c'est grave docteur ?\"",
-    "\"Le nutella c'est pas une addiction, c'est un mode de vie.\"",
-    "\"J'ai un métabolisme... généreux.\"",
-    "\"Ah tu fais remarquer que j'ai repris du dessert ? Et toi t'as repris de l'oxygène non ?\"",
-    "\"Je mange mes émotions. Et j'ai beaucoup d'émotions.\"",
-    "\"Le menu enfant c'est l'entrée.\"",
-    "\"Je mange pas beaucoup, je mange souvent.\"",
-    "\"Mon sport préféré c'est la fourchette.\"",
-    "\"Passe-moi la puff frérot.\"",
-    "\"CLIQUE ! J'ai encore la dalle.\"",
+    "\"J'ai un petit creux...\"", "\"On passe au McDo ?\"", "\"C'est pas gras, c'est du gras sain.\"", "\"J'ai mangé et je mange avec vous.\"",
+    "\"Un kebab sans la sauce d'Ali c'est pas un kebab.\"", "\"J'ai déjà mangé, mais j'ai RE-faim.\"", "\"C'est les os qui sont lourds.\"",
+    "\"Je suis pas gros, téma les bras.\"", "\"Le régime commence lundi. Comme chaque semaine.\"", "\"Faut manger pour vivre !... et vivre pour manger.\"",
+    "\"5 fruits et légumes ? La pizza a de la tomate dessus.\"", "\"Mon péché mignon c'est la nourriture. Toute.\"", "\"J'ai pas mangé depuis 20 minutes, c'est grave docteur ?\"",
+    "\"Le nutella c'est pas une addiction, c'est un mode de vie.\"", "\"J'ai un métabolisme... généreux.\"", "\"Ah tu fais remarquer que j'ai repris du dessert ? Et toi t'as repris de l'oxygène non ?\"",
+    "\"Je mange mes émotions. Et j'ai beaucoup d'émotions.\"", "\"Le menu enfant c'est l'entrée.\"", "\"Je mange pas beaucoup, je mange souvent.\"",
+    "\"Mon sport préféré c'est la fourchette.\"", "\"Passe-moi la puff frérot.\"", "\"CLIQUE ! J'ai encore la dalle.\""
 ];
 
 const MILESTONES = [
@@ -350,7 +129,9 @@ let state = {
     ascensionCount: 0,
     ascensionPoints: 0,
     ascensionUpgrades: {},
-    completedQuests: [], 
+    completedQuests: [],
+    isSelectionMode: false,
+    selectedPetsToSell: [],
 };
 
 // ============ DOM ELEMENTS ============
@@ -529,7 +310,11 @@ function getPetMultiplier() {
     let mult = 1;
     for (const pInfo of state.equippedPets) {
         const pet = PETS.find(p => p.id === pInfo.id);
-        if (pet) mult *= pet.mult;
+        if (pet) {
+            const fLvl = pInfo.fusionLevel || 0;
+            // Bonus x2 à chaque niveau de fusion (0=1, 1=2, 2=4, 3=8, 4=16)
+            mult *= pet.mult * Math.pow(2, fLvl);
+        }
     }
     return mult;
 }
@@ -547,7 +332,6 @@ function renderEggs() {
         const canAfford = state.calories >= egg.cost;
 
         const card = document.createElement('div');
-        // On ajoute la classe 'locked' si l'œuf est bloqué OU si l'inventaire est plein
         card.className = `egg-card ${isLocked || isInvFull ? 'locked' : ''} ${canAfford && !isInvFull ? 'can-afford' : ''}`;
         
         let statusText = '';
@@ -603,7 +387,8 @@ function buyEgg(egg) {
 
     state.inventoryPets.push({
         uid: Date.now() + Math.random(),
-        id: selectedId
+        id: selectedId,
+        fusionLevel: 0
     });
 
     showMilestone(`🥚 Tu as fait éclore : ${petData.icon} ${petData.name} !`);
@@ -625,6 +410,156 @@ function togglePetActions(uid) {
     });
 }
 
+// --- FONCTIONS DE SELECTION MULTIPLE ---
+
+function toggleSelectionMode() {
+    state.isSelectionMode = !state.isSelectionMode;
+    state.selectedPetsToSell = []; 
+    
+    const btnMode = document.getElementById('btn-selection-mode');
+    const btnDelete = document.getElementById('btn-delete-selected');
+    
+    if (state.isSelectionMode) {
+        if(btnMode) {
+            btnMode.textContent = 'Annuler Sélection';
+            btnMode.style.background = 'var(--text-muted)';
+        }
+        if(btnDelete) {
+            btnDelete.style.display = 'block';
+            btnDelete.textContent = 'Vendre (0)';
+        }
+        document.querySelectorAll('.pet-card.selected').forEach(c => c.classList.remove('selected'));
+    } else {
+        if(btnMode) {
+            btnMode.textContent = 'Sélection Multiple';
+            btnMode.style.background = '';
+        }
+        if(btnDelete) btnDelete.style.display = 'none';
+    }
+    renderPetInventory();
+}
+
+function togglePetSaleSelection(uid) {
+    if (!state.isSelectionMode) return;
+    const idx = state.selectedPetsToSell.indexOf(uid);
+    if (idx > -1) {
+        state.selectedPetsToSell.splice(idx, 1);
+    } else {
+        state.selectedPetsToSell.push(uid);
+    }
+    const btnDelete = document.getElementById('btn-delete-selected');
+    if(btnDelete) btnDelete.textContent = `Vendre (${state.selectedPetsToSell.length})`;
+    renderPetInventory(); 
+}
+
+function sellSelectedPets() {
+    if (state.selectedPetsToSell.length === 0) return;
+    
+    let totalGain = 0;
+    const petsToSell = state.inventoryPets.filter(p => state.selectedPetsToSell.includes(p.uid));
+    
+    for(const p of petsToSell) {
+        const petData = PETS.find(pd => pd.id === p.id);
+        const fLvl = p.fusionLevel || 0;
+        // Prix de revente multiplié par 5 à chaque fusion pour ne rien perdre
+        if(petData) totalGain += petData.sellPrice * Math.pow(5, fLvl);
+    }
+    
+    if(!confirm(`Es-tu sûr de vouloir vendre ces ${state.selectedPetsToSell.length} pets pour ${formatNumber(totalGain)} cal ?`)) return;
+    
+    const grid = document.getElementById('pet-inventory-grid');
+    if (grid) {
+        grid.style.pointerEvents = 'none';
+        const cards = grid.querySelectorAll('.pet-card.selected-for-sale');
+        cards.forEach(card => card.classList.add('poof-animation'));
+    }
+    
+    setTimeout(() => {
+        state.calories += totalGain;
+        state.totalCalories += totalGain;
+        state.inventoryPets = state.inventoryPets.filter(p => !state.selectedPetsToSell.includes(p.uid));
+        
+        state.isSelectionMode = false;
+        state.selectedPetsToSell = [];
+        
+        const btnMode = document.getElementById('btn-selection-mode');
+        const btnDelete = document.getElementById('btn-delete-selected');
+        if (btnMode) {
+            btnMode.textContent = 'Sélection Multiple';
+            btnMode.style.background = '';
+        }
+        if (btnDelete) btnDelete.style.display = 'none';
+        
+        if (grid) grid.style.pointerEvents = 'all';
+        
+        recalculateCps();
+        renderPetInventory();
+        renderEggs(); 
+        updateDisplay();
+        updateRebirthUI();
+        showQuote(`Vente massive ! +${formatNumber(totalGain)} cal`);
+    }, 400);
+}
+
+// --- FONCTION DE FUSION DES PETS (NOUVEAU) ---
+
+function fusePet(uid) {
+    let targetPet = state.inventoryPets.find(p => p.uid === uid) || state.equippedPets.find(p => p.uid === uid);
+    if (!targetPet) return;
+
+    const currentLevel = targetPet.fusionLevel || 0;
+    if (currentLevel >= 4) {
+        showQuote("Ce pet est déjà fusionné au maximum.");
+        return;
+    }
+
+    // Cherche tous les pets identiques (même ID et MÊME NIVEAU DE FUSION) partout (inventaire + équipés) SAUF le pet ciblé
+    let allSameLevel = [...state.inventoryPets, ...state.equippedPets].filter(p => p.id === targetPet.id && (p.fusionLevel || 0) === currentLevel && p.uid !== targetPet.uid);
+    
+    if (allSameLevel.length < 4) {
+        showQuote(`Pas assez de pets identiques (Niv. ${currentLevel}). Il en faut 5 !`);
+        return;
+    }
+
+    // On retire 4 copies du jeu (en priorité dans l'inventaire)
+    let toRemove = 4;
+    
+    state.inventoryPets = state.inventoryPets.filter(p => {
+        if (toRemove > 0 && p.id === targetPet.id && (p.fusionLevel || 0) === currentLevel && p.uid !== targetPet.uid) {
+            toRemove--;
+            return false;
+        }
+        return true;
+    });
+
+    // S'il manquait des copies dans l'inventaire, on les retire de ceux équipés
+    if (toRemove > 0) {
+        state.equippedPets = state.equippedPets.filter(p => {
+            if (toRemove > 0 && p.id === targetPet.id && (p.fusionLevel || 0) === currentLevel && p.uid !== targetPet.uid) {
+                toRemove--;
+                return false;
+            }
+            return true;
+        });
+    }
+
+    // On augmente le niveau de fusion
+    targetPet.fusionLevel = currentLevel + 1;
+    
+    const selIdx = state.selectedPetsToSell.indexOf(uid);
+    if (selIdx > -1) state.selectedPetsToSell.splice(selIdx, 1);
+
+    const petData = PETS.find(p=>p.id===targetPet.id);
+    showMilestone(`✨ Évolution réussie ! Ton pet devient ${FUSION_NAMES[targetPet.fusionLevel]} (x${petData.mult * Math.pow(2, targetPet.fusionLevel)}) !`);
+    
+    recalculateCps();
+    renderPetInventory();
+    updateDisplay();
+    updateRebirthUI();
+}
+
+// ---------------------------------------
+
 function equipPet(uid) {
     if (state.equippedPets.length >= state.maxPetSlots) {
         showQuote("Tu ne peux pas équiper plus de pets !");
@@ -636,7 +571,7 @@ function equipPet(uid) {
         state.equippedPets.push(pet);
         recalculateCps();
         renderPetInventory();
-        renderEggs(); // Met à jour le shop d'oeufs instantanément
+        renderEggs();
         updateDisplay();
         updateRebirthUI();
     }
@@ -653,7 +588,7 @@ function unequipPet(uid) {
         state.inventoryPets.push(pet);
         recalculateCps();
         renderPetInventory();
-        renderEggs(); // Met à jour le shop d'oeufs instantanément
+        renderEggs(); 
         updateDisplay();
         updateRebirthUI();
     }
@@ -664,15 +599,18 @@ function sellPet(uid, fromEquipped = false) {
     const index = list.findIndex(p => p.uid === uid);
     if (index > -1) {
         const petData = PETS.find(p => p.id === list[index].id);
-        if(!confirm(`Vendre ${petData.icon} ${petData.name} pour ${formatNumber(petData.sellPrice)} cal ?`)) return;
+        const fLvl = list[index].fusionLevel || 0;
+        const sellValue = petData.sellPrice * Math.pow(5, fLvl);
+        
+        if(!confirm(`Vendre ${petData.icon} ${petData.name} pour ${formatNumber(sellValue)} cal ?`)) return;
         
         list.splice(index, 1);
-        state.calories += petData.sellPrice;
-        state.totalCalories += petData.sellPrice;
+        state.calories += sellValue;
+        state.totalCalories += sellValue;
         
         recalculateCps();
         renderPetInventory();
-        renderEggs(); // Met à jour le shop d'oeufs instantanément
+        renderEggs(); 
         updateDisplay();
         updateRebirthUI();
     }
@@ -686,7 +624,11 @@ function equipBestPets() {
     state.inventoryPets.sort((a, b) => {
         const petA = PETS.find(p => p.id === a.id);
         const petB = PETS.find(p => p.id === b.id);
-        return petB.mult - petA.mult;
+        
+        const multA = petA ? petA.mult * Math.pow(2, a.fusionLevel || 0) : 0;
+        const multB = petB ? petB.mult * Math.pow(2, b.fusionLevel || 0) : 0;
+        
+        return multB - multA;
     });
 
     const toEquip = Math.min(state.maxPetSlots, state.inventoryPets.length);
@@ -696,12 +638,13 @@ function equipBestPets() {
 
     recalculateCps();
     renderPetInventory();
-    renderEggs(); // Met à jour le shop d'oeufs instantanément
+    renderEggs(); 
     updateDisplay();
     updateRebirthUI();
 }
 
 function renderPetInventory() {
+    // 1. Pets Equipés
     const equippedContainer = document.getElementById('pet-slots');
     if (equippedContainer) {
         equippedContainer.innerHTML = '';
@@ -710,18 +653,44 @@ function renderPetInventory() {
             if (i < state.equippedPets.length) {
                 const pInfo = state.equippedPets[i];
                 const pet = PETS.find(p => p.id === pInfo.id);
-                card.className = `pet-card rarity-${pet.rarity}`;
+                
+                const fLvl = pInfo.fusionLevel || 0;
+                const realMult = pet.mult * Math.pow(2, fLvl);
+                
+                const totalSameLevel = state.inventoryPets.filter(p=>p.id===pInfo.id && (p.fusionLevel||0)===fLvl).length + state.equippedPets.filter(p=>p.id===pInfo.id && (p.fusionLevel||0)===fLvl).length;
+                
+                let fuseBtnHtml = '';
+                if (fLvl >= 4) {
+                    fuseBtnHtml = `<button class="btn-fuse maxed" onclick="event.stopPropagation(); showQuote('Ce pet est déjà fusionné au maximum.')">✨ MAX ✨</button>`;
+                } else {
+                    const canFuse = totalSameLevel >= 5;
+                    fuseBtnHtml = `<button class="btn-fuse ${canFuse ? 'ready' : ''}" onclick="event.stopPropagation(); fusePet(${pInfo.uid})" ${canFuse ? '' : 'disabled'}>Fusion (${totalSameLevel}/5)</button>`;
+                }
+
+                let badgeHtml = '';
+                if (fLvl > 0) {
+                    badgeHtml = `<div class="fusion-badge badge-fusion-${fLvl}">${FUSION_NAMES[fLvl]}</div>`;
+                } else {
+                    badgeHtml = `<div class="pet-rarity rarity-${pet.rarity}">${pet.rarity}</div>`;
+                }
+
+                card.className = `pet-card rarity-${pet.rarity} ${fLvl > 0 ? 'pet-fusion-' + fLvl : ''}`;
                 card.dataset.uid = pInfo.uid;
-                card.onclick = () => togglePetActions(pInfo.uid);
+                card.onclick = () => {
+                    if(!state.isSelectionMode) togglePetActions(pInfo.uid);
+                };
                 
                 card.innerHTML = `
-                    <div class="pet-rarity rarity-${pet.rarity}">${pet.rarity}</div>
+                    ${badgeHtml}
                     <div class="pet-icon">${pet.icon}</div>
                     <div class="pet-name">${pet.name}</div>
-                    <div class="pet-mult">x${pet.mult}</div>
+                    <div class="pet-mult">x${realMult}</div>
                     <div class="btn-group">
-                        <button class="btn-equip" onclick="event.stopPropagation(); unequipPet(${pInfo.uid})">Retirer</button>
-                        <button class="btn-sell" onclick="event.stopPropagation(); sellPet(${pInfo.uid}, true)">Vendre</button>
+                        ${fuseBtnHtml}
+                        <div style="display:flex; gap:0.5rem; width:100%;">
+                            <button class="btn-equip" onclick="event.stopPropagation(); unequipPet(${pInfo.uid})">Retirer</button>
+                            <button class="btn-sell" onclick="event.stopPropagation(); sellPet(${pInfo.uid}, true)">Vendre</button>
+                        </div>
                     </div>
                 `;
             } else {
@@ -734,24 +703,63 @@ function renderPetInventory() {
         document.getElementById('pet-count-display').textContent = `(${state.equippedPets.length}/${state.maxPetSlots})`;
     }
 
+    // 2. Inventaire
     const invContainer = document.getElementById('pet-inventory-grid');
     if (invContainer) {
         invContainer.innerHTML = '';
+        
+        if(state.isSelectionMode) {
+            invContainer.classList.add('selection-mode-active');
+        } else {
+            invContainer.classList.remove('selection-mode-active');
+        }
+
         for (const pInfo of state.inventoryPets) {
             const pet = PETS.find(p => p.id === pInfo.id);
+            const isSelected = state.selectedPetsToSell.includes(pInfo.uid);
+            
+            const fLvl = pInfo.fusionLevel || 0;
+            const realMult = pet.mult * Math.pow(2, fLvl);
+            
+            const totalSameLevel = state.inventoryPets.filter(p=>p.id===pInfo.id && (p.fusionLevel||0)===fLvl).length + state.equippedPets.filter(p=>p.id===pInfo.id && (p.fusionLevel||0)===fLvl).length;
+            
+            let fuseBtnHtml = '';
+            if (fLvl >= 4) {
+                fuseBtnHtml = `<button class="btn-fuse maxed" onclick="event.stopPropagation(); showQuote('Ce pet est déjà fusionné au maximum.')">✨ MAX ✨</button>`;
+            } else {
+                const canFuse = totalSameLevel >= 5;
+                fuseBtnHtml = `<button class="btn-fuse ${canFuse ? 'ready' : ''}" onclick="event.stopPropagation(); fusePet(${pInfo.uid})" ${canFuse ? '' : 'disabled'}>Fusion (${totalSameLevel}/5)</button>`;
+            }
+            
+            let badgeHtml = '';
+            if (fLvl > 0) {
+                badgeHtml = `<div class="fusion-badge badge-fusion-${fLvl}">${FUSION_NAMES[fLvl]}</div>`;
+            } else {
+                badgeHtml = `<div class="pet-rarity rarity-${pet.rarity}">${pet.rarity}</div>`;
+            }
+            
             const card = document.createElement('div');
-            card.className = `pet-card rarity-${pet.rarity}`;
+            card.className = `pet-card rarity-${pet.rarity} ${state.isSelectionMode ? 'selectable' : ''} ${isSelected ? 'selected-for-sale' : ''} ${fLvl > 0 ? 'pet-fusion-' + fLvl : ''}`;
             card.dataset.uid = pInfo.uid;
-            card.onclick = () => togglePetActions(pInfo.uid);
+            
+            if(state.isSelectionMode) {
+                card.onclick = () => togglePetSaleSelection(pInfo.uid);
+            } else {
+                card.onclick = () => togglePetActions(pInfo.uid);
+            }
             
             card.innerHTML = `
-                <div class="pet-rarity rarity-${pet.rarity}">${pet.rarity}</div>
+                <div class="selection-checkbox"></div>
+                ${badgeHtml}
                 <div class="pet-icon">${pet.icon}</div>
                 <div class="pet-name">${pet.name}</div>
-                <div class="pet-mult">x${pet.mult}</div>
+                <div class="pet-mult">x${realMult}</div>
                 <div class="btn-group">
-                    <button class="btn-equip" onclick="event.stopPropagation(); equipPet(${pInfo.uid})">Équiper</button>
-                    <button class="btn-sell" onclick="event.stopPropagation(); sellPet(${pInfo.uid}, false)">Vendre</button>
+                    ${fuseBtnHtml}
+                    <div style="display:flex; gap:0.5rem; width:100%;">
+                        <button class="btn-equip" onclick="event.stopPropagation(); equipPet(${pInfo.uid})">Équiper</button>
+                        <button class="btn-sell" onclick="event.stopPropagation(); sellPet(${pInfo.uid}, false)">Vendre</button>
+                    </div>
                 </div>
             `;
             invContainer.appendChild(card);
@@ -1358,6 +1366,10 @@ function doAscension() {
     state.completedQuests = [];
     state.codesUsed = [];
     
+    // Annuler le mode sélection s'il est actif
+    state.isSelectionMode = false;
+    state.selectedPetsToSell = [];
+    
     for (const b of BUILDINGS) b.count = 0;
     for (const u of UPGRADES) u.purchased = false;
     
@@ -1483,7 +1495,8 @@ const CODES = {
             
             state.inventoryPets.push({
                 uid: Date.now() + Math.random(),
-                id: 'licorne'
+                id: 'licorne',
+                fusionLevel: 0
             });
             if (!state.discoveredPets.includes('licorne')) {
                 state.discoveredPets.push('licorne');
@@ -1661,8 +1674,13 @@ function loadGame() {
 
     try {
         const data = JSON.parse(raw);
-        state.calories = data.calories || 0;
-        state.totalCalories = data.totalCalories || 0;
+        
+        state.calories = Number(data.calories) || 0;
+        state.totalCalories = Number(data.totalCalories) || 0;
+        
+        if (isNaN(state.calories) || !isFinite(state.calories)) state.calories = 0;
+        if (isNaN(state.totalCalories) || !isFinite(state.totalCalories)) state.totalCalories = 0;
+        
         state.totalClicks = data.totalClicks || 0;
         state.startTime = data.startTime || Date.now();
         state.milestonesReached = data.milestonesReached || [];
@@ -1690,12 +1708,24 @@ function loadGame() {
         state.equippedPets = data.equippedPets || [];
         state.inventoryPets = data.inventoryPets || [];
         state.discoveredPets = data.discoveredPets || [];
+
+        // --- MIGRATION: Gérer l'ancien système "isFused: true" vers "fusionLevel: 1" ---
+        const migrateFusion = (p) => {
+            if (p.isFused) {
+                p.fusionLevel = 1;
+                delete p.isFused;
+            }
+            if (p.fusionLevel === undefined) p.fusionLevel = 0;
+        }
+        state.equippedPets.forEach(migrateFusion);
+        state.inventoryPets.forEach(migrateFusion);
         
         if (data.pets && Array.isArray(data.pets) && data.pets.length > 0 && state.equippedPets.length === 0 && state.inventoryPets.length === 0) {
             for(let petId of data.pets) {
                 state.inventoryPets.push({
                     uid: Date.now() + Math.random(),
-                    id: petId
+                    id: petId,
+                    fusionLevel: 0
                 });
                 if(!state.discoveredPets.includes(petId)) {
                     state.discoveredPets.push(petId);
@@ -1754,6 +1784,9 @@ function resetGame() {
     state.ascensionPoints = 0;
     state.ascensionUpgrades = {};
     
+    state.isSelectionMode = false;
+    state.selectedPetsToSell = [];
+    
     if (dom.eggsTab) dom.eggsTab.style.display = 'none';
     if (dom.inventoryTab) dom.inventoryTab.style.display = 'none';
     if (dom.indexTab) dom.indexTab.style.display = 'none';
@@ -1802,6 +1835,10 @@ function initShopTabs() {
 function init() {
     loadGame();
     recalculateCps();
+
+    // Rendre l'interface clean au démarrage
+    state.isSelectionMode = false;
+    state.selectedPetsToSell = [];
 
     renderBuildings();
     renderOrbitPuffs();
@@ -1860,6 +1897,13 @@ function init() {
     const btnEquipBest = document.getElementById('btn-equip-best');
     if(btnEquipBest) btnEquipBest.addEventListener('click', equipBestPets);
     
+    // --- LIAISON DES BOUTONS DE SELECTION MULTIPLE ---
+    const btnSelMode = document.getElementById('btn-selection-mode');
+    if(btnSelMode) btnSelMode.addEventListener('click', toggleSelectionMode);
+    
+    const btnDelSel = document.getElementById('btn-delete-selected');
+    if(btnDelSel) btnDelSel.addEventListener('click', sellSelectedPets);
+    
     initShopTabs();
     if (dom.ascensionShop) {
         renderAscensionShop();
@@ -1868,7 +1912,7 @@ function init() {
 
     // Gestion du clic extérieur pour fermer les menus de Pets
     document.addEventListener('click', (e) => {
-        if (!e.target.closest('.pet-card')) {
+        if (!state.isSelectionMode && !e.target.closest('.pet-card')) {
             document.querySelectorAll('.pet-card.selected').forEach(c => c.classList.remove('selected'));
         }
     });

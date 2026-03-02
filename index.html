@@ -139,6 +139,10 @@
                 <div id="inventory-list" class="shop-content">
                     <div class="inventory-header">
                         <span class="inventory-stats">Stock : <span id="inventory-count">0</span> / <span id="inventory-max">100</span></span>
+                        <div class="inventory-actions" style="display:flex; gap:0.5rem;">
+                            <button id="btn-selection-mode" class="btn btn-save" style="font-size: 0.7rem; padding: 0.4rem;">Sélection Multiple</button>
+                            <button id="btn-delete-selected" class="btn btn-sell hidden" style="font-size: 0.7rem; padding: 0.4rem; background: var(--danger); color:white; display:none;">Vendre (0)</button>
+                        </div>
                     </div>
                     <div id="pet-inventory-grid" class="inventory-grid"></div>
                 </div>
