@@ -31,8 +31,19 @@ export function getCurrentUniverse() {
 // ============ ENGINE ============
 export let clickTimestamps = [];
 
+// Le multiplicateur global basé sur les rebirths (Réduit à x2 pour un équilibrage parfait)
+export function getRebirthScale() {
+    return Math.pow(2, state.rebirthCount);
+}
+
 export function getBuildingCost(building) {
-    return Math.floor(building.baseCost * Math.pow(building.costScale, building.count));
+    const scale = getRebirthScale();
+    return Math.floor((building.baseCost * scale) * Math.pow(building.costScale, building.count));
+}
+
+export function getUpgradeCost(upgrade) {
+    const scale = getRebirthScale();
+    return Math.floor(upgrade.cost * scale);
 }
 
 export function getMaxBuildings(building) {
@@ -41,9 +52,10 @@ export function getMaxBuildings(building) {
 }
 
 export function checkRequirement(req) {
+    const scale = getRebirthScale();
     switch (req.type) {
         case 'clicks': return state.totalClicks >= req.value;
-        case 'calories': return state.totalCalories >= req.value;
+        case 'calories': return state.totalCalories >= (req.value * scale);
         case 'building':
             const b = data.BUILDINGS.find(b => b.id === req.building);
             return b && b.count >= req.value;
@@ -53,8 +65,10 @@ export function checkRequirement(req) {
 
 export function recalculateCps() {
     let totalCps = 0;
+    const scale = getRebirthScale();
+    
     for (const b of data.BUILDINGS) {
-        let bCps = b.baseCps * b.count;
+        let bCps = (b.baseCps * scale) * b.count;
         for (const u of data.UPGRADES) {
             if (u.purchased && u.type === 'building' && u.target === b.id) {
                 bCps *= u.multiplier;
@@ -62,6 +76,7 @@ export function recalculateCps() {
         }
         totalCps += bCps;
     }
+    
     let globalMult = 1;
     for (const u of data.UPGRADES) {
         if (u.purchased && u.type === 'global') globalMult *= u.multiplier;
@@ -70,7 +85,7 @@ export function recalculateCps() {
     
     const petMult = getPetMultiplier();
     const ascensionCpsMult = getCpsMultiplierBonus();
-    const universeCpsMult = getCurrentUniverse().cpsMult; // Bonus Univers
+    const universeCpsMult = getCurrentUniverse().cpsMult;
 
     state.cps = totalCps * globalMult * petMult * ascensionCpsMult * universeCpsMult;
 
@@ -80,7 +95,8 @@ export function recalculateCps() {
     }
     const ascensionClickMult = getClickMultiplierBonus();
     state.clickMultiplier = clickMult;
-    state.clickPower = 1 * clickMult * globalMult * petMult * ascensionClickMult * universeCpsMult;
+    
+    state.clickPower = (1 * scale) * clickMult * globalMult * petMult * ascensionClickMult * universeCpsMult;
 }
 
 export function handleClick(e) {
@@ -163,7 +179,6 @@ export function doRebirth() {
     state.completedQuests = []; state.activeQuests = []; state.lastQuestTypes = [];
     state.stats = { eggsOpened: 0, petsFused: 0, petsSold: 0, timePlayed: 0 };
     
-    // Fix: Désactive la sélection pour éviter les bugs si on Rebirth en plein tri
     state.isSelectionMode = false; state.selectedPetsToSell = []; 
 
     for (const b of data.BUILDINGS) b.count = 0;
@@ -669,9 +684,37 @@ export function buyBuilding(building) {
     if (el) { el.classList.add('purchase-flash'); setTimeout(() => el.classList.remove('purchase-flash'), 500); }
 }
 
+// NOUVEAU : Fonction pour acheter le maximum d'un bâtiment
+export function buyMaxBuilding(building) {
+    const maxBuildings = getMaxBuildings(building);
+    if (building.count >= maxBuildings) return;
+    
+    let bought = false;
+    let cost = getBuildingCost(building);
+    
+    // Tant qu'on a l'argent et qu'on n'a pas atteint la limite
+    while (building.count < maxBuildings && state.calories >= cost) {
+        state.calories -= cost;
+        building.count++;
+        bought = true;
+        cost = getBuildingCost(building); // On recalcule le coût pour le suivant
+    }
+    
+    if (bought) {
+        recalculateCps(); 
+        ui.updateDisplay(); 
+        ui.renderBuildings(); 
+        ui.renderOrbitPuffs(); 
+        ui.renderUpgrades();
+        const el = document.querySelector(`[data-id="${building.id}"]`);
+        if (el) { el.classList.add('purchase-flash'); setTimeout(() => el.classList.remove('purchase-flash'), 500); }
+    }
+}
+
 export function buyUpgrade(upgrade) {
-    if (state.calories < upgrade.cost || upgrade.purchased) return;
-    state.calories -= upgrade.cost; upgrade.purchased = true;
+    const cost = getUpgradeCost(upgrade);
+    if (state.calories < cost || upgrade.purchased) return;
+    state.calories -= cost; upgrade.purchased = true;
     recalculateCps(); ui.updateDisplay(); ui.renderBuildings(); ui.renderUpgrades();
     ui.showQuote(`"${upgrade.name}" débloqué ! 🎉`);
 }
@@ -723,12 +766,12 @@ export function saveGame() {
         diamonds: state.diamonds, diamondProgress: state.diamondProgress, diamondUpgradesPurchased: state.diamondUpgradesPurchased
     };
     
-    localStorage.setItem('aubinclicker_save_v2', JSON.stringify(saveData));
+    localStorage.setItem('aubinclicker_save_v3', JSON.stringify(saveData));
     ui.showQuote("💾 Partie sauvegardée !");
 }
 
 export function loadGame() {
-    const raw = localStorage.getItem('aubinclicker_save_v2');
+    const raw = localStorage.getItem('aubinclicker_save_v3');
     if (!raw) {
         data.updateDynamicContent(0);
         return false;
@@ -770,7 +813,7 @@ export function loadGame() {
 export function resetGame() {
     if (!confirm("⚠️ Tout effacer ? Aubin va devoir recommencer son régime...")) return;
     
-    localStorage.removeItem('aubinclicker_save_v2');
+    localStorage.removeItem('aubinclicker_save_v3');
     
     state.calories = 0; state.totalCalories = 0; state.totalClicks = 0; state.clickPower = 1;
     state.cps = 0; state.clickMultiplier = 1; state.globalMultiplier = 1;

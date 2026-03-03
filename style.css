@@ -1830,3 +1830,89 @@ body {
         transform: none !important;
     }
 }
+
+/* ====================================================
+   ========= STYLE DU BOUTON MAX DES BÂTIMENTS ========
+   ==================================================== */
+.btn-buy-max {
+    font-size: 0.85rem;
+    padding: 6px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-secondary);
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* État "Prêt à acheter" (Jaune lumineux) */
+.btn-buy-max.max-ready {
+    border-color: var(--accent-secondary);
+    background: rgba(255, 201, 71, 0.15);
+    color: var(--accent-secondary);
+    box-shadow: 0 0 12px rgba(255, 201, 71, 0.2);
+}
+
+@media (hover: hover) {
+    .btn-buy-max.max-ready:hover {
+        background: rgba(255, 201, 71, 0.3);
+        box-shadow: 0 0 15px rgba(255, 201, 71, 0.4);
+        transform: scale(1.05);
+    }
+}
+
+/* ====================================================
+   ========= LAYOUT BÂTIMENTS & BOUTON MAX ============
+   ==================================================== */
+
+/* La ligne qui contient la carte et le bouton MAX */
+.shop-row {
+    display: flex;
+    align-items: stretch;
+    gap: 10px;
+    margin-bottom: 12px;
+    width: 100%;
+}
+
+/* On retire la marge de la carte puisqu'elle est gérée par la ligne */
+.shop-row .shop-item {
+    flex: 1;
+    margin-bottom: 0 !important;
+}
+
+/* Le nouveau gros bouton MAX indépendant */
+.btn-buy-max {
+    flex-shrink: 0;
+    width: 65px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    padding: 0;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px; /* Bords bien arrondis */
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-muted);
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+/* État "Prêt à acheter" (Jaune lumineux) */
+.btn-buy-max.max-ready {
+    border-color: var(--accent-secondary);
+    background: rgba(255, 201, 71, 0.15);
+    color: var(--accent-secondary);
+    box-shadow: 0 0 12px rgba(255, 201, 71, 0.3);
+}
+
+@media (hover: hover) {
+    .btn-buy-max.max-ready:hover {
+        background: rgba(255, 201, 71, 0.3);
+        box-shadow: 0 0 20px rgba(255, 201, 71, 0.5);
+        transform: scale(1.05);
+    }
+}

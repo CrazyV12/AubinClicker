@@ -95,13 +95,11 @@ export function renderDiamondShop() {
                 </button>
             `;
             
-            // Correction : listener rattaché sans condition
             card.querySelector('.ascension-buy-btn').addEventListener('click', () => core.buyDiamondUpgrade(u.id));
             upList.appendChild(card);
         }
     }
 
-    // --- Section Œufs diamants ---
     const eggSection = document.getElementById('diamond-eggs-section');
     if (eggSection) {
         eggSection.innerHTML = '';
@@ -110,7 +108,6 @@ export function renderDiamondShop() {
         const maxBatch = core.getEggBatchSize();
         const qty = Math.min(state.eggQtySelected, maxBatch);
 
-        // Stepper (visible seulement si batch > 1)
         if (maxBatch > 1) {
             eggSection.appendChild(_buildQtySelector(qty, maxBatch, 'dia'));
         }
@@ -137,16 +134,12 @@ export function renderDiamondShop() {
             }
 
             card.innerHTML = `<div class="egg-icon">${egg.icon}</div><div class="egg-name">${egg.name}</div><div class="egg-status-text">${statusHtml}</div>`;
-            
-            // Correction : listener rattaché sans condition
             card.addEventListener('click', () => core.buyDiamondEgg(egg.id));
-            
             eggList.appendChild(card);
         }
     }
 }
 
-/** Construit le stepper [-][N][+] pour la section œufs. prefixId = 'std'|'dia' */
 function _buildQtySelector(qty, maxBatch, prefixId) {
     const bar = document.createElement('div');
     bar.className = 'egg-qty-bar glass-panel-inner';
@@ -165,7 +158,6 @@ function _buildQtySelector(qty, maxBatch, prefixId) {
         </div>
         ${discTag}
     `;
-    // Event listeners bindés après insertion dans le DOM
     requestAnimationFrame(() => {
         const minus = document.getElementById(`${prefixId}-qty-minus`);
         const plus  = document.getElementById(`${prefixId}-qty-plus`);
@@ -192,28 +184,55 @@ export function updateDisplay() {
 
     const bList = el('buildings-list');
     if(bList) {
-        bList.querySelectorAll('.shop-item').forEach(item => {
-            const b = data.BUILDINGS.find(x => x.id === item.dataset.id);
+        // On itère sur les LIGNES (.shop-row) plutôt que sur les cartes directes
+        bList.querySelectorAll('.shop-row').forEach(row => {
+            const b = data.BUILDINGS.find(x => x.id === row.dataset.id);
             if (!b) return;
+            
+            const item = row.querySelector('.shop-item');
+            const maxBtn = row.querySelector('.btn-buy-max');
+
             const maxBuildings = core.getMaxBuildings(b);
             const isLockedByRebirth = state.rebirthCount < (b.minRebirth || 0);
             const isLockedByAscension = b.reqAscension ? core.getAscensionUpgradeLevel(b.reqAscension) === 0 : false;
             const isHardLocked = isLockedByRebirth || isLockedByAscension;
             const isMaxed = b.count >= maxBuildings;
             const cost = core.getBuildingCost(b);
+            
+            // On vérifie si on a l'argent pour au moins 1 bâtiment
             const canAfford = state.calories >= cost && !isMaxed && !isHardLocked;
             const isSoftLocked = state.totalCalories < b.baseCost * 0.5 && b.count === 0;
             
-            item.className = `shop-item ${canAfford ? 'can-afford' : ''} ${(isSoftLocked || isHardLocked) ? 'locked' : ''} ${isMaxed ? 'locked maxed' : ''}`;
-            const costEl = item.querySelector('.shop-item-cost');
-            if (costEl) {
-                if (isLockedByAscension) { costEl.textContent = '✨ Ascension requise'; costEl.classList.remove('too-expensive'); }
-                else if (isHardLocked) { costEl.textContent = `🔄 Rebirth ${b.minRebirth} requis`; costEl.classList.remove('too-expensive'); }
-                else if (isMaxed) { costEl.textContent = 'MAX'; costEl.classList.remove('too-expensive'); }
-                else { costEl.textContent = `${core.formatNumber(cost)} cal`; costEl.classList.toggle('too-expensive', !canAfford); }
+            if (item) {
+                item.className = `shop-item ${canAfford ? 'can-afford' : ''} ${(isSoftLocked || isHardLocked) ? 'locked' : ''} ${isMaxed ? 'locked maxed' : ''}`;
+                const costEl = item.querySelector('.shop-item-cost');
+                if (costEl) {
+                    if (isLockedByAscension) { costEl.textContent = '✨ Ascension requise'; costEl.classList.remove('too-expensive'); }
+                    else if (isHardLocked) { costEl.textContent = `🔄 Rebirth ${b.minRebirth} requis`; costEl.classList.remove('too-expensive'); }
+                    else if (isMaxed) { costEl.textContent = 'MAX'; costEl.classList.remove('too-expensive'); }
+                    else { costEl.textContent = `${core.formatNumber(cost)} cal`; costEl.classList.toggle('too-expensive', !canAfford); }
+                }
+                const countEl = item.querySelector('.shop-item-count');
+                if (countEl) countEl.textContent = isHardLocked ? '0' : `${b.count} / ${maxBuildings}`;
             }
-            const countEl = item.querySelector('.shop-item-count');
-            if (countEl) countEl.textContent = isHardLocked ? '0' : `${b.count} / ${maxBuildings}`;
+
+            // Gère l'affichage et l'état du bouton MAX
+            if (maxBtn) {
+                if (isMaxed || isHardLocked || isSoftLocked) {
+                    maxBtn.style.display = 'none';
+                } else {
+                    maxBtn.style.display = 'flex'; // On garde l'affichage flex pour le centrage du texte
+                    if (canAfford) {
+                        maxBtn.classList.add('max-ready');
+                        maxBtn.style.opacity = '1';
+                        maxBtn.style.pointerEvents = 'auto';
+                    } else {
+                        maxBtn.classList.remove('max-ready');
+                        maxBtn.style.opacity = '0.4';
+                        maxBtn.style.pointerEvents = 'none';
+                    }
+                }
+            }
         });
     }
 
@@ -227,7 +246,10 @@ export function updateDisplay() {
             uList.querySelectorAll('.upgrade-item').forEach(item => {
                 const u = data.UPGRADES.find(x => x.id === item.dataset.id);
                 if (!u) return;
-                const canAfford = state.calories >= u.cost && !u.purchased;
+                
+                const cost = core.getUpgradeCost(u); 
+                
+                const canAfford = state.calories >= cost && !u.purchased;
                 const isUnlocked = core.checkRequirement(u.requirement);
                 const isLockedUI = !u.purchased && (!canAfford || !isUnlocked);
                 item.className = `upgrade-item ${u.purchased ? 'purchased' : ''} ${isLockedUI ? 'locked' : ''}`;
@@ -237,7 +259,6 @@ export function updateDisplay() {
         }
     }
 
-    // Mise à jour légère des prix sur les cartes œufs déjà rendues
     ['egg-shop-grid', 'diamond-eggs-list'].forEach(gridId => {
         const grid = el(gridId);
         if (!grid) return;
@@ -307,6 +328,7 @@ export function renderBuildings() {
     const list = document.getElementById('buildings-list');
     if(!list) return;
     list.innerHTML = '';
+    
     for (const b of data.BUILDINGS) {
         const maxBuildings = core.getMaxBuildings(b);
         const cost = core.getBuildingCost(b);
@@ -319,9 +341,14 @@ export function renderBuildings() {
         const canAfford = state.calories >= cost && !isMaxed && !isHardLocked;
         const isSoftLocked = state.totalCalories < b.baseCost * 0.5 && b.count === 0;
 
+        // Création du conteneur global
+        const row = document.createElement('div');
+        row.className = 'shop-row';
+        row.dataset.id = b.id;
+
+        // Création de la carte du bâtiment (achète 1)
         const item = document.createElement('div');
         item.className = `shop-item ${canAfford ? 'can-afford' : ''} ${(isSoftLocked || isHardLocked) ? 'locked' : ''} ${isMaxed ? 'locked maxed' : ''}`;
-        item.dataset.id = b.id;
         
         let costText = '';
         if (isLockedByAscension) costText = '✨ Ascension requise';
@@ -335,13 +362,26 @@ export function renderBuildings() {
                 <div class="shop-item-name">${isHardLocked ? 'Bâtiment bloqué' : (isSoftLocked ? '???' : b.name)}</div>
                 <div class="shop-item-cost ${canAfford || isMaxed ? '' : 'too-expensive'}">${costText}</div>
             </div>
-            <div class="shop-item-count">${isHardLocked ? '0' : b.count} / ${isHardLocked ? '0' : maxBuildings}</div>
+            <div class="shop-item-count" style="min-width: 45px; text-align: right;">
+                ${isHardLocked ? '0' : b.count} / ${isHardLocked ? '0' : maxBuildings}
+            </div>
         `;
         
-        // Correction : listener rattaché sans condition
+        // Listener sur la carte = achète 1
         item.addEventListener('click', () => core.buyBuilding(b));
+        row.appendChild(item);
+
+        // Création du bouton MAX (indépendant)
+        const maxBtn = document.createElement('button');
+        maxBtn.className = `btn-buy-max ${canAfford ? 'max-ready' : ''}`;
+        maxBtn.textContent = 'MAX';
+        if (isHardLocked || isSoftLocked || isMaxed) maxBtn.style.display = 'none';
         
-        list.appendChild(item);
+        // Listener sur le bouton MAX = achète tout
+        maxBtn.addEventListener('click', () => core.buyMaxBuilding(b));
+        row.appendChild(maxBtn);
+
+        list.appendChild(row);
     }
 }
 
@@ -354,7 +394,8 @@ export function renderUpgrades() {
         const isUnlocked = core.checkRequirement(u.requirement);
         if (!isUnlocked && !u.purchased) continue; 
 
-        const canAfford = state.calories >= u.cost && !u.purchased;
+        const cost = core.getUpgradeCost(u); 
+        const canAfford = state.calories >= cost && !u.purchased;
 
         const item = document.createElement('div');
         const isLockedUI = !u.purchased && (!canAfford || !isUnlocked);
@@ -362,7 +403,7 @@ export function renderUpgrades() {
         item.dataset.id = u.id;
 
         let descHtml = `<div class="upgrade-item-desc">${u.desc}</div>`;
-        let costHtml = u.purchased ? '' : `<div class="upgrade-item-cost ${canAfford ? '' : 'too-expensive'}">${core.formatNumber(u.cost)} cal</div>`;
+        let costHtml = u.purchased ? '' : `<div class="upgrade-item-cost ${canAfford ? '' : 'too-expensive'}">${core.formatNumber(cost)} cal</div>`;
 
         item.innerHTML = `
             <div class="upgrade-icon">${u.icon}</div>
@@ -373,7 +414,6 @@ export function renderUpgrades() {
             </div>
         `;
         
-        // Correction : listener rattaché sans condition
         item.addEventListener('click', () => core.buyUpgrade(u));
         
         list.appendChild(item);
@@ -405,7 +445,6 @@ export function renderAscensionShop() {
             </button>
         `;
         
-        // Correction : listener rattaché sans condition
         card.querySelector('.ascension-buy-btn').addEventListener('click', () => core.buyAscensionUpgrade(upgrade.id));
         
         shop.appendChild(card);
@@ -427,8 +466,8 @@ export function renderPetInventory() {
                 const fusionCost = data.FUSION_BASE_COST[pet.rarity] * Math.pow(10, fLvl);
                 
                 let fuseBtnHtml = fLvl >= 4 
-                    ? `<button class="btn-fuse maxed" data-action="fuse-max">✨ MAX ✨</button>`
-                    : `<button class="btn-fuse ${totalSame >= 5 && state.calories >= fusionCost ? 'ready' : ''}" data-action="fuse" ${totalSame >= 5 ? '' : 'disabled'}>Fusion (${core.formatNumber(fusionCost)})</button>`;
+                    ? `<button class="btn-fuse maxed" data-action="fuse-max" style="width:100%; margin:0;">✨ MAX ✨</button>`
+                    : `<button class="btn-fuse ${totalSame >= 5 && state.calories >= fusionCost ? 'ready' : ''}" data-action="fuse" style="width:100%; margin:0;" ${totalSame >= 5 ? '' : 'disabled'}>Fusion (${core.formatNumber(fusionCost)})</button>`;
 
                 let badgeHtml = fLvl > 0 ? `<div class="fusion-badge badge-fusion-${fLvl}">${data.FUSION_NAMES[fLvl]}</div>` : `<div class="pet-rarity rarity-${pet.rarity}">${pet.rarity}</div>`;
 
@@ -439,12 +478,11 @@ export function renderPetInventory() {
                     <div class="pet-icon">${pet.icon}</div>
                     <div class="pet-name">${pet.name}</div>
                     <div class="pet-mult">+${core.formatNumber(bonusPct)}%</div>
-                    <div class="btn-group">
+                    
+                    <div class="btn-group" style="display:flex; flex-direction:column; gap:4px; width:100%; box-sizing:border-box; padding:4px;">
                         ${fuseBtnHtml}
-                        <div style="display:flex; gap:0.5rem; width:100%;">
-                            <button class="btn-equip" data-action="unequip">Retirer</button>
-                            <button class="btn-sell" data-action="sell-equip">Vendre</button>
-                        </div>
+                        <button class="btn-equip" data-action="unequip" style="width:100%; margin:0;">Retirer</button>
+                        <button class="btn-sell" data-action="sell-equip" style="width:100%; margin:0;">Vendre</button>
                     </div>
                 `;
             } else {
@@ -475,8 +513,8 @@ export function renderPetInventory() {
             const fusionCost = data.FUSION_BASE_COST[pet.rarity] * Math.pow(10, fLvl);
             
             let fuseBtnHtml = fLvl >= 4 
-                ? `<button class="btn-fuse maxed" data-action="fuse-max">✨ MAX ✨</button>`
-                : `<button class="btn-fuse ${totalSame >= 5 && state.calories >= fusionCost ? 'ready' : ''}" data-action="fuse" ${totalSame >= 5 ? '' : 'disabled'}>Fusion (${core.formatNumber(fusionCost)})</button>`;
+                ? `<button class="btn-fuse maxed" data-action="fuse-max" style="width:100%; margin:0;">✨ MAX ✨</button>`
+                : `<button class="btn-fuse ${totalSame >= 5 && state.calories >= fusionCost ? 'ready' : ''}" data-action="fuse" style="width:100%; margin:0;" ${totalSame >= 5 ? '' : 'disabled'}>Fusion (${core.formatNumber(fusionCost)})</button>`;
             
             let badgeHtml = fLvl > 0 ? `<div class="fusion-badge badge-fusion-${fLvl}">${data.FUSION_NAMES[fLvl]}</div>` : `<div class="pet-rarity rarity-${pet.rarity}">${pet.rarity}</div>`;
             
@@ -489,12 +527,11 @@ export function renderPetInventory() {
                 <div class="pet-icon">${pet.icon}</div>
                 <div class="pet-name">${pet.name}</div>
                 <div class="pet-mult">+${core.formatNumber(bonusPct)}%</div>
-                <div class="btn-group">
+                
+                <div class="btn-group" style="display:flex; flex-direction:column; gap:4px; width:100%; box-sizing:border-box; padding:4px;">
                     ${fuseBtnHtml}
-                    <div style="display:flex; gap:0.5rem; width:100%;">
-                        <button class="btn-equip" data-action="equip">Équiper</button>
-                        <button class="btn-sell" data-action="sell-inv">Vendre</button>
-                    </div>
+                    <button class="btn-equip" data-action="equip" style="width:100%; margin:0;">Équiper</button>
+                    <button class="btn-sell" data-action="sell-inv" style="width:100%; margin:0;">Vendre</button>
                 </div>
             `;
             grid.appendChild(card);
@@ -516,7 +553,6 @@ export function renderEggs() {
     const maxBatch = core.getEggBatchSize();
     const qty = Math.min(state.eggQtySelected, maxBatch);
 
-    // Stepper (visible seulement si batch > 1, i.e. niveau Éclosion ≥1)
     if (maxBatch > 1) {
         section.appendChild(_buildQtySelector(qty, maxBatch, 'std'));
     }
@@ -547,7 +583,6 @@ export function renderEggs() {
 
         card.innerHTML = `<div class="egg-icon">${egg.icon}</div><div class="egg-name">${egg.name}</div><div class="egg-status-text">${statusHtml}</div>`;
 
-        // Correction : listener rattaché sans condition
         card.addEventListener('click', () => core.buyEgg(egg));
         
         grid.appendChild(card);

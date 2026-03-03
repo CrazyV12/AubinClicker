@@ -26,13 +26,11 @@ export const DIAMOND_UPGRADES = [
     { id: 'egg_batch', name: 'Éclosion Multiple', icon: '🥚', desc: '+1 œuf ouvert par clic', baseCost: 40, costMult: 2.5, type: 'eggBatch', value: 1, maxLevel: 9 }
 ];
 
-// Les œufs diamants de base
 const BASE_DIAMOND_EGGS = [
     { id: 'egg_crystal', name: 'Œuf de Cristal', icon: '🔮', cost: 15, pool: [{id: 'dragon', weight: 80}, {id: 'licorne', weight: 20}] },
     { id: 'egg_void', name: 'Œuf du Néant', icon: '🕳️', cost: 100, pool: [{id: 'licorne', weight: 100}] }
 ];
 
-// Les pets de base (Ascension 0)
 const BASE_PETS = [
     { id: 'hamster', name: 'Hamster Boulimique', icon: '🐹', mult: 1.2, rarity: 'common', sellPrice: 500 },
     { id: 'chat', name: 'Chat Glouton', icon: '🐱', mult: 1.3, rarity: 'common', sellPrice: 1000 },
@@ -45,7 +43,6 @@ const BASE_PETS = [
     { id: 'licorne', name: 'Licorne Calorique', icon: '🦄', mult: 25.0, rarity: 'mythic', sellPrice: 50000000 },
 ];
 
-// Les œufs de base (Ascension 0)
 const BASE_EGGS = [
     { id: 'egg_wood', name: 'Œuf en Bois', icon: '🥚', cost: 15000, minRebirth: 0, pool: [{id: 'hamster', weight: 70}, {id: 'chat', weight: 30}] },
     { id: 'egg_iron', name: 'Œuf en Fer', icon: '🍳', cost: 250000, minRebirth: 1, pool: [{id: 'chat', weight: 50}, {id: 'chien', weight: 40}, {id: 'grenouille', weight: 10}] },
@@ -54,32 +51,27 @@ const BASE_EGGS = [
     { id: 'egg_mythic', name: 'Œuf Cosmique', icon: '🌌', cost: 100000000000, minRebirth: 10, pool: [{id: 'dragon', weight: 90}, {id: 'licorne', weight: 10}] }
 ];
 
-// Création des tableaux globaux exportés et modifiables
 export const PETS = [];
 export const EGGS = [];
 export const DIAMOND_EGGS = [];
 
-// LE GÉNÉRATEUR DYNAMIQUE
 export function updateDynamicContent(ascensionCount) {
-    // 1. On nettoie tout
     PETS.length = 0;
     EGGS.length = 0;
     DIAMOND_EGGS.length = 0;
 
-    // 2. On injecte les éléments du Monde Classique (Toujours disponibles)
     PETS.push(...BASE_PETS);
     EGGS.push(...BASE_EGGS);
 
-    // 3. On génère le contenu des Ascensions supérieures
     const suffixes = ["", "Cyber", "Sucré", "Infernal", "Divin", "Absolu"];
 
     for (let a = 1; a <= ascensionCount; a++) {
         const suffixStr = suffixes[Math.min(a, suffixes.length - 1)] || `Tier ${a}`;
         const suffix = ` (${suffixStr})`;
         
-        // La puissance x100 par ascension et prix x10000 !
-        const multPower = Math.pow(100, a);
-        const costPower = Math.pow(10000, a);
+        // CORRECTION D'ÉQUILIBRAGE : Les pets scalent beaucoup moins fort !
+        const multPower = Math.pow(6, a); // Multiplicateur de x6 au lieu de x100 par Ascension !
+        const costPower = Math.pow(500, a); // Le prix est nerf aussi (x500 au lieu de x10000)
 
         const aPets = [
             { id: `hamster_${a}`, name: `Hamster${suffix}`, icon: '🐹', mult: 1.2 * multPower, rarity: 'common', sellPrice: 500 * costPower },
@@ -90,7 +82,6 @@ export function updateDynamicContent(ascensionCount) {
         ];
         PETS.push(...aPets);
 
-        // Ajout de 3 œufs exclusifs pour cette ascension
         const aEggs = [
             { id: `egg_wood_${a}`, name: `Œuf Basique${suffix}`, icon: '🥚', cost: 15000 * costPower, minRebirth: 0, pool: [{id: `hamster_${a}`, weight: 70}, {id: `chien_${a}`, weight: 30}] },
             { id: `egg_gold_${a}`, name: `Œuf Majeur${suffix}`, icon: '✨', cost: 15000000 * costPower, minRebirth: 2, pool: [{id: `chien_${a}`, weight: 60}, {id: `cochon_${a}`, weight: 30}, {id: `dragon_${a}`, weight: 10}] },
@@ -99,7 +90,6 @@ export function updateDynamicContent(ascensionCount) {
         EGGS.push(...aEggs);
     }
 
-    // 4. Les Œufs Diamants scalent sur l'ascension actuelle !
     const maxTier = ascensionCount === 0 ? '' : `_${ascensionCount}`;
     const dragonId = ascensionCount === 0 ? 'dragon' : `dragon${maxTier}`;
     const licorneId = ascensionCount === 0 ? 'licorne' : `licorne${maxTier}`;
