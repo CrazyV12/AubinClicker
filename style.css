@@ -1916,3 +1916,31 @@ body {
         transform: scale(1.05);
     }
 }
+
+/* ====================================================
+   ========= CORRECTION ESPACEMENT & ZOOM =============
+   ==================================================== */
+
+/* 1. Listes verticales (Bâtiments, Upgrades, Quêtes) */
+.shop-content {
+    gap: 0.8rem !important; /* Aère l'espace vertical */
+    padding: 0.6rem !important; /* Empêche les éléments de toucher les bords au zoom */
+}
+
+/* 2. Grilles (Œufs, Inventaire Pets, Index) */
+.egg-grid, .inventory-grid, .index-grid {
+    gap: 0.8rem !important; /* Sépare un peu plus les cartes entre elles */
+    padding: 0.6rem !important; /* Marge pour le zoom */
+}
+
+/* 3. Boutique d'Ascension */
+#ascension-shop {
+    gap: 15px !important;
+    padding: 10px !important;
+}
+
+/* 4. Améliorations en Diamants */
+#diamond-upgrades-list {
+    gap: 15px !important;
+    padding: 10px !important;
+}
