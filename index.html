@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=1.3">
+    <link rel="stylesheet" href="style.css?v=1.5">
 </head>
 <body class="theme-classic">
     <div id="particles"></div>
@@ -145,7 +145,7 @@
                 <div id="eggs-list" class="shop-content">
                     <div class="ascension-section">
                         <p class="ascension-intro">Achète des œufs avec tes Calories d'Or.</p>
-                        <div id="egg-shop-grid" class="egg-grid"></div>
+                        <div id="egg-shop-section"></div>
                     </div>
                 </div>
 
@@ -184,7 +184,7 @@
                         <h3 style="margin-bottom:10px; font-size:1rem;">Améliorations Permanentes</h3>
                         <div id="diamond-upgrades-list" style="display:flex; flex-direction:column; gap:10px;"></div>
                         <h3 style="margin-top:20px; margin-bottom:10px; font-size:1rem;">Œufs Exclusifs</h3>
-                        <div id="diamond-eggs-list" class="egg-grid"></div>
+                        <div id="diamond-eggs-section"></div>
                     </div>
                 </div>
 
@@ -201,6 +201,26 @@
 
                 <div id="settings-list" class="shop-content">
                     <div class="settings-section">
+                        <h3 style="margin-bottom: 10px; color: var(--accent-secondary);">📊 Statistiques Globales</h3>
+                        <div class="stat-grid" style="width: 100%; margin-bottom: 20px;">
+                            <div class="stat-card">
+                                <span class="stat-label">Temps de jeu</span>
+                                <span class="stat-value" id="stat-time" style="font-size: 1rem;">0s</span>
+                            </div>
+                            <div class="stat-card">
+                                <span class="stat-label">Fusions réalisées</span>
+                                <span class="stat-value" id="stat-fusions" style="font-size: 1rem;">0</span>
+                            </div>
+                            <div class="stat-card">
+                                <span class="stat-label">Œufs ouverts</span>
+                                <span class="stat-value" id="stat-eggs" style="font-size: 1rem;">0</span>
+                            </div>
+                            <div class="stat-card">
+                                <span class="stat-label">Pets vendus</span>
+                                <span class="stat-value" id="stat-sold" style="font-size: 1rem;">0</span>
+                            </div>
+                        </div>
+
                         <p class="settings-intro">Gère ta sauvegarde ici.</p>
                         <button id="reset-btn" class="btn btn-reset">🗑️ Reset Sauvegarde</button>
                     </div>
@@ -217,12 +237,50 @@
                 <button class="shop-tab" data-tab="ascension" id="ascension-tab" style="display:none;" data-title="✨ Ascension" title="Ascension">✨</button>
                 <button class="shop-tab" data-tab="diamonds" id="diamonds-tab" style="display:none;" data-title="💎 Marché Noir" title="Marché Noir">💎</button>
                 <button class="shop-tab" data-tab="codes" id="codes-tab" style="display:none;" data-title="🔑 Codes" title="Codes">🔑</button>
-                <button class="shop-tab" data-tab="settings" data-title="⚙️ Paramètres" title="Paramètres">⚙️</button>
+                <button class="shop-tab" data-tab="settings" data-title="⚙️ Paramètres & Stats" title="Paramètres">⚙️</button>
             </nav>
         </div>
     </main>
 
     <div id="float-text-container"></div>
+
+    <!-- Modal Fusion -->
+    <div id="fusion-modal" class="hidden">
+        <div class="fusion-content">
+            <div id="fusion-arena"></div>
+            <div class="fusion-center-star">✨</div>
+            <div id="fusion-result" class="hidden">
+                <div id="fusion-result-icon"></div>
+                <div id="fusion-result-name"></div>
+                <div id="fusion-result-badge"></div>
+                <button id="fusion-close-btn" class="btn btn-save gacha-close-btn-style">Continuer !</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="gacha-modal" class="hidden">
+        <div class="gacha-content">
+            <div id="gacha-egg" class="gacha-egg">🥚</div>
+            <div id="gacha-roulette" class="hidden">
+                <div class="roulette-pointer-left"></div>
+                <div class="roulette-pointer-right"></div>
+                <div class="roulette-window">
+                    <div id="gacha-track"></div>
+                </div>
+            </div>
+            <div id="gacha-multi-open" class="hidden">
+                <div id="gacha-pods-container" class="gacha-pods-grid"></div>
+                <button id="gacha-multi-close" class="btn btn-save gacha-close-btn-style">Continuer</button>
+            </div>
+            <div id="gacha-result" class="hidden">
+                <div id="gacha-result-icon"></div>
+                <div id="gacha-result-name"></div>
+                <div id="gacha-result-rarity"></div>
+                <div id="gacha-multi-grid" class="hidden"></div>
+                <button id="gacha-close-btn" class="btn btn-save">Continuer</button>
+            </div>
+        </div>
+    </div>
 
     <script type="module" src="js/main.js"></script>
 </body>

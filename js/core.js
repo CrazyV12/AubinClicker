@@ -14,6 +14,15 @@ export function formatNumber(n) {
     return scaled.toFixed(scaled < 10 ? 2 : scaled < 100 ? 1 : 0) + suffix;
 }
 
+export function formatTime(seconds) {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = Math.floor(seconds % 60);
+    if (h > 0) return `${h}h ${m}m ${s}s`;
+    if (m > 0) return `${m}m ${s}s`;
+    return `${s}s`;
+}
+
 export function getCurrentUniverse() {
     const idx = Math.min(state.ascensionCount, data.UNIVERSES.length - 1);
     return data.UNIVERSES[idx];
@@ -77,7 +86,7 @@ export function recalculateCps() {
 export function handleClick(e) {
     const now = Date.now();
     clickTimestamps = clickTimestamps.filter(t => now - t < 1000);
-    if (clickTimestamps.length >= 10) return;
+    if (clickTimestamps.length >= 20) return; // Limite fixée à 20 CPS
     clickTimestamps.push(now);
 
     const amount = state.clickPower;
@@ -153,6 +162,9 @@ export function doRebirth() {
     state.milestonesReached = [];
     state.completedQuests = []; state.activeQuests = []; state.lastQuestTypes = [];
     state.stats = { eggsOpened: 0, petsFused: 0, petsSold: 0, timePlayed: 0 };
+    
+    // Fix: Désactive la sélection pour éviter les bugs si on Rebirth en plein tri
+    state.isSelectionMode = false; state.selectedPetsToSell = []; 
 
     for (const b of data.BUILDINGS) b.count = 0;
     for (const u of data.UPGRADES) u.purchased = false;
@@ -180,6 +192,9 @@ export function doAscension() {
     
     for (const b of data.BUILDINGS) b.count = 0;
     for (const u of data.UPGRADES) u.purchased = false;
+    
+    // Génère les oeufs de la nouvelle ascension
+    data.updateDynamicContent(state.ascensionCount);
     
     ui.applyUniverseTheme();
     recalcMaxPetSlots();
@@ -225,40 +240,99 @@ export function buyDiamondUpgrade(uId) {
         ui.renderDiamondShop();
         ui.updateRebirthUI();
         ui.renderPetInventory();
+        ui.updateAubinAppearance(); 
         ui.showMilestone(`💎 Amélioration achetée : ${u.name}`);
     }
 }
 
 export function buyDiamondEgg(eggId) {
+    if (state.isOpeningEgg) return;
     const egg = data.DIAMOND_EGGS.find(x => x.id === eggId);
     if (!egg) return;
-    if (state.diamonds < egg.cost) return;
-    if (state.inventoryPets.length >= getMaxInventory()) { ui.showQuote("Inventaire plein !"); return; }
 
-    state.diamonds -= egg.cost;
-    state.stats.eggsOpened++;
+    const maxInv = getMaxInventory();
+    const spaceLeft = maxInv - state.inventoryPets.length;
+    if (spaceLeft <= 0) { ui.showQuote("Inventaire plein !"); return; }
 
-    const totalWeight = egg.pool.reduce((sum, p) => sum + p.weight, 0);
-    let rand = Math.random() * totalWeight;
-    let selectedId = egg.pool[0].id;
-    for (const p of egg.pool) {
-        rand -= p.weight;
-        if (rand <= 0) { selectedId = p.id; break; }
+    const maxBatch = getEggBatchSize();
+    const requestedQty = Math.min(state.eggQtySelected, maxBatch, spaceLeft);
+    if (requestedQty <= 0) return;
+
+    const totalCost = getEggTotalCost(egg, requestedQty, true);
+    if (state.diamonds < totalCost) return;
+
+    state.isOpeningEgg = true;
+    state.diamonds -= totalCost;
+    state.stats.eggsOpened += requestedQty;
+
+    const newPets = [];
+    const petsData = [];
+    const newlyDiscovered = [];
+
+    for (let i = 0; i < requestedQty; i++) {
+        const selectedId = rollPetFromPool(egg.pool);
+        const petData = data.PETS.find(p => p.id === selectedId);
+        if (!state.discoveredPets.includes(selectedId)) {
+            state.discoveredPets.push(selectedId);
+            newlyDiscovered.push(petData);
+        }
+        const newPet = { uid: Date.now() + Math.random() + i, id: selectedId, fusionLevel: 0, isHatching: true };
+        state.inventoryPets.push(newPet);
+        newPets.push(newPet);
+        petsData.push(petData);
     }
 
-    const petData = data.PETS.find(p => p.id === selectedId);
-    if (!state.discoveredPets.includes(selectedId)) state.discoveredPets.push(selectedId);
-
-    state.inventoryPets.push({ uid: Date.now() + Math.random(), id: selectedId, fusionLevel: 0 });
-    
-    ui.showMilestone(`💎 Éclosion Divine : ${petData.icon} ${petData.name} !`);
+    saveGame();
     ui.updateDiamondUI();
-    ui.renderDiamondShop();
-    if (state.sortOrder) toggleSortInventory(true); else ui.renderPetInventory();
-    ui.renderPetIndex();
+
+    ui.playMultiEggAnimation(egg, petsData, () => {
+        for (const p of newPets) delete p.isHatching;
+        saveGame();
+        for (const pd of newlyDiscovered) ui.showMilestone(`📖 Nouveau Pet découvert : ${pd.name} !`);
+        if (requestedQty === 1) ui.showMilestone(`💎 Éclosion Divine : ${petsData[0].icon} ${petsData[0].name} !`);
+        else ui.showMilestone(`💎 Éclosion Divine x${requestedQty} ! ${petsData.map(p => p.icon).join('')}`);
+        ui.renderDiamondShop();
+        if (state.sortOrder) toggleSortInventory(true); else ui.renderPetInventory();
+        ui.renderPetIndex();
+        state.isOpeningEgg = false;
+    });
 }
 
 // ============ PETS & GACHA ============
+
+export function getEggBatchSize() {
+    return 1 + (state.diamondUpgradesPurchased['egg_batch'] || 0);
+}
+
+export function getEggBulkDiscount(qty) {
+    if (qty <= 1) return 1;
+    return Math.max(0.50, 1 - 0.05 * (qty - 1));
+}
+
+export function getEggTotalCost(egg, qty, isDiamond = false) {
+    const base = egg.cost; 
+    const discount = getEggBulkDiscount(qty);
+    return Math.ceil(base * qty * discount);
+}
+
+export function setEggQty(qty) {
+    const maxBatch = getEggBatchSize();
+    state.eggQtySelected = Math.max(1, Math.min(qty, maxBatch));
+    ui.renderEggs();
+    ui.renderDiamondShop();
+}
+
+function rollPetFromPool(pool) {
+    const totalWeight = pool.reduce((sum, p) => sum + p.weight, 0);
+    let rand = Math.random() * totalWeight;
+    let selectedId = pool[0].id;
+    for (const p of pool) {
+        rand -= p.weight;
+        if (rand <= 0) { selectedId = p.id; break; }
+    }
+    return selectedId;
+}
+
 export function getMaxInventory() {
     let bonus = 0;
     const u = state.ascensionUpgrades['inventory_cap'];
@@ -281,34 +355,54 @@ export function getPetMultiplier() {
 }
 
 export function buyEgg(egg) {
-    if (state.calories < egg.cost) return;
-    if (state.inventoryPets.length >= getMaxInventory()) { ui.showQuote("Inventaire plein ! Vends des pets d'abord."); return; }
+    if (state.isOpeningEgg) return;
 
-    state.calories -= egg.cost;
-    state.stats.eggsOpened++;
+    const maxInv = getMaxInventory();
+    const spaceLeft = maxInv - state.inventoryPets.length;
+    if (spaceLeft <= 0) { ui.showQuote("Inventaire plein ! Vends des pets d'abord."); return; }
 
-    const totalWeight = egg.pool.reduce((sum, p) => sum + p.weight, 0);
-    let rand = Math.random() * totalWeight;
-    let selectedId = egg.pool[0].id;
+    const maxBatch = getEggBatchSize();
+    const requestedQty = Math.min(state.eggQtySelected, maxBatch, spaceLeft);
+    if (requestedQty <= 0) return;
 
-    for (const p of egg.pool) {
-        rand -= p.weight;
-        if (rand <= 0) { selectedId = p.id; break; }
+    const totalCost = getEggTotalCost(egg, requestedQty);
+    if (state.calories < totalCost) return;
+
+    state.isOpeningEgg = true;
+    state.calories -= totalCost;
+    state.stats.eggsOpened += requestedQty;
+
+    const newPets = [];
+    const petsData = [];
+    const newlyDiscovered = [];
+
+    for (let i = 0; i < requestedQty; i++) {
+        const selectedId = rollPetFromPool(egg.pool);
+        const petData = data.PETS.find(p => p.id === selectedId);
+        if (!state.discoveredPets.includes(selectedId)) {
+            state.discoveredPets.push(selectedId);
+            newlyDiscovered.push(petData);
+        }
+        const newPet = { uid: Date.now() + Math.random() + i, id: selectedId, fusionLevel: 0, isHatching: true };
+        state.inventoryPets.push(newPet);
+        newPets.push(newPet);
+        petsData.push(petData);
     }
 
-    const petData = data.PETS.find(p => p.id === selectedId);
-    if (!state.discoveredPets.includes(selectedId)) {
-        state.discoveredPets.push(selectedId);
-        ui.showMilestone(`📖 Nouveau Pet découvert : ${petData.name} !`);
-    }
-
-    state.inventoryPets.push({ uid: Date.now() + Math.random(), id: selectedId, fusionLevel: 0 });
-    ui.showMilestone(`🥚 Éclosion : ${petData.icon} ${petData.name} !`);
-    
+    saveGame();
     ui.updateDisplay();
-    ui.renderEggs();
-    if (state.sortOrder) toggleSortInventory(true); else ui.renderPetInventory();
-    ui.renderPetIndex();
+
+    ui.playMultiEggAnimation(egg, petsData, () => {
+        for (const p of newPets) delete p.isHatching;
+        saveGame();
+        for (const pd of newlyDiscovered) ui.showMilestone(`📖 Nouveau Pet découvert : ${pd.name} !`);
+        if (requestedQty === 1) ui.showMilestone(`🥚 Éclosion : ${petsData[0].icon} ${petsData[0].name} !`);
+        else ui.showMilestone(`🥚 Éclosion x${requestedQty} ! ${petsData.map(p => p.icon).join('')}`);
+        ui.renderEggs();
+        if (state.sortOrder) toggleSortInventory(true); else ui.renderPetInventory();
+        ui.renderPetIndex();
+        state.isOpeningEgg = false;
+    });
 }
 
 export function fusePet(uid) {
@@ -318,29 +412,39 @@ export function fusePet(uid) {
     const currentLevel = targetPet.fusionLevel || 0;
     if (currentLevel >= 4) { ui.showQuote("Pet fusionné au maximum."); return; }
 
-    let allSameLevel = [...state.inventoryPets, ...state.equippedPets].filter(p => p.id === targetPet.id && (p.fusionLevel || 0) === currentLevel && p.uid !== targetPet.uid);
+    let allSameLevel = [...state.inventoryPets, ...state.equippedPets].filter(
+        p => p.id === targetPet.id && (p.fusionLevel || 0) === currentLevel && p.uid !== targetPet.uid
+    );
     if (allSameLevel.length < 4) { ui.showQuote(`Pas assez de pets identiques.`); return; }
 
-    const petData = data.PETS.find(p=>p.id===targetPet.id);
+    const petData = data.PETS.find(p => p.id === targetPet.id);
     const fusionCost = data.FUSION_BASE_COST[petData.rarity] * Math.pow(10, currentLevel);
     if (state.calories < fusionCost) { ui.showQuote(`Pas assez de calories !`); return; }
 
-    state.calories -= fusionCost;
-    let toRemove = 4;
-    state.inventoryPets = state.inventoryPets.filter(p => { if (toRemove > 0 && p.id === targetPet.id && (p.fusionLevel || 0) === currentLevel && p.uid !== targetPet.uid) { toRemove--; return false; } return true; });
-    if (toRemove > 0) state.equippedPets = state.equippedPets.filter(p => { if (toRemove > 0 && p.id === targetPet.id && (p.fusionLevel || 0) === currentLevel && p.uid !== targetPet.uid) { toRemove--; return false; } return true; });
+    const participants = [targetPet, ...allSameLevel.slice(0, 4)];
 
-    targetPet.fusionLevel = currentLevel + 1;
-    state.stats.petsFused++;
-    
-    const selIdx = state.selectedPetsToSell.indexOf(uid);
-    if (selIdx > -1) state.selectedPetsToSell.splice(selIdx, 1);
+    ui.playFusionAnimation(participants, petData, currentLevel, () => {
+        state.calories -= fusionCost;
+        let toRemove = 4;
+        state.inventoryPets = state.inventoryPets.filter(p => {
+            if (toRemove > 0 && p.id === targetPet.id && (p.fusionLevel || 0) === currentLevel && p.uid !== targetPet.uid) { toRemove--; return false; }
+            return true;
+        });
+        if (toRemove > 0) state.equippedPets = state.equippedPets.filter(p => {
+            if (toRemove > 0 && p.id === targetPet.id && (p.fusionLevel || 0) === currentLevel && p.uid !== targetPet.uid) { toRemove--; return false; }
+            return true;
+        });
+        targetPet.fusionLevel = currentLevel + 1;
+        state.stats.petsFused++;
+        const selIdx = state.selectedPetsToSell.indexOf(uid);
+        if (selIdx > -1) state.selectedPetsToSell.splice(selIdx, 1);
 
-    ui.showMilestone(`✨ Ton pet devient ${data.FUSION_NAMES[targetPet.fusionLevel]} !`);
-    recalculateCps();
-    if (state.sortOrder) toggleSortInventory(true); else ui.renderPetInventory();
-    ui.updateDisplay();
-    ui.updateRebirthUI();
+        ui.showMilestone(`✨ Ton pet devient ${data.FUSION_NAMES[targetPet.fusionLevel]} !`);
+        recalculateCps();
+        if (state.sortOrder) toggleSortInventory(true); else ui.renderPetInventory();
+        ui.updateDisplay();
+        ui.updateRebirthUI();
+    });
 }
 
 export function autoFusePets() {
@@ -503,16 +607,22 @@ export function getStatValue(statName) {
 export function generateQuests() {
     const maxQuests = 4;
     const r = state.rebirthCount;
-    const uniQuestMult = getCurrentUniverse().questMult; // Bonus Univers
+    const uniQuestMult = getCurrentUniverse().questMult; 
 
     while (state.activeQuests.length < maxQuests) {
         const availableTemplates = data.QUEST_TEMPLATES.filter(t => !state.lastQuestTypes.includes(t.id));
         const template = availableTemplates[Math.floor(Math.random() * availableTemplates.length)];
+        
         const target = Math.max(1, template.calcTarget(r));
         const avgTarget = Math.max(1, template.calcTarget(r)); 
         const difficultyMult = target / avgTarget; 
         
-        const reward = Math.floor(template.baseReward * Math.pow(5, r) * difficultyMult * uniQuestMult);
+        const baseFraction = template.baseReward / 100000; 
+        const questMultiplier = Math.sqrt(uniQuestMult); 
+        let rawReward = getRebirthTarget() * baseFraction * difficultyMult * questMultiplier;
+        
+        const maxReward = getRebirthTarget() * 0.25;
+        const reward = Math.floor(Math.min(rawReward, maxReward));
         
         state.activeQuests.push({
             uid: Date.now() + Math.random(), templateId: template.id, name: template.name,
@@ -577,8 +687,12 @@ export function redeemCode(inputRaw) {
     if (input === 'ROMAINJTM') {
         state.codesUsed.push(input);
         state.bonusPetSlots++; recalcMaxPetSlots();
-        state.inventoryPets.push({ uid: Date.now() + Math.random(), id: 'licorne', fusionLevel: 0 });
-        if (!state.discoveredPets.includes('licorne')) state.discoveredPets.push('licorne');
+        
+        // La licorne s'adapte à ton monde actuel !
+        const licorneId = state.ascensionCount === 0 ? 'licorne' : `licorne_${state.ascensionCount}`;
+        state.inventoryPets.push({ uid: Date.now() + Math.random(), id: licorneId, fusionLevel: 0 });
+        if (!state.discoveredPets.includes(licorneId)) state.discoveredPets.push(licorneId);
+        
         recalculateCps();
         if (state.sortOrder) toggleSortInventory(true); else ui.renderPetInventory();
         ui.renderPetIndex(); ui.updateDisplay();
@@ -609,15 +723,16 @@ export function saveGame() {
         diamonds: state.diamonds, diamondProgress: state.diamondProgress, diamondUpgradesPurchased: state.diamondUpgradesPurchased
     };
     
-    // ON FORCE LE CHANGEMENT DE NOM DE CLE ICI :
     localStorage.setItem('aubinclicker_save_v2', JSON.stringify(saveData));
     ui.showQuote("💾 Partie sauvegardée !");
 }
 
 export function loadGame() {
-    // ON CHERCHE LA NOUVELLE CLE ICI AUSSI :
     const raw = localStorage.getItem('aubinclicker_save_v2');
-    if (!raw) return false;
+    if (!raw) {
+        data.updateDynamicContent(0);
+        return false;
+    }
     try {
         const d = JSON.parse(raw);
         state.calories = Number(d.calories) || 0; state.totalCalories = Number(d.totalCalories) || 0;
@@ -639,15 +754,22 @@ export function loadGame() {
         const migrateFusion = (p) => { if (p.isFused) { p.fusionLevel = 1; delete p.isFused; } if (p.fusionLevel === undefined) p.fusionLevel = 0; };
         state.equippedPets.forEach(migrateFusion); state.inventoryPets.forEach(migrateFusion);
         state.ascensionCount = d.ascensionCount || 0; state.ascensionPoints = d.ascensionPoints || 0; state.ascensionUpgrades = d.ascensionUpgrades || {};
+        
+        // Charge les oeufs de la bonne ascension
+        data.updateDynamicContent(state.ascensionCount);
+        
         recalcMaxPetSlots();
         return true;
-    } catch (e) { console.warn('Erreur chargement:', e); return false; }
+    } catch (e) { 
+        console.warn('Erreur chargement:', e); 
+        data.updateDynamicContent(0);
+        return false; 
+    }
 }
 
 export function resetGame() {
     if (!confirm("⚠️ Tout effacer ? Aubin va devoir recommencer son régime...")) return;
     
-    // ON NETTOIE LA NOUVELLE CLE :
     localStorage.removeItem('aubinclicker_save_v2');
     
     state.calories = 0; state.totalCalories = 0; state.totalClicks = 0; state.clickPower = 1;
@@ -665,9 +787,12 @@ export function resetGame() {
     state.isSelectionMode = false; state.selectedPetsToSell = [];
     state.diamonds = 0; state.diamondProgress = 0; state.diamondUpgradesPurchased = {};
     
+    // Remet les oeufs au niveau 0
+    data.updateDynamicContent(0);
+    
     ui.applyUniverseTheme();
     recalculateCps();
-    generateQuests();
+    core.generateQuests();
     ui.renderAll();
     ui.showQuote("🔄 C'est reparti ! Aubin a encore faim !");
 }

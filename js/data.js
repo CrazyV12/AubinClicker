@@ -10,7 +10,6 @@ export const FUSION_BASE_COST = {
     'mythic': 500000000
 };
 
-// ============ NOUVEAUTÉS PHASE 3 ============
 export const UNIVERSES = [
     { name: "Monde Classique", theme: "theme-classic", emojis: ['🍔', '🍕', '🍟', '🍗'], cpsMult: 1, questMult: 1, diamondRate: 1 },
     { name: "Cyber-Bouffe 2077", theme: "theme-cyber", emojis: ['🔋', '💊', '🦾', '💾'], cpsMult: 1.5, questMult: 1.5, diamondRate: 2 },
@@ -23,14 +22,93 @@ export const UNIVERSES = [
 export const DIAMOND_UPGRADES = [
     { id: 'inv_space', name: 'Extension Sac', icon: '🎒', desc: '+10 places d\'inventaire', baseCost: 10, costMult: 1.5, type: 'inventory', value: 10, maxLevel: 20 },
     { id: 'rebirth_cost', name: 'Charisme Divin', icon: '🗣️', desc: '-5% sur l\'objectif de Rebirth', baseCost: 25, costMult: 2.0, type: 'rebirthCost', value: 0.05, maxLevel: 10 },
-    { id: 'diamond_speed', name: 'Sablier Magique', icon: '⏳', desc: '+10% vitesse jauge diamants', baseCost: 50, costMult: 2.5, type: 'diamondSpeed', value: 0.1, maxLevel: 5 }
+    { id: 'diamond_class', name: 'Classe Supérieure', icon: '👑', desc: '+1 diamant / 5 min', baseCost: 50, costMult: 2.5, type: 'diamondRate', value: 1, maxLevel: 10 },
+    { id: 'egg_batch', name: 'Éclosion Multiple', icon: '🥚', desc: '+1 œuf ouvert par clic', baseCost: 40, costMult: 2.5, type: 'eggBatch', value: 1, maxLevel: 9 }
 ];
 
-export const DIAMOND_EGGS = [
+// Les œufs diamants de base
+const BASE_DIAMOND_EGGS = [
     { id: 'egg_crystal', name: 'Œuf de Cristal', icon: '🔮', cost: 15, pool: [{id: 'dragon', weight: 80}, {id: 'licorne', weight: 20}] },
     { id: 'egg_void', name: 'Œuf du Néant', icon: '🕳️', cost: 100, pool: [{id: 'licorne', weight: 100}] }
 ];
-// ============================================
+
+// Les pets de base (Ascension 0)
+const BASE_PETS = [
+    { id: 'hamster', name: 'Hamster Boulimique', icon: '🐹', mult: 1.2, rarity: 'common', sellPrice: 500 },
+    { id: 'chat', name: 'Chat Glouton', icon: '🐱', mult: 1.3, rarity: 'common', sellPrice: 1000 },
+    { id: 'chien', name: 'Chien Pataud', icon: '🐶', mult: 1.5, rarity: 'rare', sellPrice: 5000 },
+    { id: 'grenouille', name: 'Grenouille Grasse', icon: '🐸', mult: 1.8, rarity: 'rare', sellPrice: 15000 },
+    { id: 'renard', name: 'Renard Malin', icon: '🦊', mult: 2.2, rarity: 'epic', sellPrice: 50000 },
+    { id: 'cochon', name: 'Cochon d\'Or', icon: '🐷', mult: 3.0, rarity: 'epic', sellPrice: 200000 },
+    { id: 'lion', name: 'Lion Affamé', icon: '🦁', mult: 5.0, rarity: 'legendary', sellPrice: 1000000 },
+    { id: 'dragon', name: 'Dragon Calorique', icon: '🐉', mult: 10.0, rarity: 'legendary', sellPrice: 5000000 },
+    { id: 'licorne', name: 'Licorne Calorique', icon: '🦄', mult: 25.0, rarity: 'mythic', sellPrice: 50000000 },
+];
+
+// Les œufs de base (Ascension 0)
+const BASE_EGGS = [
+    { id: 'egg_wood', name: 'Œuf en Bois', icon: '🥚', cost: 15000, minRebirth: 0, pool: [{id: 'hamster', weight: 70}, {id: 'chat', weight: 30}] },
+    { id: 'egg_iron', name: 'Œuf en Fer', icon: '🍳', cost: 250000, minRebirth: 1, pool: [{id: 'chat', weight: 50}, {id: 'chien', weight: 40}, {id: 'grenouille', weight: 10}] },
+    { id: 'egg_gold', name: 'Œuf en Or', icon: '✨', cost: 15000000, minRebirth: 3, pool: [{id: 'grenouille', weight: 60}, {id: 'renard', weight: 30}, {id: 'cochon', weight: 10}] },
+    { id: 'egg_diamond', name: 'Œuf de Diamant', icon: '💎', cost: 1000000000, minRebirth: 5, pool: [{id: 'cochon', weight: 60}, {id: 'lion', weight: 35}, {id: 'dragon', weight: 5}] },
+    { id: 'egg_mythic', name: 'Œuf Cosmique', icon: '🌌', cost: 100000000000, minRebirth: 10, pool: [{id: 'dragon', weight: 90}, {id: 'licorne', weight: 10}] }
+];
+
+// Création des tableaux globaux exportés et modifiables
+export const PETS = [];
+export const EGGS = [];
+export const DIAMOND_EGGS = [];
+
+// LE GÉNÉRATEUR DYNAMIQUE
+export function updateDynamicContent(ascensionCount) {
+    // 1. On nettoie tout
+    PETS.length = 0;
+    EGGS.length = 0;
+    DIAMOND_EGGS.length = 0;
+
+    // 2. On injecte les éléments du Monde Classique (Toujours disponibles)
+    PETS.push(...BASE_PETS);
+    EGGS.push(...BASE_EGGS);
+
+    // 3. On génère le contenu des Ascensions supérieures
+    const suffixes = ["", "Cyber", "Sucré", "Infernal", "Divin", "Absolu"];
+
+    for (let a = 1; a <= ascensionCount; a++) {
+        const suffixStr = suffixes[Math.min(a, suffixes.length - 1)] || `Tier ${a}`;
+        const suffix = ` (${suffixStr})`;
+        
+        // La puissance x100 par ascension et prix x10000 !
+        const multPower = Math.pow(100, a);
+        const costPower = Math.pow(10000, a);
+
+        const aPets = [
+            { id: `hamster_${a}`, name: `Hamster${suffix}`, icon: '🐹', mult: 1.2 * multPower, rarity: 'common', sellPrice: 500 * costPower },
+            { id: `chien_${a}`, name: `Chien${suffix}`, icon: '🐶', mult: 1.5 * multPower, rarity: 'rare', sellPrice: 5000 * costPower },
+            { id: `cochon_${a}`, name: `Cochon${suffix}`, icon: '🐷', mult: 3.0 * multPower, rarity: 'epic', sellPrice: 200000 * costPower },
+            { id: `dragon_${a}`, name: `Dragon${suffix}`, icon: '🐉', mult: 10.0 * multPower, rarity: 'legendary', sellPrice: 5000000 * costPower },
+            { id: `licorne_${a}`, name: `Licorne${suffix}`, icon: '🦄', mult: 25.0 * multPower, rarity: 'mythic', sellPrice: 50000000 * costPower }
+        ];
+        PETS.push(...aPets);
+
+        // Ajout de 3 œufs exclusifs pour cette ascension
+        const aEggs = [
+            { id: `egg_wood_${a}`, name: `Œuf Basique${suffix}`, icon: '🥚', cost: 15000 * costPower, minRebirth: 0, pool: [{id: `hamster_${a}`, weight: 70}, {id: `chien_${a}`, weight: 30}] },
+            { id: `egg_gold_${a}`, name: `Œuf Majeur${suffix}`, icon: '✨', cost: 15000000 * costPower, minRebirth: 2, pool: [{id: `chien_${a}`, weight: 60}, {id: `cochon_${a}`, weight: 30}, {id: `dragon_${a}`, weight: 10}] },
+            { id: `egg_mythic_${a}`, name: `Œuf Suprême${suffix}`, icon: '🌌', cost: 100000000000 * costPower, minRebirth: 5, pool: [{id: `dragon_${a}`, weight: 90}, {id: `licorne_${a}`, weight: 10}] }
+        ];
+        EGGS.push(...aEggs);
+    }
+
+    // 4. Les Œufs Diamants scalent sur l'ascension actuelle !
+    const maxTier = ascensionCount === 0 ? '' : `_${ascensionCount}`;
+    const dragonId = ascensionCount === 0 ? 'dragon' : `dragon${maxTier}`;
+    const licorneId = ascensionCount === 0 ? 'licorne' : `licorne${maxTier}`;
+    
+    DIAMOND_EGGS.push(
+        { id: 'egg_crystal', name: 'Œuf de Cristal', icon: '🔮', cost: 15, pool: [{id: dragonId, weight: 80}, {id: licorneId, weight: 20}] },
+        { id: 'egg_void', name: 'Œuf du Néant', icon: '🕳️', cost: 100, pool: [{id: licorneId, weight: 100}] }
+    );
+}
 
 export const BUILDINGS = [
     { id: 'puff', name: 'Puff 16k', icon: '💨', desc: 'Un curseur en forme de Puff qui clique automatiquement sur Aubin', baseCost: 15, baseCps: 0.5, count: 0, minRebirth: 0, baseMax: 200, costScale: 1.15 },
@@ -49,15 +127,15 @@ export const UPGRADES = [
     { id: 'double_click', name: 'Doigts Gras', icon: '👆', desc: 'Double la puissance de clic', cost: 100, type: 'click', multiplier: 2, requirement: { type: 'clicks', value: 50 }, purchased: false },
     { id: 'triple_click', name: 'Mains de Beurre', icon: '🧈', desc: 'Triple pouvoir de clic. Ça glisse.', cost: 1000, type: 'click', multiplier: 3, requirement: { type: 'clicks', value: 200 }, purchased: false },
     { id: 'mega_click', name: 'Poing Calorique', icon: '👊', desc: 'x5 puissance de clic brute (ARC SALLE)', cost: 50000, type: 'click', multiplier: 5, requirement: { type: 'calories', value: 25000 }, purchased: false },
-    { id: 'puff_50k', name: 'Puff 32k', icon: '🌬️', desc: 'Upgrade les Puffs ! Triple production', cost: 200, type: 'building', target: 'puff', multiplier: 3, requirement: { type: 'building', building: 'puff', value: 5 }, purchased: false },
-    { id: 'sauce', name: 'Sauce en Plus', icon: '🫗', desc: 'Les frites produisent x3', cost: 1500, type: 'building', target: 'frite', multiplier: 3, requirement: { type: 'building', building: 'frite', value: 5 }, purchased: false },
-    { id: 'triple_cheese', name: 'Triple Cheese', icon: '🧀', desc: 'Burgers au triple fromage ! x3', cost: 5000, type: 'building', target: 'burger', multiplier: 3, requirement: { type: 'building', building: 'burger', value: 5 }, purchased: false },
-    { id: 'galette', name: 'Galette Maison', icon: '🫓', desc: 'Kebabs artisanaux x3', cost: 20000, type: 'building', target: 'kebab', multiplier: 3, requirement: { type: 'building', building: 'kebab', value: 5 }, purchased: false },
+    { id: 'puff_50k', name: 'Puff 32k', icon: '🌬️', desc: 'Upgrade les Puffs en 32k ! Triple production', cost: 200, type: 'building', target: 'puff', multiplier: 3, requirement: { type: 'building', building: 'puff', value: 5 }, purchased: false },
+    { id: 'sauce', name: 'Sauce en Plus', icon: '🫗', desc: 'Toutes les frites produisent x3 Calories d\'Or', cost: 1500, type: 'building', target: 'frite', multiplier: 3, requirement: { type: 'building', building: 'frite', value: 5 }, purchased: false },
+    { id: 'triple_cheese', name: 'Triple Cheese', icon: '🧀', desc: 'Burgers passent au triple fromage ! x3', cost: 5000, type: 'building', target: 'burger', multiplier: 3, requirement: { type: 'building', building: 'burger', value: 5 }, purchased: false },
+    { id: 'galette', name: 'Galette Maison', icon: '🫓', desc: 'Kebabs avec galette artisanale x3', cost: 20000, type: 'building', target: 'kebab', multiplier: 3, requirement: { type: 'building', building: 'kebab', value: 5 }, purchased: false },
     { id: 'aile_en_plus', name: 'Aile en Plus', icon: '🦴', desc: 'Chaque bucket contient 50% d\'ailes en plus x3', cost: 80000, type: 'building', target: 'poulet', multiplier: 3, requirement: { type: 'building', building: 'poulet', value: 5 }, purchased: false },
     { id: 'four_a_bois', name: 'Four à Bois', icon: '🪵', desc: 'Pizzas cuites au feu de bois = x3', cost: 300000, type: 'building', target: 'pizza', multiplier: 3, requirement: { type: 'building', building: 'pizza', value: 5 }, purchased: false },
-    { id: 'appetit_leger', name: 'Gros Appétit', icon: '😋', desc: 'Tout x2 !', cost: 10000, type: 'global', multiplier: 2, requirement: { type: 'calories', value: 5000 }, purchased: false },
-    { id: 'trou_noir', name: 'Estomac sans Fond', icon: '🕳️', desc: 'Tout x3', cost: 500000, type: 'global', multiplier: 3, requirement: { type: 'calories', value: 200000 }, purchased: false },
-    { id: 'dimension_bouffe', name: 'Dimension Bouffe', icon: '🌌', desc: 'Tout x5', cost: 5000000, type: 'global', multiplier: 5, requirement: { type: 'calories', value: 2000000 }, purchased: false },
+    { id: 'appetit_leger', name: 'Gros Appétit', icon: '😋', desc: 'Aubin a encore plus faim ! Tout x2 !', cost: 10000, type: 'global', multiplier: 2, requirement: { type: 'calories', value: 5000 }, purchased: false },
+    { id: 'trou_noir', name: 'Estomac sans Fond', icon: '🕳️', desc: 'La science ne peut pas expliquer où ça va. Tout x3', cost: 500000, type: 'global', multiplier: 3, requirement: { type: 'calories', value: 200000 }, purchased: false },
+    { id: 'dimension_bouffe', name: 'Dimension Bouffe', icon: '🌌', desc: 'Aubin transcende la réalité. Tout x5', cost: 5000000, type: 'global', multiplier: 5, requirement: { type: 'calories', value: 2000000 }, purchased: false },
 ];
 
 export const ASCENSION_UPGRADES = [
@@ -77,26 +155,6 @@ export const ASCENSION_UPGRADES = [
     { id: 'cps_2', name: 'Efficacité Max', icon: '⚡', desc: 'x1.5 au CPS global', type: 'cpsMult', value: 1.5, baseCost: 50, costMult: 4, maxLevel: 3, minAscension: 2 },
     { id: 'rebirth_bonus', name: 'Bonus de Rebirth', icon: '🎁', desc: '+1 Rebirth Token par rebirth', type: 'rebirthBonus', value: 1, baseCost: 100, costMult: 5, maxLevel: 3, minAscension: 4 },
     { id: 'inventory_cap', name: 'Sac sans Fond', icon: '🎒', desc: '+50 places dans l\'inventaire de pets', type: 'inventoryCap', value: 50, baseCost: 10, costMult: 2, maxLevel: 5, minAscension: 1 }
-];
-
-export const PETS = [
-    { id: 'hamster', name: 'Hamster Boulimique', icon: '🐹', mult: 1.2, rarity: 'common', sellPrice: 500 },
-    { id: 'chat', name: 'Chat Glouton', icon: '🐱', mult: 1.3, rarity: 'common', sellPrice: 1000 },
-    { id: 'chien', name: 'Chien Pataud', icon: '🐶', mult: 1.5, rarity: 'rare', sellPrice: 5000 },
-    { id: 'grenouille', name: 'Grenouille Grasse', icon: '🐸', mult: 1.8, rarity: 'rare', sellPrice: 15000 },
-    { id: 'renard', name: 'Renard Malin', icon: '🦊', mult: 2.2, rarity: 'epic', sellPrice: 50000 },
-    { id: 'cochon', name: 'Cochon d\'Or', icon: '🐷', mult: 3.0, rarity: 'epic', sellPrice: 200000 },
-    { id: 'lion', name: 'Lion Affamé', icon: '🦁', mult: 5.0, rarity: 'legendary', sellPrice: 1000000 },
-    { id: 'dragon', name: 'Dragon Calorique', icon: '🐉', mult: 10.0, rarity: 'legendary', sellPrice: 5000000 },
-    { id: 'licorne', name: 'Licorne Calorique', icon: '🦄', mult: 25.0, rarity: 'mythic', sellPrice: 50000000 },
-];
-
-export const EGGS = [
-    { id: 'egg_wood', name: 'Œuf en Bois', icon: '🥚', cost: 15000, minRebirth: 0, pool: [{id: 'hamster', weight: 70}, {id: 'chat', weight: 30}] },
-    { id: 'egg_iron', name: 'Œuf en Fer', icon: '🍳', cost: 250000, minRebirth: 1, pool: [{id: 'chat', weight: 50}, {id: 'chien', weight: 40}, {id: 'grenouille', weight: 10}] },
-    { id: 'egg_gold', name: 'Œuf en Or', icon: '✨', cost: 15000000, minRebirth: 3, pool: [{id: 'grenouille', weight: 60}, {id: 'renard', weight: 30}, {id: 'cochon', weight: 10}] },
-    { id: 'egg_diamond', name: 'Œuf de Diamant', icon: '💎', cost: 1000000000, minRebirth: 5, pool: [{id: 'cochon', weight: 60}, {id: 'lion', weight: 35}, {id: 'dragon', weight: 5}] },
-    { id: 'egg_mythic', name: 'Œuf Cosmique', icon: '🌌', cost: 100000000000, minRebirth: 10, pool: [{id: 'dragon', weight: 90}, {id: 'licorne', weight: 10}] }
 ];
 
 export const QUEST_TEMPLATES = [

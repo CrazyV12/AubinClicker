@@ -121,16 +121,10 @@ body {
   border-color: rgba(0, 210, 255, 0.3) !important;
   background: rgba(0, 0, 0, 0.5) !important;
 }
-.diamond-timer {
-  text-align: center;
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  margin-top: 2px;
-  font-variant-numeric: tabular-nums; /* Empêche le texte de trembler quand les secondes défilent */
-}
 .diamond-info { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 1.2rem; font-weight: bold; color: #00d2ff; text-shadow: 0 0 10px rgba(0, 210, 255, 0.5); }
 .diamond-progress-bg { width: 120px; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; }
 .diamond-progress-fill { width: 0%; height: 100%; background: #00d2ff; transition: width 0.1s linear; }
+.diamond-timer { text-align: center; font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; font-variant-numeric: tabular-nums; }
 
 /* --- Animated background particles --- */
 #particles {
@@ -212,9 +206,10 @@ body {
 #right-interface {
   display: flex;
   gap: 1rem;
-  align-items: center; /* Centre les panneaux verticalement */
-  justify-content: flex-end; /* Garde la nav à droite quand la boutique est fermée */
+  align-items: center;
+  justify-content: flex-end; 
   width: 100%;
+  height: 80vh; 
 }
 
 /* --- Glass Panel --- */
@@ -369,7 +364,7 @@ body {
   background-clip: text;
   display: block;
   line-height: 1.1;
-  transition: transform var(--transition-fast);
+  transition: transform var(--transition-fast), background 1s ease;
 }
 
 #calorie-count.bump { transform: scale(1.08); }
@@ -448,21 +443,52 @@ body {
   transition: all 0.6s ease;
 }
 
-#aubin-aura.aura-1 { box-shadow: 0 0 20px 8px rgba(150, 200, 255, 0.5), 0 0 50px 20px rgba(100, 160, 255, 0.25); animation: aura-pulse-1 2.5s ease-in-out infinite; }
-@keyframes aura-pulse-1 { 0%, 100% { box-shadow: 0 0 20px 8px rgba(150,200,255,0.5), 0 0 50px 20px rgba(100,160,255,0.25); } 50% { box-shadow: 0 0 35px 15px rgba(150,200,255,0.75), 0 0 70px 30px rgba(100,160,255,0.4); } }
-#aubin-aura.aura-2 { box-shadow: 0 0 25px 10px rgba(255, 180, 30, 0.65), 0 0 60px 25px rgba(255, 100, 10, 0.35); animation: aura-pulse-2 2s ease-in-out infinite; }
-@keyframes aura-pulse-2 { 0%, 100% { box-shadow: 0 0 25px 10px rgba(255,180,30,0.65), 0 0 60px 25px rgba(255,100,10,0.35); } 50% { box-shadow: 0 0 45px 20px rgba(255,220,50,0.9), 0 0 90px 40px rgba(255,100,10,0.55); } }
-#aubin-aura.aura-3 { box-shadow: 0 0 30px 12px rgba(170, 60, 255, 0.7), 0 0 70px 30px rgba(100, 0, 200, 0.4); animation: aura-pulse-3 1.8s ease-in-out infinite; }
-@keyframes aura-pulse-3 { 0%, 100% { box-shadow: 0 0 30px 12px rgba(170,60,255,0.7), 0 0 70px 30px rgba(100,0,200,0.4); } 50% { box-shadow: 0 0 55px 22px rgba(200,80,255,0.9), 0 0 100px 45px rgba(130,0,255,0.6); } }
-#aubin-aura.aura-4 { animation: aura-rainbow 2s linear infinite; }
+/* Niveau 1 : Bleu Pâle */
+#aubin-aura.aura-1 { animation: aura-pulse-1 2.5s ease-in-out infinite; }
+@keyframes aura-pulse-1 { 0%, 100% { box-shadow: 0 0 20px 8px rgba(150,200,255,0.4); } 50% { box-shadow: 0 0 35px 15px rgba(150,200,255,0.7); } }
+
+/* Niveau 2 : Vert Nature */
+#aubin-aura.aura-2 { animation: aura-pulse-2 2.3s ease-in-out infinite; }
+@keyframes aura-pulse-2 { 0%, 100% { box-shadow: 0 0 25px 10px rgba(74,222,128,0.4); } 50% { box-shadow: 0 0 45px 20px rgba(74,222,128,0.7); } }
+
+/* Niveau 3 : Jaune Or */
+#aubin-aura.aura-3 { animation: aura-pulse-3 2.1s ease-in-out infinite; }
+@keyframes aura-pulse-3 { 0%, 100% { box-shadow: 0 0 30px 12px rgba(251,191,36,0.4); } 50% { box-shadow: 0 0 55px 25px rgba(251,191,36,0.7); } }
+
+/* Niveau 4 : Orange Brûlant */
+#aubin-aura.aura-4 { animation: aura-pulse-4 1.9s ease-in-out infinite; }
+@keyframes aura-pulse-4 { 0%, 100% { box-shadow: 0 0 35px 15px rgba(249,115,22,0.4); } 50% { box-shadow: 0 0 65px 30px rgba(249,115,22,0.8); } }
+
+/* Niveau 5 : Rouge Sang */
+#aubin-aura.aura-5 { animation: aura-pulse-5 1.7s ease-in-out infinite; }
+@keyframes aura-pulse-5 { 0%, 100% { box-shadow: 0 0 40px 18px rgba(244,63,94,0.5); } 50% { box-shadow: 0 0 75px 35px rgba(244,63,94,0.8); } }
+
+/* Niveau 6 : Violet Mystique */
+#aubin-aura.aura-6 { animation: aura-pulse-6 1.5s ease-in-out infinite; }
+@keyframes aura-pulse-6 { 0%, 100% { box-shadow: 0 0 50px 20px rgba(217,70,239,0.5); } 50% { box-shadow: 0 0 85px 40px rgba(217,70,239,0.9); } }
+
+/* Niveau 7 : Cyan Électrique */
+#aubin-aura.aura-7 { animation: aura-pulse-7 1.3s ease-in-out infinite; }
+@keyframes aura-pulse-7 { 0%, 100% { box-shadow: 0 0 60px 25px rgba(6,182,212,0.6); } 50% { box-shadow: 0 0 100px 45px rgba(6,182,212,0.9); } }
+
+/* Niveau 8 : Bleu Profond Cosmique */
+#aubin-aura.aura-8 { animation: aura-pulse-8 1.1s ease-in-out infinite; }
+@keyframes aura-pulse-8 { 0%, 100% { box-shadow: 0 0 70px 30px rgba(59,130,246,0.6); } 50% { box-shadow: 0 0 115px 50px rgba(59,130,246,1); } }
+
+/* Niveau 9 : Blanc Divin */
+#aubin-aura.aura-9 { animation: aura-pulse-9 0.9s ease-in-out infinite; }
+@keyframes aura-pulse-9 { 0%, 100% { box-shadow: 0 0 80px 35px rgba(255,255,255,0.7); } 50% { box-shadow: 0 0 130px 60px rgba(255,255,255,1); } }
+
+/* Niveau 10 : Rainbow Absolu */
+#aubin-aura.aura-10 { animation: aura-rainbow 2s linear infinite; }
 @keyframes aura-rainbow {
-  0%   { box-shadow: 0 0 40px 16px rgba(255,50,50,0.8),   0 0 80px 35px rgba(255,50,50,0.4); }
-  16%  { box-shadow: 0 0 40px 16px rgba(255,165,0,0.8),   0 0 80px 35px rgba(255,165,0,0.4); }
-  33%  { box-shadow: 0 0 40px 16px rgba(255,255,0,0.8),   0 0 80px 35px rgba(255,255,0,0.4); }
-  50%  { box-shadow: 0 0 40px 16px rgba(0,220,100,0.8),   0 0 80px 35px rgba(0,220,100,0.4); }
-  66%  { box-shadow: 0 0 40px 16px rgba(60,100,255,0.8),  0 0 80px 35px rgba(60,100,255,0.4); }
-  83%  { box-shadow: 0 0 40px 16px rgba(180,60,255,0.8),  0 0 80px 35px rgba(180,60,255,0.4); }
-  100% { box-shadow: 0 0 40px 16px rgba(255,50,50,0.8),   0 0 80px 35px rgba(255,50,50,0.4); }
+  0%   { box-shadow: 0 0 90px 40px rgba(255,50,50,0.8),   0 0 150px 60px rgba(255,50,50,0.4); }
+  16%  { box-shadow: 0 0 90px 40px rgba(255,165,0,0.8),   0 0 150px 60px rgba(255,165,0,0.4); }
+  33%  { box-shadow: 0 0 90px 40px rgba(255,255,0,0.8),   0 0 150px 60px rgba(255,255,0,0.4); }
+  50%  { box-shadow: 0 0 90px 40px rgba(0,220,100,0.8),   0 0 150px 60px rgba(0,220,100,0.4); }
+  66%  { box-shadow: 0 0 90px 40px rgba(60,100,255,0.8),  0 0 150px 60px rgba(60,100,255,0.4); }
+  83%  { box-shadow: 0 0 90px 40px rgba(180,60,255,0.8),  0 0 150px 60px rgba(180,60,255,0.4); }
+  100% { box-shadow: 0 0 90px 40px rgba(255,50,50,0.8),   0 0 150px 60px rgba(255,50,50,0.4); }
 }
 
 /* Puff orbit ring */
@@ -575,7 +601,7 @@ body {
 #shop-panel {
   width: 100%;
   flex: 1;
-  max-height: 85vh; /* Le panneau peut s'étirer verticalement */
+  max-height: 85vh; 
   display: flex;
   flex-direction: column;
   margin: 0;
@@ -586,7 +612,7 @@ body {
   flex-direction: column;
   gap: 0.75rem;
   padding: 1rem 0.5rem;
-  flex-shrink: 0; /* La navbar ne s'écrase pas */
+  flex-shrink: 0; 
 }
 
 .shop-tab {
@@ -652,7 +678,7 @@ body {
   display: none;
   flex-direction: column;
   gap: 0.5rem;
-  overflow-y: auto; /* Permet le scroll à l'intérieur */
+  overflow-y: auto; 
   flex: 1;
   padding-right: 0.25rem;
 }
@@ -950,6 +976,7 @@ body {
 }
 .egg-cost { color: var(--accent-secondary); font-size: 0.75rem; font-weight: bold;}
 .egg-req { font-size: 0.65rem; color: var(--danger); }
+.egg-status-text { text-align: center; line-height: 1.2; margin-top: 5px; }
 
 .inventory-header {
     display: flex;
@@ -1091,170 +1118,60 @@ body {
 .rarity-mythic { background: rgba(236, 72, 153, 0.1); border-color: rgba(236, 72, 153, 0.3); color: #ec4899; box-shadow: 0 0 15px rgba(236, 72, 153, 0.2); }
 
 /* --- Rebirth Section --- */
-#rebirth-info {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.rebirth-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-weight: 700;
-  font-size: 0.95rem;
-  color: var(--accent-secondary);
-}
-
-.rebirth-badge {
-  background: var(--accent-gradient);
-  color: #fff;
-  font-size: 0.75rem;
-  font-weight: 800;
-  padding: 0.15rem 0.5rem;
-  border-radius: 20px;
-  min-width: 24px;
-  text-align: center;
-}
-
-.rebirth-details {
-  display: flex;
-  gap: 0.75rem;
-}
-
-.rebirth-cap, .rebirth-mult {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-}
-
-.btn-rebirth {
-  background: linear-gradient(135deg, #8b5cf6, #a78bfa);
-  border: 1px solid rgba(139, 92, 246, 0.3);
-  color: #fff;
-  font-weight: 700;
-  padding: 0.6rem;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.btn-rebirth:hover:not(:disabled) {
-  box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
-  transform: scale(1.02);
-}
-
+#rebirth-info { display: flex; flex-direction: column; gap: 0.5rem; }
+.rebirth-header { display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 0.95rem; color: var(--accent-secondary); transition: color 1s ease; }
+.rebirth-badge { background: var(--accent-gradient); color: #fff; font-size: 0.75rem; font-weight: 800; padding: 0.15rem 0.5rem; border-radius: 20px; min-width: 24px; text-align: center; transition: background 1s ease; }
+.rebirth-details { display: flex; gap: 0.75rem; }
+.rebirth-cap, .rebirth-mult { flex: 1; display: flex; flex-direction: column; gap: 0.1rem; }
+.btn-rebirth { background: linear-gradient(135deg, #8b5cf6, #a78bfa); border: 1px solid rgba(139, 92, 246, 0.3); color: #fff; font-weight: 700; padding: 0.6rem; cursor: pointer; transition: all var(--transition-fast); }
+.btn-rebirth:hover:not(:disabled) { box-shadow: 0 0 20px rgba(139, 92, 246, 0.4); transform: scale(1.02); }
 .btn-rebirth:disabled { opacity: 0.4; cursor: not-allowed; }
-
 .btn-rebirth.ready { animation: rebirthPulse 1.5s ease-in-out infinite; }
-
-@keyframes rebirthPulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.3); }
-  50% { box-shadow: 0 0 20px 5px rgba(139, 92, 246, 0.4); }
-}
-
+@keyframes rebirthPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.3); } 50% { box-shadow: 0 0 20px 5px rgba(139, 92, 246, 0.4); } }
 .rebirth-require-text { font-size: 0.7rem; color: var(--text-muted); text-align: center; }
 
 /* --- Ascension Styles --- */
-.ascension-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 15px;
-  padding-top: 15px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  font-weight: 700;
-  color: #fbbf24;
-}
-
-.ascension-badge {
-  background: linear-gradient(135deg, #fbbf24, #f59e0b);
-  color: #1a1a1a;
-  padding: 2px 10px;
-  border-radius: 20px;
-  font-size: 0.85rem;
-  font-weight: 800;
-}
-
+.ascension-header { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255, 255, 255, 0.1); font-weight: 700; color: #fbbf24; }
+.ascension-badge { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #1a1a1a; padding: 2px 10px; border-radius: 20px; font-size: 0.85rem; font-weight: 800; }
 .ascension-details { display: flex; gap: 15px; margin: 10px 0; }
 .ascension-points { display: flex; flex-direction: column; align-items: center; flex: 1; }
-
-.btn-ascension {
-  background: linear-gradient(135deg, #fbbf24, #f59e0b);
-  color: #1a1a1a;
-  font-weight: 700;
-  width: 100%;
-  margin-top: 10px;
-}
-
+.btn-ascension { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #1a1a1a; font-weight: 700; width: 100%; margin-top: 10px; }
 .btn-ascension:hover:not(:disabled) { box-shadow: 0 0 20px rgba(251, 191, 36, 0.4); }
 .btn-ascension:disabled { opacity: 0.4; cursor: not-allowed; }
 .btn-ascension.ready { animation: ascensionPulse 1.5s ease-in-out infinite; }
-
-@keyframes ascensionPulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.3); }
-  50% { box-shadow: 0 0 20px 5px rgba(251, 191, 36, 0.4); }
-}
-
+@keyframes ascensionPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.3); } 50% { box-shadow: 0 0 20px 5px rgba(251, 191, 36, 0.4); } }
 .ascension-require-text { font-size: 0.7rem; color: var(--text-muted); text-align: center; margin-top: 5px; }
 
 /* --- Ascension Shop --- */
 .ascension-intro { text-align: center; color: var(--text-muted); margin-bottom: 15px; font-size: 0.9rem; }
-
 #ascension-shop { display: flex; flex-direction: column; gap: 10px; max-height: 400px; overflow-y: auto; padding-right: 5px; }
 #ascension-shop::-webkit-scrollbar { width: 6px; }
 #ascension-shop::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); border-radius: 3px; }
 #ascension-shop::-webkit-scrollbar-thumb { background: rgba(251, 191, 36, 0.3); border-radius: 3px; }
-
-.ascension-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(251, 191, 36, 0.2);
-  border-radius: 10px;
-  transition: all 0.2s ease;
-}
-
+.ascension-card { display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(251, 191, 36, 0.2); border-radius: 10px; transition: all 0.2s ease; }
 .ascension-card:hover:not(.maxed):not(.locked) { background: rgba(255, 255, 255, 0.08); border-color: rgba(251, 191, 36, 0.4); }
 .ascension-card.maxed { border-color: rgba(34, 197, 94, 0.4); opacity: 0.8; }
 .ascension-card.locked { opacity: 0.5; filter: grayscale(0.5); }
 .ascension-card.cant-afford { opacity: 0.7; }
-
 .ascension-icon { font-size: 1.8rem; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; background: rgba(251, 191, 36, 0.15); border-radius: 10px; flex-shrink: 0; }
 .ascension-info { flex: 1; min-width: 0; }
 .ascension-name { font-weight: 700; color: var(--text-primary); font-size: 0.9rem; }
 .ascension-desc { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
 .ascension-level { font-size: 0.7rem; color: #fbbf24; margin-top: 4px; }
 .ascension-bonus { font-size: 0.65rem; color: #22c55e; }
-
-.ascension-buy-btn {
-  padding: 8px 12px;
-  font-size: 0.8rem;
-  background: linear-gradient(135deg, #fbbf24, #f59e0b);
-  color: #1a1a1a;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 700;
-  white-space: nowrap;
-  transition: all 0.2s ease;
-}
-
+.ascension-buy-btn { padding: 8px 12px; font-size: 0.8rem; background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #1a1a1a; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; white-space: nowrap; transition: all 0.2s ease; }
 .ascension-buy-btn:hover:not(:disabled) { transform: scale(1.05); box-shadow: 0 0 10px rgba(251, 191, 36, 0.4); }
 .ascension-buy-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
 /* --- Calorie Progress Bar --- */
 #calorie-bar-container { width: 100%; height: 8px; background: rgba(255, 255, 255, 0.06); border-radius: 4px; margin-top: 0.5rem; position: relative; overflow: hidden; }
-#calorie-bar { height: 100%; background: var(--accent-gradient); border-radius: 4px; transition: width 0.3s ease; width: 0%; }
+#calorie-bar { height: 100%; background: var(--accent-gradient); border-radius: 4px; transition: width 0.3s ease, background 1s ease; width: 0%; }
 #calorie-bar.capped { background: linear-gradient(90deg, #f43f5e, #ff6b6b); animation: capFlash 1s ease-in-out infinite; }
-
 @keyframes capFlash { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
 #calorie-bar-text { position: absolute; top: -18px; right: 0; font-size: 0.65rem; color: var(--text-muted); }
 
 /* --- Pet Inventory Equipment --- */
-#pet-inventory { padding: 0.5rem 0.75rem; width: 100%; max-width: 500px; }
+#pet-inventory { padding: 0.5rem 0.75rem; width: 100%; max-width: 500px; margin-top: 3rem;}
 #pet-inventory h3 { font-size: 0.8rem; font-weight: 700; margin-bottom: 0.4rem; text-align: center; }
 #pet-count-display { color: var(--text-muted); font-weight: 400; font-size: 0.75rem; }
 #pet-slots { display: flex; flex-wrap: wrap; gap: 0.35rem; justify-content: center; }
@@ -1274,95 +1191,642 @@ body {
 
 /* --- Pet Selection Mode --- */
 .pet-card.selectable { cursor: pointer; }
-.pet-card.selectable::after {
-    content: ''; position: absolute; inset: 0; border: 2px solid transparent; border-radius: inherit; pointer-events: none; transition: all var(--transition-fast);
-}
+.pet-card.selectable::after { content: ''; position: absolute; inset: 0; border: 2px solid transparent; border-radius: inherit; pointer-events: none; transition: all var(--transition-fast); }
 .pet-card.selectable:hover::after { border-color: rgba(255, 255, 255, 0.3); background: rgba(255, 255, 255, 0.1); }
 .pet-card.selected-for-sale::after { border-color: var(--danger) !important; background: rgba(244, 63, 94, 0.2) !important; }
 .pet-card.selected-for-sale .pet-icon { transform: scale(0.9); }
 
-.selection-checkbox {
-    position: absolute; top: 5px; right: 5px; width: 16px; height: 16px; border-radius: 4px; border: 2px solid var(--text-muted); display: none; align-items: center; justify-content: center; font-size: 10px; color: transparent; z-index: 15; background: var(--glass-bg);
-}
+.selection-checkbox { position: absolute; top: 5px; right: 5px; width: 16px; height: 16px; border-radius: 4px; border: 2px solid var(--text-muted); display: none; align-items: center; justify-content: center; font-size: 10px; color: transparent; z-index: 15; background: var(--glass-bg); }
 .selection-mode-active .selection-checkbox { display: flex; }
 .pet-card.selected-for-sale .selection-checkbox { background: var(--danger); border-color: var(--danger); color: white; }
 .pet-card.selected-for-sale .selection-checkbox::before { content: '✔'; }
 .selection-mode-active .pet-card .btn-group { display: none !important; }
 
-@keyframes poof {
-    0% { transform: scale(1); opacity: 1; filter: brightness(1); }
-    50% { transform: scale(1.2) rotate(5deg); opacity: 0.8; filter: brightness(1.5); }
-    100% { transform: scale(0); opacity: 0; filter: brightness(2); }
-}
+@keyframes poof { 0% { transform: scale(1); opacity: 1; filter: brightness(1); } 50% { transform: scale(1.2) rotate(5deg); opacity: 0.8; filter: brightness(1.5); } 100% { transform: scale(0); opacity: 0; filter: brightness(2); } }
 .poof-animation { animation: poof 0.4s ease-out forwards; pointer-events: none; }
+
+
+/* ============ ANIMATION GACHA (MODERNE & TRANSPARENTE) ============ */
+#gacha-modal {
+    position: fixed; inset: 0; z-index: 9999;
+    background: rgba(0, 0, 0, 0.65); 
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    display: flex; align-items: center; justify-content: center;
+}
+#gacha-modal.hidden { display: none; }
+
+.gacha-content {
+    width: 100vw; height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; text-align: center;
+    pointer-events: none; 
+}
+
+.gacha-egg {
+    font-size: 8rem;
+    filter: drop-shadow(0 0 40px rgba(255,255,255,0.4));
+    animation: eggShake 0.4s infinite; cursor: default;
+}
+@keyframes eggShake {
+    0% { transform: rotate(0deg) scale(1); }
+    25% { transform: rotate(-15deg) scale(1.1); }
+    50% { transform: rotate(0deg) scale(1); }
+    75% { transform: rotate(15deg) scale(1.1); }
+    100% { transform: rotate(0deg) scale(1); }
+}
+
+#gacha-roulette { position: relative; width: 300px; }
+
+.roulette-window {
+    height: 150px; overflow: hidden;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 35%, black 65%, transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0%, black 35%, black 65%, transparent 100%);
+}
+
+.roulette-pointer-left, .roulette-pointer-right {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    width: 0; height: 0;
+    border-top: 8px solid transparent; border-bottom: 8px solid transparent;
+    z-index: 5;
+}
+.roulette-pointer-left { left: 10px; border-left: 12px solid var(--accent-primary); filter: drop-shadow(0 0 10px var(--accent-primary)); }
+.roulette-pointer-right { right: 10px; border-right: 12px solid var(--accent-primary); filter: drop-shadow(0 0 10px var(--accent-primary)); }
+
+#gacha-track { display: flex; flex-direction: column; }
+.gacha-slot {
+    height: 150px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+}
+.gacha-slot .slot-icon { font-size: 4rem; filter: drop-shadow(0 0 15px rgba(255,255,255,0.2)); }
+.gacha-slot .slot-name { font-size: 1.2rem; font-weight: bold; margin-top: 10px; color: var(--text-primary); text-shadow: 0 0 5px rgba(0,0,0,0.8); }
+
+#gacha-result { 
+    animation: gachaPop 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; 
+    display: flex; flex-direction: column; align-items: center;
+    pointer-events: auto; 
+}
+
+@keyframes gachaPop {
+    0% { transform: scale(0.5); opacity: 0; filter: blur(10px); }
+    100% { transform: scale(1); opacity: 1; filter: blur(0); }
+}
+
+#gacha-result-icon { font-size: 10rem; filter: drop-shadow(0 0 50px rgba(255, 255, 255, 0.6)); animation: floatHolo 3s ease-in-out infinite; }
+#gacha-result-name { font-size: 2.5rem; font-weight: 900; margin: 20px 0 10px; color: var(--text-primary); text-shadow: 0 0 20px var(--accent-glow); }
+.gacha-rarity { font-size: 1rem; text-transform: uppercase; letter-spacing: 3px; padding: 6px 15px; border-radius: 8px; font-weight: bold; display: inline-block; }
+
+@keyframes floatHolo { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+
+#gacha-close-btn {
+    margin-top: 3rem; font-size: 1.2rem; padding: 1rem 3rem;
+    opacity: 0; transform: translateY(20px);
+    pointer-events: none; 
+    transition: all 0.5s ease-out;
+}
+
+#gacha-close-btn.show-action {
+    opacity: 1; 
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+
+/* ============ EGG QTY SELECTOR & DISCOUNT ============ */
+
+/* Barre stepper dans la section \u0153ufs */
+.egg-qty-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.6rem 0.9rem;
+    margin-bottom: 0.75rem;
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(255, 107, 53, 0.15);
+    background: rgba(255, 107, 53, 0.05);
+    flex-wrap: wrap;
+}
+
+.qty-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+}
+
+/* Stepper [-] [N] [+] */
+.qty-stepper {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.qty-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 107, 53, 0.4);
+    background: rgba(255, 107, 53, 0.1);
+    color: var(--accent-primary);
+    font-size: 1.1rem;
+    font-weight: 900;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+    line-height: 1;
+    padding: 0;
+}
+
+.qty-btn:hover {
+    background: rgba(255, 107, 53, 0.25);
+    transform: scale(1.12);
+}
+
+.qty-btn:active { transform: scale(0.95); }
+
+.qty-num {
+    min-width: 2.2rem;
+    text-align: center;
+    font-size: 1.1rem;
+    font-weight: 900;
+    color: var(--accent-secondary);
+    text-shadow: 0 0 8px rgba(255, 201, 71, 0.4);
+}
+
+.qty-max {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+}
+
+/* Badge remise (-X%/\u0153uf) */
+.qty-discount-tag, .egg-discount-tag {
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 2px 7px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: #fff;
+    letter-spacing: 0.4px;
+    text-shadow: none;
+    white-space: nowrap;
+}
+
+/* Tag remise inline dans la carte \u0153uf */
+.egg-discount-tag {
+    display: block;
+    margin-top: 3px;
+    font-size: 0.6rem;
+}
+
+/* ============ ANIMATION GACHA SIMULTAN\u00c9E ============ */
+
+/* Conteneur global de la zone multi-pods */
+#gacha-multi-open {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    pointer-events: auto;
+    animation: gachaPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+#gacha-multi-open.hidden { display: none; }
+
+/* Grille des pods */
+.gacha-pods-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: center;
+    max-width: 640px;
+    max-height: 55vh;
+    overflow-y: auto;
+    padding: 0.5rem;
+    scrollbar-width: thin;
+}
+
+/* Pod individuel */
+.egg-pod {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.75rem 0.6rem;
+    min-width: 100px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    text-align: center;
+}
+
+/* \u0152uf dans le pod : secoue en boucle */
+.pod-egg {
+    font-size: 3rem;
+    line-height: 1;
+    animation: podShake 0.35s ease-in-out infinite;
+    transform-origin: center bottom;
+}
+
+@keyframes podShake {
+    0%, 100% { transform: rotate(-10deg) scale(1); }
+    50%       { transform: rotate(10deg) scale(1.05); }
+}
+
+/* Crack de l'\u0153uf */
+.pod-egg.cracking {
+    animation: podCrack 0.4s ease-out forwards;
+}
+
+@keyframes podCrack {
+    0%   { transform: scale(1); opacity: 1; filter: brightness(1); }
+    40%  { transform: scale(1.35) rotate(12deg); filter: brightness(2); }
+    100% { transform: scale(0.1); opacity: 0; filter: brightness(3); }
+}
+
+/* Zone de r\u00e9v\u00e9lation du pet */
+.pod-reveal {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.2rem;
+    animation: podReveal 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.pod-reveal.hidden { display: none; }
+
+@keyframes podReveal {
+    0%   { transform: scale(0) rotate(-15deg); opacity: 0; }
+    100% { transform: scale(1) rotate(0deg);   opacity: 1; }
+}
+
+.pod-pet-icon   { font-size: 2.2rem; line-height: 1; }
+.pod-pet-name   { font-size: 0.62rem; font-weight: 700; color: var(--text-primary); line-height: 1.1; }
+.pod-pet-rarity {
+    font-size: 0.5rem;
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    padding: 1px 5px;
+    border-radius: 4px;
+}
+
+/* Bouton Continuer du mode multi-open (mêmes styles que gacha-close-btn) */
+.gacha-close-btn-style {
+    margin-top: 0.5rem;
+    font-size: 1.1rem;
+    padding: 0.8rem 2.5rem;
+    opacity: 0;
+    transform: translateY(20px);
+    pointer-events: none;
+    transition: all 0.5s ease-out;
+}
+
+.gacha-close-btn-style.show-action {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+
+/* ====================================================
+   ========= ANIMATION FUSION ========================
+   ==================================================== */
+
+/* Overlay plein \u00e9cran */
+#fusion-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.88);
+    backdrop-filter: blur(6px);
+    animation: fusionOverlayIn 0.3s ease;
+}
+#fusion-modal.hidden { display: none; }
+
+@keyframes fusionOverlayIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+/* Boite de contenu */
+.fusion-content {
+    position: relative;
+    width: 340px;
+    height: 340px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* Arena (conteneur relatif pour les pets + particules) */
+#fusion-arena {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+/* \u00c9toile centrale (d\u00e9cor) */
+.fusion-center-star {
+    position: absolute;
+    font-size: 3rem;
+    z-index: 2;
+    filter: drop-shadow(0 0 20px #ffc947);
+    animation: starPulse 0.6s ease-in-out infinite alternate;
+}
+@keyframes starPulse {
+    from { transform: scale(0.8); filter: drop-shadow(0 0 10px #ffc947); }
+    to   { transform: scale(1.2); filter: drop-shadow(0 0 30px #ff6b35); }
+}
+
+/* --- Node de pet ---  */
+.fusion-pet-node {
+    position: absolute;
+    width: 64px;
+    height: 64px;
+    transform: translate(-50%, -50%); /* centre sur left/top */
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.2rem;
+    background: var(--glass-bg);
+    border: 2px solid rgba(255, 201, 71, 0.5);
+    box-shadow: 0 0 12px rgba(255, 201, 71, 0.3);
+    z-index: 3;
+    transition: opacity 0.2s;
+}
+
+/* Phase 1 : secousse */
+.fusion-pet-node.fusion-shaking {
+    animation: nodeShake 0.18s ease-in-out infinite;
+}
+@keyframes nodeShake {
+    0%, 100% { transform: translate(-50%, -50%) rotate(-8deg) scale(1.05); }
+    50%       { transform: translate(-50%, -50%) rotate(8deg) scale(1.05); }
+}
+
+/* Phase 2 : convergence vers le centre (left:50%, top:50%) */
+.fusion-pet-node.fusion-converging {
+    animation: none;
+    transition: left 0.65s cubic-bezier(0.5, 0, 0.2, 1),
+                top  0.65s cubic-bezier(0.5, 0, 0.2, 1),
+                opacity 0.15s ease 0.6s,
+                transform 0.65s ease;
+    left: 50% !important;
+    top:  50% !important;
+    transform: translate(-50%, -50%) scale(0.5);
+    opacity: 0.7;
+}
+
+/* --- Particule d'explosion --- */
+.fusion-particle {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    z-index: 5;
+    animation: particleBurst 0.7s ease-out forwards;
+    pointer-events: none;
+}
+
+@keyframes particleBurst {
+    0%   { transform: translate(-50%, -50%) translate(0, 0) scale(1); opacity: 1; }
+    100% { transform: translate(-50%, -50%) translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+}
+
+/* --- Zone de r\u00e9sultat --- */
+#fusion-result {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    text-align: center;
+    animation: fusionResultIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+#fusion-result.hidden { display: none; }
+
+@keyframes fusionResultIn {
+    0%   { transform: scale(0.3) rotate(-10deg); opacity: 0; }
+    100% { transform: scale(1) rotate(0deg);     opacity: 1; }
+}
+
+#fusion-result-icon {
+    font-size: 5rem;
+    line-height: 1;
+    filter: drop-shadow(0 0 20px #ffc947);
+    animation: iconGlow 1s ease-in-out infinite alternate;
+}
+
+@keyframes iconGlow {
+    from { filter: drop-shadow(0 0 10px #ffc947); transform: scale(1);   }
+    to   { filter: drop-shadow(0 0 30px #ff6b35); transform: scale(1.08); }
+}
+
+#fusion-result-name {
+    font-size: 1.3rem;
+    font-weight: 900;
+    color: var(--text-primary);
+}
+
+.fusion-level-badge {
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 3px 12px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    color: #1a1a1a;
+}
+/* Couleurs par niveau de fusion */
+.badge-fusion-1 { background: linear-gradient(135deg, #86efac, #22c55e); color: #052e16; }
+.badge-fusion-2 { background: linear-gradient(135deg, #93c5fd, #3b82f6); color: #eff6ff; }
+.badge-fusion-3 { background: linear-gradient(135deg, #c084fc, #a855f7); color: #faf5ff; }
+.badge-fusion-4 { background: linear-gradient(135deg, #fbbf24, #f97316); color: #1a1a1a;
+                  box-shadow: 0 0 20px rgba(251, 191, 36, 0.6); }
+
 
 /* ====================================================
    ========= RESPONSIVE DESIGN (TELEPHONE/TABLETTE) ======
    ==================================================== */
 
-@media (max-width: 1100px) {
-  /* On passe tout sur une seule colonne */
-  #game-container {
-    grid-template-columns: 1fr;
-    align-items: start;
-    padding: 1rem;
-    gap: 1.5rem;
-    max-width: 700px;
-  }
-  
-  #clicker-panel {
-    order: -1;
-  }
-  
-  #right-interface {
-    height: auto; /* Sur mobile, on désactive la hauteur fixe */
-    flex-direction: column-reverse; /* La nav au dessus de la boutique */
-    align-items: stretch;
-    justify-content: flex-start;
-    width: 100%;
-  }
-  
-  #vertical-nav {
-    flex-direction: row;
-    width: 100%;
-    justify-content: center;
-    flex-wrap: wrap;
-    padding: 0.5rem;
-  }
-  
-  .shop-tab {
-    flex: 1;
-    min-width: 50px;
-    max-width: 70px;
-  }
-  
-  #shop-panel, #stats-panel {
-    width: 100%;
-    max-height: none; 
-  }
-  
-  .shop-content {
-    max-height: 50vh; /* Permet le défilement sur petit écran */
-  }
+
+/* ====================================================
+   ========= RESPONSIVE DESIGN & MOBILE APP MODE ======
+   ==================================================== */
+
+/* --- DÉSACTIVATION DU SURBRILLAGE BLEU SUR MOBILE --- */
+* {
+    -webkit-tap-highlight-color: transparent;
+    outline: none;
 }
 
-@media (max-width: 600px) {
-  #click-target { width: 220px; height: 220px; }
-  .aubin-img { width: 140px; height: 140px; }
-  #puff-orbit { width: 220px; height: 220px; }
-  
-  #game-header h1 { font-size: 2rem; }
-  
-  .egg-grid, .inventory-grid, .index-grid {
-    grid-template-columns: repeat(auto-fill, minmax(75px, 1fr)); 
-  }
-  
-  .pet-card .btn-fuse, .pet-card .btn-equip, .pet-card .btn-sell {
-      font-size: 0.55rem;
-      padding: 0.3rem;
-  }
-  
-  .stat-grid {
-      grid-template-columns: 1fr 1fr;
-  }
+/* --- TABLETTES ET PETITS ÉCRANS PC (Mode 1 colonne) --- */
+@media (max-width: 1100px) {
+    #game-container {
+        grid-template-columns: 1fr;
+        padding: 1rem;
+        gap: 1.5rem;
+        max-width: 750px;
+    }
+    #clicker-panel { order: -1; }
+    #right-interface {
+        flex-direction: column-reverse;
+        height: auto;
+    }
+    #vertical-nav {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        width: 100%;
+        padding: 0.5rem;
+    }
+    .shop-tab { flex: 1; min-width: 50px; max-width: 70px; }
+    #shop-panel, #stats-panel { width: 100%; max-height: none; }
+}
+
+/* --- TÉLÉPHONES (Mode Application Mobile Native) --- */
+@media (max-width: 768px) {
+    /* Empêche le pull-to-refresh natif des navigateurs mobiles */
+    body { overscroll-behavior-y: none; }
+
+    /* Conteneur principal transformé en Flexbox Vertical */
+    #game-container {
+        display: flex;
+        flex-direction: column;
+        padding: 10px 10px 90px 10px; /* 90px en bas pour laisser la place à la Tab Bar */
+        gap: 20px;
+    }
+
+    /* Ordre parfait : Clicker -> Boutique -> Stats */
+    #clicker-panel { order: 1; padding: 10px 0; }
+    #right-interface { order: 2; display: flex; flex-direction: column; }
+    #stats-panel { order: 3; }
+
+    /* Réduction de la taille d'Aubin pour gagner de la place */
+    #click-target { width: 220px; height: 220px; margin: 10px 0; }
+    .aubin-img { width: 140px; height: 140px; }
+    #puff-orbit { width: 220px; height: 220px; }
+    
+    #game-header h1 { font-size: 2.2rem; }
+    #calorie-display { min-width: unset; width: 100%; padding: 0.5rem; }
+
+    /* ====== LA MAGIE : TAB BAR FIXÉE EN BAS ====== */
+    #vertical-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        overflow-x: auto; /* Permet de scroller horizontalement dans les onglets */
+        background: rgba(15, 15, 25, 0.95);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-top: 1px solid var(--glass-border);
+        border-radius: 0;
+        padding: 12px 15px;
+        gap: 15px;
+        z-index: 9000;
+        justify-content: flex-start;
+        scrollbar-width: none; /* Firefox : cache la scrollbar */
+        box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
+    }
+    /* Chrome/Safari : cache la scrollbar de la navbar */
+    #vertical-nav::-webkit-scrollbar { display: none; } 
+
+    .shop-tab {
+        flex: 0 0 auto; /* Empêche l'onglet de s'écraser */
+        width: 50px;
+        height: 50px;
+        font-size: 1.5rem;
+        background: rgba(255,255,255,0.05);
+    }
+
+    /* Remonte l'UI des diamants pour ne pas être cachée par la nouvelle Tab Bar */
+    .diamond-ui {
+        bottom: 85px;
+        right: 15px;
+        transform: scale(0.85);
+        transform-origin: bottom right;
+    }
+
+    /* Ajustement des grilles pour les petits écrans */
+    .egg-grid, .inventory-grid, .index-grid {
+        grid-template-columns: repeat(auto-fill, minmax(75px, 1fr));
+        gap: 0.4rem;
+    }
+
+    /* Ajustement des boutons des pets */
+    .pet-card .btn-fuse, .pet-card .btn-equip, .pet-card .btn-sell {
+        font-size: 0.55rem;
+        padding: 0.35rem;
+    }
+
+    /* Redimensionnement des modales de fusion/gacha */
+    .fusion-content { transform: scale(0.8); }
+    #gacha-result-icon { font-size: 6rem !important; }
+    .gacha-egg { font-size: 6rem; }
+}
+
+/* ====================================================
+   ========= CORRECTION AFFICHAGE FUSION ==============
+   ==================================================== */
+
+/* 1. Désintègre l'étoile centrale dès que le résultat s'affiche */
+.fusion-content:has(#fusion-result:not(.hidden)) .fusion-center-star {
+    display: none !important;
+    opacity: 0 !important;
+    animation: none !important;
+}
+
+/* 2. Force un bel espace sous la grosse tête du pet */
+#fusion-result-icon {
+    margin-bottom: 25px !important; 
+    font-size: 7rem !important; /* On le rend un peu plus grand et majestueux ! */
+}
+
+/* 3. Ajoute un petit espace entre le nom et le badge vert */
+#fusion-result-name {
+    margin-bottom: 15px !important;
+    font-size: 2.2rem !important;
+    text-shadow: 0 0 15px rgba(0, 0, 0, 0.8) !important; /* Rend le texte plus lisible */
+}
+
+/* ====================================================
+   ========= CORRECTION DOUBLE CLIC (MOBILE & PC) =====
+   ==================================================== */
+
+/* 1. Correction du menu des pets (pointer-events: all est invalide en HTML) */
+.pet-card .btn-group {
+    opacity: 0;
+    visibility: hidden; /* Mieux que pointer-events pour bloquer les clics fantômes */
+    pointer-events: none;
+    transition: opacity 0.15s ease, visibility 0.15s ease;
+}
+
+.pet-card.selected .btn-group {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto; /* La VRAIE valeur pour restaurer le clic */
+}
+
+/* 2. Désactivation des animations de déformation sur les écrans tactiles. 
+   Sur mobile, un hover qui modifie la taille bloque systématiquement le premier clic ! */
+@media (hover: none) {
+    .shop-item:hover:not(.locked),
+    .upgrade-item:hover:not(.locked):not(.purchased),
+    .qty-btn:hover,
+    .shop-tab:hover,
+    .btn-rebirth:hover:not(:disabled),
+    .ascension-buy-btn:hover:not(:disabled),
+    .quest-claim-btn:hover,
+    .pet-card .btn-equip:hover, 
+    .pet-card .btn-sell:hover {
+        transform: none !important;
+    }
 }

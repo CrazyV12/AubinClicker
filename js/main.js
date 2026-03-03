@@ -36,17 +36,19 @@ function gameLoop(now) {
     lastTick = now;
     state.stats.timePlayed += debugDt;
 
-    // Logique Diamants Passifs
     state.diamondProgress += debugDt;
-    const speedBonusLvl = state.diamondUpgradesPurchased['diamond_speed'] || 0;
-    const speedMult = 1 + (speedBonusLvl * 0.1);
-    const effectiveTick = 300 / speedMult; // 300s = 5 minutes
+    const effectiveTick = 300; 
 
     if (state.diamondProgress >= effectiveTick) {
-        state.diamondProgress -= effectiveTick;
+        const cycles = Math.floor(state.diamondProgress / effectiveTick);
+        state.diamondProgress -= (effectiveTick * cycles);
+        
         const u = core.getCurrentUniverse();
-        state.diamonds += u.diamondRate;
-        ui.showMilestone(`💎 +${u.diamondRate} Diamants récoltés !`);
+        const classBonusLvl = state.diamondUpgradesPurchased['diamond_class'] || 0;
+        const totalDiamonds = (u.diamondRate + classBonusLvl) * cycles;
+        
+        state.diamonds += totalDiamonds;
+        ui.showMilestone(`💎 +${totalDiamonds} Diamants récoltés !`);
         ui.updateDiamondUI();
     }
 
@@ -54,7 +56,7 @@ function gameLoop(now) {
         const gained = state.cps * debugDt;
         state.calories += gained;
         state.totalCalories += gained;
-        ui.updateDisplay();
+        ui.updateDisplay(); // Mise à jour fluide uniquement
         ui.checkMilestones();
     }
     requestAnimationFrame(gameLoop);
@@ -67,7 +69,6 @@ function init() {
     core.generateQuests();
     ui.renderAll();
 
-    // Onglets dynamiques (affichés si rebirth > 0)
     if (state.rebirthCount >= 1) {
         ['eggs-tab', 'inventory-tab', 'index-tab', 'codes-tab', 'pet-inventory', 'diamonds-tab'].forEach(id => {
             const el = document.getElementById(id);
@@ -75,7 +76,6 @@ function init() {
         });
     }
 
-    // Gestion du clic sur Aubin
     const clickTarget = document.getElementById('click-target');
     if(clickTarget) {
         clickTarget.addEventListener('click', core.handleClick);
@@ -90,7 +90,6 @@ function init() {
         clickTarget.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); core.handleClick(null); } });
     }
 
-    // Boutons Globaux
     const addEv = (id, fn) => { const el = document.getElementById(id); if(el) el.addEventListener('click', fn); };
     addEv('save-btn', core.saveGame);
     addEv('reset-btn', core.resetGame);
@@ -102,7 +101,6 @@ function init() {
     addEv('btn-sort-inventory', () => core.toggleSortInventory(false));
     addEv('btn-auto-fuse', core.autoFusePets);
 
-    // Codes
     const codeSubmit = document.getElementById('code-submit');
     const codeInput = document.getElementById('code-input');
     if (codeSubmit && codeInput) {
@@ -110,7 +108,6 @@ function init() {
         codeInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') core.redeemCode(codeInput.value); });
     }
 
-    // Clic pour désélectionner un pet (en dehors)
     document.addEventListener('click', (e) => {
         if (!state.isSelectionMode && !e.target.closest('.pet-card')) {
             document.querySelectorAll('.pet-card.selected').forEach(c => c.classList.remove('selected'));
@@ -119,7 +116,6 @@ function init() {
 
     initShopTabs();
 
-    // Boucles
     setInterval(core.saveGame, 30000);
     window.addEventListener('beforeunload', core.saveGame);
     setInterval(() => ui.showQuote(), 30000);
@@ -127,16 +123,12 @@ function init() {
     setInterval(ui.spawnBackgroundParticle, 2000);
     for (let i = 0; i < 5; i++) setTimeout(() => ui.spawnBackgroundParticle(), i * 400);
     
-    // RAFRAÎCHISSEMENT DE L'INTERFACE TOUTES LES SECONDES (1000ms au lieu de 2000ms)
+    // RAFRAÎCHISSEMENT INTELLIGENT (Sans recréer les boutons !)
     setInterval(() => {
-        ui.renderBuildings();
-        ui.renderUpgrades();
-        ui.renderQuests();
+        ui.updateDisplay();
         ui.checkQuests();
         ui.updateRebirthUI();
         ui.updateAscensionUI();
-        ui.renderEggs(); 
-        ui.renderDiamondShop();
         ui.updateDiamondUI();
     }, 1000);
 

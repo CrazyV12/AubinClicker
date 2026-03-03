@@ -21,7 +21,6 @@ export let state = {
     ascensionPoints: 0,
     ascensionUpgrades: {},
     
-    // NOUVEAUTÉ DIAMANTS
     diamonds: 0,
     diamondProgress: 0,
     diamondUpgradesPurchased: {},
@@ -32,5 +31,8 @@ export let state = {
     completedQuests: [],
     activeQuests: [],
     lastQuestTypes: [],
-    stats: { eggsOpened: 0, petsFused: 0, petsSold: 0, timePlayed: 0 }
+    stats: { eggsOpened: 0, petsFused: 0, petsSold: 0, timePlayed: 0 },
+    
+    isOpeningEgg: false,
+    eggQtySelected: 1   // Quantité choisie dans le stepper d'achat d'œufs
 };

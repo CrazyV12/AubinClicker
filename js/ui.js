@@ -42,15 +42,19 @@ export function applyUniverseTheme() {
 
 export function updateDiamondUI() {
     const dc = document.getElementById('diamond-count');
-    if (dc) dc.textContent = core.formatNumber(state.diamonds);
-
     const dp = document.getElementById('diamond-progress');
     const dt = document.getElementById('diamond-timer');
     
+    const u = core.getCurrentUniverse();
+    const classBonusLvl = state.diamondUpgradesPurchased['diamond_class'] || 0;
+    const rate = u.diamondRate + classBonusLvl;
+
+    if (dc) {
+        dc.innerHTML = `${core.formatNumber(state.diamonds)} <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal; margin-left: 5px;">(+${rate}/5min)</span>`;
+    }
+    
     if (dp || dt) {
-        const speedBonusLvl = state.diamondUpgradesPurchased['diamond_speed'] || 0;
-        const speedMult = 1 + (speedBonusLvl * 0.1);
-        const effectiveTick = 300 / speedMult; // 5 minutes de base
+        const effectiveTick = 300; 
         
         if (dp) {
             const pct = (state.diamondProgress / effectiveTick) * 100;
@@ -61,7 +65,6 @@ export function updateDiamondUI() {
             const remainingSeconds = Math.max(0, effectiveTick - state.diamondProgress);
             const m = Math.floor(remainingSeconds / 60);
             const s = Math.floor(remainingSeconds % 60);
-            // Affichage formaté MM:SS
             dt.textContent = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
         }
     }
@@ -79,6 +82,7 @@ export function renderDiamondShop() {
             
             const card = document.createElement('div');
             card.className = `ascension-card ${isMaxed ? 'maxed' : ''} ${!canAfford && !isMaxed ? 'cant-afford' : ''}`;
+            card.dataset.id = u.id;
             card.innerHTML = `
                 <div class="ascension-icon">${u.icon}</div>
                 <div class="ascension-info">
@@ -90,32 +94,85 @@ export function renderDiamondShop() {
                     ${isMaxed ? 'MAX' : `${core.formatNumber(cost)} 💎`}
                 </button>
             `;
-            if (!isMaxed && canAfford) card.querySelector('.ascension-buy-btn').addEventListener('click', () => core.buyDiamondUpgrade(u.id));
+            
+            // Correction : listener rattaché sans condition
+            card.querySelector('.ascension-buy-btn').addEventListener('click', () => core.buyDiamondUpgrade(u.id));
             upList.appendChild(card);
         }
     }
 
-    const eggList = document.getElementById('diamond-eggs-list');
-    if (eggList) {
-        eggList.innerHTML = '';
+    // --- Section Œufs diamants ---
+    const eggSection = document.getElementById('diamond-eggs-section');
+    if (eggSection) {
+        eggSection.innerHTML = '';
         const maxInv = core.getMaxInventory();
         const isInvFull = state.inventoryPets.length >= maxInv;
+        const maxBatch = core.getEggBatchSize();
+        const qty = Math.min(state.eggQtySelected, maxBatch);
+
+        // Stepper (visible seulement si batch > 1)
+        if (maxBatch > 1) {
+            eggSection.appendChild(_buildQtySelector(qty, maxBatch, 'dia'));
+        }
+
+        const eggList = document.createElement('div');
+        eggList.id = 'diamond-eggs-list';
+        eggList.className = 'egg-grid';
+        eggSection.appendChild(eggList);
 
         for (const egg of data.DIAMOND_EGGS) {
-            const canAfford = state.diamonds >= egg.cost;
+            const totalCost = core.getEggTotalCost(egg, qty, true);
+            const discount = core.getEggBulkDiscount(qty);
+            const canAfford = state.diamonds >= totalCost;
             const card = document.createElement('div');
-            card.className = `egg-card ${isInvFull ? 'locked' : ''} ${canAfford && !isInvFull ? 'can-afford' : ''}`;
-            let statusText = isInvFull ? `<div class="egg-req">Inventaire plein !</div>` : `<div class="egg-cost" style="color:#00d2ff">${core.formatNumber(egg.cost)} 💎</div>`;
+            card.className = `egg-card ${isInvFull || !canAfford ? 'locked' : 'can-afford'}`;
+            card.dataset.id = egg.id;
 
-            card.innerHTML = `<div class="egg-icon">${egg.icon}</div><div class="egg-name">${egg.name}</div>${statusText}`;
-            if (!isInvFull && canAfford) {
-                card.style.cursor = 'pointer';
-                card.style.borderColor = '#00d2ff';
-                card.addEventListener('click', () => core.buyDiamondEgg(egg.id));
+            let statusHtml = '';
+            if (isInvFull) statusHtml = `<span class="egg-req">Inventaire plein !</span>`;
+            else if (!canAfford) statusHtml = `<span class="egg-req">${core.formatNumber(totalCost)} 💎</span>`;
+            else {
+                statusHtml = `<span class="egg-cost" style="color:#00d2ff">${core.formatNumber(totalCost)} 💎</span>`;
+                if (qty > 1) statusHtml += `<span class="egg-discount-tag">-${Math.round((1 - discount) * 100)}%/œuf</span>`;
             }
+
+            card.innerHTML = `<div class="egg-icon">${egg.icon}</div><div class="egg-name">${egg.name}</div><div class="egg-status-text">${statusHtml}</div>`;
+            
+            // Correction : listener rattaché sans condition
+            card.addEventListener('click', () => core.buyDiamondEgg(egg.id));
+            
             eggList.appendChild(card);
         }
     }
+}
+
+/** Construit le stepper [-][N][+] pour la section œufs. prefixId = 'std'|'dia' */
+function _buildQtySelector(qty, maxBatch, prefixId) {
+    const bar = document.createElement('div');
+    bar.className = 'egg-qty-bar glass-panel-inner';
+
+    const discount = core.getEggBulkDiscount(qty);
+    const discountPct = Math.round((1 - discount) * 100);
+    const discTag = qty > 1 ? `<span class="qty-discount-tag">−${discountPct}% / œuf</span>` : '';
+
+    bar.innerHTML = `
+        <span class="qty-label">🥚 Acheter :</span>
+        <div class="qty-stepper">
+            <button class="qty-btn" id="${prefixId}-qty-minus">&#8722;</button>
+            <span class="qty-num" id="${prefixId}-qty-num">${qty}</span>
+            <button class="qty-btn" id="${prefixId}-qty-plus">+</button>
+            <span class="qty-max">/ ${maxBatch}</span>
+        </div>
+        ${discTag}
+    `;
+    // Event listeners bindés après insertion dans le DOM
+    requestAnimationFrame(() => {
+        const minus = document.getElementById(`${prefixId}-qty-minus`);
+        const plus  = document.getElementById(`${prefixId}-qty-plus`);
+        if (minus) minus.addEventListener('click', () => core.setEggQty(state.eggQtySelected - 1));
+        if (plus)  plus.addEventListener('click',  () => core.setEggQty(state.eggQtySelected + 1));
+    });
+    return bar;
 }
 
 // ============ RENDER FUNCTIONS ============
@@ -128,29 +185,120 @@ export function updateDisplay() {
     if(el('total-clicks')) el('total-clicks').textContent = core.formatNumber(state.totalClicks);
     document.title = `${core.formatNumber(state.calories)} Calories - AubinClicker`;
 
-    const list = el('buildings-list');
-    if(list) {
-        list.querySelectorAll('.shop-item').forEach(item => {
-            const b = data.BUILDINGS.find(b => b.id === item.dataset.id);
+    if(el('stat-time')) el('stat-time').textContent = core.formatTime(state.stats.timePlayed);
+    if(el('stat-fusions')) el('stat-fusions').textContent = core.formatNumber(state.stats.petsFused);
+    if(el('stat-eggs')) el('stat-eggs').textContent = core.formatNumber(state.stats.eggsOpened);
+    if(el('stat-sold')) el('stat-sold').textContent = core.formatNumber(state.stats.petsSold);
+
+    const bList = el('buildings-list');
+    if(bList) {
+        bList.querySelectorAll('.shop-item').forEach(item => {
+            const b = data.BUILDINGS.find(x => x.id === item.dataset.id);
             if (!b) return;
             const maxBuildings = core.getMaxBuildings(b);
-            const isHardLocked = state.rebirthCount < (b.minRebirth || 0);
+            const isLockedByRebirth = state.rebirthCount < (b.minRebirth || 0);
+            const isLockedByAscension = b.reqAscension ? core.getAscensionUpgradeLevel(b.reqAscension) === 0 : false;
+            const isHardLocked = isLockedByRebirth || isLockedByAscension;
             const isMaxed = b.count >= maxBuildings;
             const cost = core.getBuildingCost(b);
             const canAfford = state.calories >= cost && !isMaxed && !isHardLocked;
             const isSoftLocked = state.totalCalories < b.baseCost * 0.5 && b.count === 0;
             
-            item.classList.toggle('can-afford', canAfford);
-            item.classList.toggle('locked', isMaxed || isSoftLocked || isHardLocked);
-            
+            item.className = `shop-item ${canAfford ? 'can-afford' : ''} ${(isSoftLocked || isHardLocked) ? 'locked' : ''} ${isMaxed ? 'locked maxed' : ''}`;
             const costEl = item.querySelector('.shop-item-cost');
             if (costEl) {
-                if (isHardLocked) { costEl.textContent = `🔄 Rebirth ${b.minRebirth}`; costEl.classList.remove('too-expensive'); }
+                if (isLockedByAscension) { costEl.textContent = '✨ Ascension requise'; costEl.classList.remove('too-expensive'); }
+                else if (isHardLocked) { costEl.textContent = `🔄 Rebirth ${b.minRebirth} requis`; costEl.classList.remove('too-expensive'); }
                 else if (isMaxed) { costEl.textContent = 'MAX'; costEl.classList.remove('too-expensive'); }
                 else { costEl.textContent = `${core.formatNumber(cost)} cal`; costEl.classList.toggle('too-expensive', !canAfford); }
             }
             const countEl = item.querySelector('.shop-item-count');
             if (countEl) countEl.textContent = isHardLocked ? '0' : `${b.count} / ${maxBuildings}`;
+        });
+    }
+
+    const uList = el('upgrades-list');
+    if(uList) {
+        const visibleCount = data.UPGRADES.filter(u => core.checkRequirement(u.requirement) || u.purchased).length;
+        const renderedCount = uList.querySelectorAll('.upgrade-item').length;
+        if (visibleCount !== renderedCount) {
+            renderUpgrades(); 
+        } else {
+            uList.querySelectorAll('.upgrade-item').forEach(item => {
+                const u = data.UPGRADES.find(x => x.id === item.dataset.id);
+                if (!u) return;
+                const canAfford = state.calories >= u.cost && !u.purchased;
+                const isUnlocked = core.checkRequirement(u.requirement);
+                const isLockedUI = !u.purchased && (!canAfford || !isUnlocked);
+                item.className = `upgrade-item ${u.purchased ? 'purchased' : ''} ${isLockedUI ? 'locked' : ''}`;
+                const costEl = item.querySelector('.upgrade-item-cost');
+                if (costEl && !u.purchased) costEl.className = `upgrade-item-cost ${canAfford ? '' : 'too-expensive'}`;
+            });
+        }
+    }
+
+    // Mise à jour légère des prix sur les cartes œufs déjà rendues
+    ['egg-shop-grid', 'diamond-eggs-list'].forEach(gridId => {
+        const grid = el(gridId);
+        if (!grid) return;
+        const isDiamond = gridId === 'diamond-eggs-list';
+        const maxInv = core.getMaxInventory();
+        const isInvFull = state.inventoryPets.length >= maxInv;
+        const qty = Math.min(state.eggQtySelected, core.getEggBatchSize());
+
+        grid.querySelectorAll('.egg-card').forEach(card => {
+            const eggId = card.dataset.id;
+            const egg = isDiamond ? data.DIAMOND_EGGS.find(x => x.id === eggId) : data.EGGS.find(x => x.id === eggId);
+            if (!egg) return;
+
+            const isLocked = isDiamond ? false : (state.rebirthCount < egg.minRebirth);
+            const totalCost = core.getEggTotalCost(egg, qty, isDiamond);
+            const discount  = core.getEggBulkDiscount(qty);
+            const canAfford = isDiamond ? (state.diamonds >= totalCost) : (state.calories >= totalCost);
+
+            card.className = `egg-card ${isLocked || isInvFull ? 'locked' : ''} ${canAfford && !isInvFull && !isLocked ? 'can-afford' : ''}`;
+
+            const statusEl = card.querySelector('.egg-status-text');
+            if (statusEl) {
+                let html = '';
+                if (isLocked)      html = `<span class="egg-req">🔒 Rebirth ${egg.minRebirth}</span>`;
+                else if (isInvFull) html = `<span class="egg-req">Inventaire plein !</span>`;
+                else if (!canAfford) {
+                    const cost1 = isDiamond ? `${core.formatNumber(egg.cost)} 💎` : `${core.formatNumber(egg.cost)} cal`;
+                    html = `<span class="egg-req">${cost1} (x1)</span>`;
+                } else {
+                    const costStr = isDiamond ? `${core.formatNumber(totalCost)} 💎` : `${core.formatNumber(totalCost)} cal`;
+                    const color   = isDiamond ? 'color:#00d2ff' : '';
+                    html = `<span class="egg-cost" style="${color}">${costStr}</span>`;
+                    if (qty > 1) html += `<span class="egg-discount-tag">-${Math.round((1-discount)*100)}%/œuf</span>`;
+                }
+                statusEl.innerHTML = html;
+            }
+        });
+    });
+
+    const qList = el('quests-list');
+    if (qList) {
+        qList.querySelectorAll('.quest-item').forEach((item, index) => {
+            const q = state.activeQuests[index];
+            if (!q) return;
+            const progress = core.getQuestProgress(q);
+            const ready = progress >= q.target;
+            
+            item.className = `quest-item ${ready ? 'quest-ready' : ''}`;
+            const descEl = item.querySelector('.quest-desc small');
+            if(descEl) descEl.textContent = `(${core.formatNumber(progress)} / ${core.formatNumber(q.target)})`;
+            
+            let btn = item.querySelector('.quest-claim-btn');
+            if (ready && !btn) {
+                btn = document.createElement('button');
+                btn.className = 'quest-claim-btn';
+                btn.textContent = 'Réclamer';
+                btn.addEventListener('click', () => core.claimQuest(q.uid));
+                item.appendChild(btn);
+            } else if (!ready && btn) {
+                btn.remove();
+            }
         });
     }
 }
@@ -163,22 +311,36 @@ export function renderBuildings() {
         const maxBuildings = core.getMaxBuildings(b);
         const cost = core.getBuildingCost(b);
         const isMaxed = b.count >= maxBuildings;
-        const isHardLocked = state.rebirthCount < (b.minRebirth || 0);
+        
+        const isLockedByRebirth = state.rebirthCount < (b.minRebirth || 0);
+        const isLockedByAscension = b.reqAscension ? core.getAscensionUpgradeLevel(b.reqAscension) === 0 : false;
+        const isHardLocked = isLockedByRebirth || isLockedByAscension;
+        
         const canAfford = state.calories >= cost && !isMaxed && !isHardLocked;
         const isSoftLocked = state.totalCalories < b.baseCost * 0.5 && b.count === 0;
 
         const item = document.createElement('div');
         item.className = `shop-item ${canAfford ? 'can-afford' : ''} ${(isSoftLocked || isHardLocked) ? 'locked' : ''} ${isMaxed ? 'locked maxed' : ''}`;
         item.dataset.id = b.id;
+        
+        let costText = '';
+        if (isLockedByAscension) costText = '✨ Ascension requise';
+        else if (isLockedByRebirth) costText = `🔄 Rebirth ${b.minRebirth} requis`;
+        else if (isMaxed) costText = 'MAX';
+        else costText = `${core.formatNumber(cost)} cal`;
+
         item.innerHTML = `
             <div class="shop-item-icon">${isHardLocked ? '🔒' : b.icon}</div>
             <div class="shop-item-info">
-                <div class="shop-item-name">${isHardLocked ? 'Bloqué' : (isSoftLocked ? '???' : b.name)}</div>
-                <div class="shop-item-cost ${canAfford || isMaxed ? '' : 'too-expensive'}">${isHardLocked ? `🔄 Rebirth ${b.minRebirth}` : (isMaxed ? 'MAX' : core.formatNumber(cost) + ' cal')}</div>
+                <div class="shop-item-name">${isHardLocked ? 'Bâtiment bloqué' : (isSoftLocked ? '???' : b.name)}</div>
+                <div class="shop-item-cost ${canAfford || isMaxed ? '' : 'too-expensive'}">${costText}</div>
             </div>
             <div class="shop-item-count">${isHardLocked ? '0' : b.count} / ${isHardLocked ? '0' : maxBuildings}</div>
         `;
-        if (!isSoftLocked && !isHardLocked && !isMaxed) item.addEventListener('click', () => core.buyBuilding(b));
+        
+        // Correction : listener rattaché sans condition
+        item.addEventListener('click', () => core.buyBuilding(b));
+        
         list.appendChild(item);
     }
 }
@@ -187,19 +349,33 @@ export function renderUpgrades() {
     const list = document.getElementById('upgrades-list');
     if(!list) return;
     list.innerHTML = '';
+    
     for (const u of data.UPGRADES) {
-        if (!core.checkRequirement(u.requirement) && !u.purchased) continue;
+        const isUnlocked = core.checkRequirement(u.requirement);
+        if (!isUnlocked && !u.purchased) continue; 
+
         const canAfford = state.calories >= u.cost && !u.purchased;
+
         const item = document.createElement('div');
-        item.className = `upgrade-item ${u.purchased ? 'purchased' : ''} ${!canAfford && !u.purchased ? 'locked' : ''}`;
+        const isLockedUI = !u.purchased && (!canAfford || !isUnlocked);
+        item.className = `upgrade-item ${u.purchased ? 'purchased' : ''} ${isLockedUI ? 'locked' : ''}`;
+        item.dataset.id = u.id;
+
+        let descHtml = `<div class="upgrade-item-desc">${u.desc}</div>`;
+        let costHtml = u.purchased ? '' : `<div class="upgrade-item-cost ${canAfford ? '' : 'too-expensive'}">${core.formatNumber(u.cost)} cal</div>`;
+
         item.innerHTML = `
             <div class="upgrade-icon">${u.icon}</div>
             <div class="upgrade-item-info">
                 <div class="upgrade-item-name">${u.name}</div>
-                ${!u.purchased ? `<div class="upgrade-item-cost ${canAfford ? '' : 'too-expensive'}">${core.formatNumber(u.cost)} cal</div>` : ''}
+                ${descHtml}
+                ${costHtml}
             </div>
         `;
-        if (!u.purchased && canAfford) item.addEventListener('click', () => core.buyUpgrade(u));
+        
+        // Correction : listener rattaché sans condition
+        item.addEventListener('click', () => core.buyUpgrade(u));
+        
         list.appendChild(item);
     }
 }
@@ -228,9 +404,10 @@ export function renderAscensionShop() {
                 ${isMaxed ? 'MAX' : !isUnlocked ? `Ascension ${upgrade.minAscension}` : `${cost} ✨`}
             </button>
         `;
-        if (!isMaxed && isUnlocked && canAfford) {
-            card.querySelector('.ascension-buy-btn').addEventListener('click', () => core.buyAscensionUpgrade(upgrade.id));
-        }
+        
+        // Correction : listener rattaché sans condition
+        card.querySelector('.ascension-buy-btn').addEventListener('click', () => core.buyAscensionUpgrade(upgrade.id));
+        
         shop.appendChild(card);
     }
 }
@@ -287,7 +464,9 @@ export function renderPetInventory() {
         if(state.isSelectionMode) grid.classList.add('selection-mode-active');
         else grid.classList.remove('selection-mode-active');
 
-        for (const pInfo of state.inventoryPets) {
+        const visiblePets = state.inventoryPets.filter(p => !p.isHatching);
+
+        for (const pInfo of visiblePets) {
             const pet = data.PETS.find(p => p.id === pInfo.id);
             const isSel = state.selectedPetsToSell.includes(pInfo.uid);
             const fLvl = pInfo.fusionLevel || 0;
@@ -322,32 +501,56 @@ export function renderPetInventory() {
         }
         const ic = document.getElementById('inventory-count');
         const im = document.getElementById('inventory-max');
-        if(ic) ic.textContent = state.inventoryPets.length;
+        if(ic) ic.textContent = visiblePets.length; 
         if(im) im.textContent = core.getMaxInventory();
         bindPetEvents(grid);
     }
 }
 
 export function renderEggs() {
-    const container = document.getElementById('egg-shop-grid');
-    if(!container) return;
-    container.innerHTML = '';
+    const section = document.getElementById('egg-shop-section');
+    if (!section) return;
+    section.innerHTML = '';
+
     const isInvFull = state.inventoryPets.length >= core.getMaxInventory();
+    const maxBatch = core.getEggBatchSize();
+    const qty = Math.min(state.eggQtySelected, maxBatch);
+
+    // Stepper (visible seulement si batch > 1, i.e. niveau Éclosion ≥1)
+    if (maxBatch > 1) {
+        section.appendChild(_buildQtySelector(qty, maxBatch, 'std'));
+    }
+
+    const grid = document.createElement('div');
+    grid.id = 'egg-shop-grid';
+    grid.className = 'egg-grid';
+    section.appendChild(grid);
 
     for (const egg of data.EGGS) {
         const isLocked = state.rebirthCount < egg.minRebirth;
-        const canAfford = state.calories >= egg.cost;
-        const card = document.createElement('div');
-        card.className = `egg-card ${isLocked || isInvFull ? 'locked' : ''} ${canAfford && !isInvFull ? 'can-afford' : ''}`;
-        
-        let statusText = isLocked ? `<div class="egg-req">Rebirth ${egg.minRebirth}</div>` : (isInvFull ? `<div class="egg-req">Inventaire plein !</div>` : `<div class="egg-cost">${core.formatNumber(egg.cost)} cal</div>`);
+        const totalCost = core.getEggTotalCost(egg, qty);
+        const discount  = core.getEggBulkDiscount(qty);
+        const canAfford = state.calories >= totalCost;
 
-        card.innerHTML = `<div class="egg-icon">${egg.icon}</div><div class="egg-name">${egg.name}</div>${statusText}`;
-        if (!isLocked && !isInvFull && canAfford) {
-            card.style.cursor = 'pointer';
-            card.addEventListener('click', () => core.buyEgg(egg));
+        const card = document.createElement('div');
+        card.className = `egg-card ${isLocked || isInvFull ? 'locked' : ''} ${canAfford && !isInvFull && !isLocked ? 'can-afford' : ''}`;
+        card.dataset.id = egg.id;
+
+        let statusHtml = '';
+        if (isLocked) statusHtml = `<span class="egg-req">🔒 Rebirth ${egg.minRebirth}</span>`;
+        else if (isInvFull) statusHtml = `<span class="egg-req">Inventaire plein !</span>`;
+        else if (!canAfford) statusHtml = `<span class="egg-req">${core.formatNumber(totalCost)} cal</span>`;
+        else {
+            statusHtml = `<span class="egg-cost">${core.formatNumber(totalCost)} cal</span>`;
+            if (qty > 1) statusHtml += `<span class="egg-discount-tag">-${Math.round((1 - discount) * 100)}%/œuf</span>`;
         }
-        container.appendChild(card);
+
+        card.innerHTML = `<div class="egg-icon">${egg.icon}</div><div class="egg-name">${egg.name}</div><div class="egg-status-text">${statusHtml}</div>`;
+
+        // Correction : listener rattaché sans condition
+        card.addEventListener('click', () => core.buyEgg(egg));
+        
+        grid.appendChild(card);
     }
 }
 
@@ -451,6 +654,13 @@ export function updateRebirthUI() {
     }
     if(el('calorie-bar-text')) el('calorie-bar-text').textContent = `${core.formatNumber(state.calories)} / ${core.formatNumber(target)}`;
     
+    if (state.rebirthCount >= 1) {
+        ['eggs-tab', 'inventory-tab', 'index-tab', 'codes-tab', 'pet-inventory', 'diamonds-tab'].forEach(id => {
+            const element = document.getElementById(id);
+            if(element) element.style.display = '';
+        });
+    }
+
     if (state.rebirthCount >= 10) {
         if (el('ascension-info')) el('ascension-info').style.display = '';
         if (el('ascension-details')) el('ascension-details').style.display = '';
@@ -523,11 +733,20 @@ export function spawnBackgroundParticle() {
 }
 
 export function getAubinBaseSrc() { return data.AUBIN_IMAGES[state.rebirthCount % data.AUBIN_CYCLE]; }
+
 export function updateAubinAppearance() {
-    const cycleNum = Math.floor(state.rebirthCount / data.AUBIN_CYCLE); 
-    const imgEl = document.getElementById('aubin-img'); if (imgEl) imgEl.src = getAubinBaseSrc();
+    const imgEl = document.getElementById('aubin-img'); 
+    if (imgEl) imgEl.src = getAubinBaseSrc();
+    
     const auraEl = document.getElementById('aubin-aura');
-    if (auraEl) { auraEl.className = ''; if (cycleNum >= 1) auraEl.classList.add(`aura-${Math.min(cycleNum, 4)}`); }
+    if (auraEl) { 
+        auraEl.className = ''; 
+        const classLevel = state.diamondUpgradesPurchased['diamond_class'] || 0;
+        if (classLevel >= 1) {
+            const auraLevel = Math.min(classLevel, 10);
+            auraEl.classList.add(`aura-${auraLevel}`); 
+        }
+    }
 }
 
 export function renderAll() {
@@ -545,4 +764,348 @@ export function renderAll() {
     updateRebirthUI();
     updateAscensionUI();
     updateAubinAppearance();
+}
+
+// ============ ANIMATION FUSION ============
+export function playFusionAnimation(participants, petData, currentLevel, callback) {
+    const modal = document.getElementById('fusion-modal');
+    const arena = document.getElementById('fusion-arena');
+    const resultZone = document.getElementById('fusion-result');
+    const resultIcon = document.getElementById('fusion-result-icon');
+    const resultName = document.getElementById('fusion-result-name');
+    const resultBadge = document.getElementById('fusion-result-badge');
+    const closeBtn = document.getElementById('fusion-close-btn');
+
+    if (!modal || !arena) {
+        callback();
+        return;
+    }
+
+    // Reset
+    arena.innerHTML = '';
+    resultZone.classList.add('hidden');
+    closeBtn.classList.remove('show-action');
+    modal.classList.remove('hidden');
+
+    // --- Son de fusion ---
+    _playFusionSound();
+
+    // --- Placer les 5 pets en étoile ---
+    const positions = [
+        { x: 50, y: 8  },   // haut
+        { x: 90, y: 35 },   // haut-droite
+        { x: 78, y: 80 },   // bas-droite
+        { x: 22, y: 80 },   // bas-gauche
+        { x: 10, y: 35 },   // haut-gauche
+    ];
+
+    const petEls = participants.map((p, idx) => {
+        const petInfo = data.PETS.find(x => x.id === p.id);
+        const el = document.createElement('div');
+        el.className = 'fusion-pet-node';
+        el.style.left = `${positions[idx].x}%`;
+        el.style.top  = `${positions[idx].y}%`;
+        el.innerHTML  = `<span>${petInfo ? petInfo.icon : '❓'}</span>`;
+        arena.appendChild(el);
+        return el;
+    });
+
+    // --- Phase 1 (800ms) : secousse d'anticipation ---
+    petEls.forEach(el => el.classList.add('fusion-shaking'));
+
+    setTimeout(() => {
+        // --- Phase 2 (700ms) : convergence vers le centre ---
+        petEls.forEach(el => {
+            el.classList.remove('fusion-shaking');
+            el.classList.add('fusion-converging');
+        });
+
+        setTimeout(() => {
+            // --- Phase 3 : explosion de particules ---
+            _spawnFusionExplosion(arena);
+
+            // Cacher les 5 nodes
+            petEls.forEach(el => el.style.opacity = '0');
+
+            // Exécuter la mutation d'état
+            callback();
+
+            // Afficher le résultat fusionné
+            const newLevel = currentLevel + 1;
+            const fusionNames = data.FUSION_NAMES || ['Sauvage', 'Élu', 'Sacré', 'Légendaire', 'Divin'];
+            resultIcon.textContent = petData.icon;
+            resultName.textContent = `${petData.name}`;
+            resultBadge.textContent = fusionNames[newLevel] || `Fusion ${newLevel}`;
+            resultBadge.className = `fusion-level-badge badge-fusion-${newLevel}`;
+
+            setTimeout(() => {
+                resultZone.classList.remove('hidden');
+                setTimeout(() => closeBtn.classList.add('show-action'), 600);
+            }, 300);
+
+            closeBtn.onclick = () => {
+                modal.classList.add('hidden');
+            };
+        }, 750);
+    }, 800);
+}
+
+/** Son synthétique de fusion via Web Audio API */
+function _playFusionSound() {
+    try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+        // Build : un accord montant + un whoosh
+        const play = (freq, startTime, dur, type = 'sine', gainVal = 0.18) => {
+            const osc  = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain); gain.connect(ctx.destination);
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, ctx.currentTime + startTime);
+            osc.frequency.exponentialRampToValueAtTime(freq * 2.5, ctx.currentTime + startTime + dur * 0.7);
+            gain.gain.setValueAtTime(0, ctx.currentTime + startTime);
+            gain.gain.linearRampToValueAtTime(gainVal, ctx.currentTime + startTime + 0.05);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startTime + dur);
+            osc.start(ctx.currentTime + startTime);
+            osc.stop(ctx.currentTime + startTime + dur + 0.05);
+        };
+
+        // Accord magique ascendant
+        play(220,  0,    0.6, 'sine',     0.12);
+        play(330,  0.08, 0.6, 'sine',     0.10);
+        play(440,  0.16, 0.6, 'sine',     0.10);
+        play(880,  0.30, 0.5, 'sine',     0.20);
+        // Impact final
+        play(110,  0.75, 0.4, 'sawtooth', 0.08);
+        play(1760, 0.75, 0.3, 'sine',     0.15);
+    } catch(e) {
+        // Web Audio non disponible, silence
+    }
+}
+
+/** Spawn de particules d'explosion au centre de l'arena */
+function _spawnFusionExplosion(arena) {
+    const colors = ['#ff6b35', '#ffc947', '#a855f7', '#22c55e', '#fff', '#00d2ff', '#ec4899'];
+    const count  = 22;
+    for (let i = 0; i < count; i++) {
+        const p = document.createElement('div');
+        p.className = 'fusion-particle';
+        const angle  = (360 / count) * i + (Math.random() - 0.5) * 20;
+        const dist   = 60 + Math.random() * 80;
+        const rad    = (angle * Math.PI) / 180;
+        const tx     = Math.round(Math.cos(rad) * dist);
+        const ty     = Math.round(Math.sin(rad) * dist);
+        const size   = 6 + Math.round(Math.random() * 10);
+        const color  = colors[Math.floor(Math.random() * colors.length)];
+        p.style.cssText = `
+            left: 50%; top: 50%;
+            width: ${size}px; height: ${size}px;
+            background: ${color};
+            border-radius: 50%;
+            box-shadow: 0 0 ${size * 2}px ${color};
+            --tx: ${tx}px; --ty: ${ty}px;
+            animation-delay: ${Math.random() * 0.1}s;
+        `;
+        arena.appendChild(p);
+    }
+}
+
+// ============ ANIMATION GACHA ============
+
+/** Son synthétique exclusif pour les Œufs (Web Audio API) */
+function _playEggSound(type) {
+    try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const play = (freq, typeOsc, startTime, dur, vol) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain); gain.connect(ctx.destination);
+            osc.type = typeOsc;
+            osc.frequency.setValueAtTime(freq, ctx.currentTime + startTime);
+            if(typeOsc === 'sine' || typeOsc === 'triangle') {
+                osc.frequency.exponentialRampToValueAtTime(freq * 1.5, ctx.currentTime + startTime + dur);
+            }
+            gain.gain.setValueAtTime(0, ctx.currentTime + startTime);
+            gain.gain.linearRampToValueAtTime(vol, ctx.currentTime + startTime + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startTime + dur);
+            osc.start(ctx.currentTime + startTime);
+            osc.stop(ctx.currentTime + startTime + dur + 0.05);
+        };
+
+        if (type === 'pop') { 
+            // Petit son quand l'œuf apparaît
+            play(600, 'sine', 0, 0.15, 0.1);
+            play(800, 'triangle', 0.05, 0.2, 0.1);
+        } else if (type === 'roulette-tick') {
+            // Son très court pendant que la roulette tourne
+            play(800, 'square', 0, 0.05, 0.015);
+        } else if (type === 'reveal-single') { 
+            // Fanfare triomphante pour un pet unique
+            play(440, 'square', 0, 0.2, 0.05);
+            play(554, 'square', 0.1, 0.2, 0.05);
+            play(659, 'square', 0.2, 0.4, 0.05);
+            play(880, 'square', 0.3, 0.7, 0.05);
+        } else if (type === 'reveal-multi') {
+            // Accord d'apparition multiple rapide
+            play(523.25, 'sine', 0, 0.3, 0.1); // Do
+            play(659.25, 'sine', 0.1, 0.3, 0.1); // Mi
+            play(783.99, 'sine', 0.2, 0.5, 0.1); // Sol
+        }
+    } catch(e) {
+        // Silencieux si l'API audio n'est pas supportée
+    }
+}
+
+/** Point d'entrée Gacha : Nettoyage strict puis redirection */
+export function playMultiEggAnimation(egg, petsArray, callback) {
+    const modal = document.getElementById('gacha-modal');
+    if (!modal) { callback(); return; }
+
+    // HARD RESET : On cache TOUT formellement pour éviter les superpositions
+    document.getElementById('gacha-egg').classList.add('hidden');
+    document.getElementById('gacha-roulette').classList.add('hidden');
+    document.getElementById('gacha-multi-open').classList.add('hidden');
+    document.getElementById('gacha-result').classList.add('hidden');
+    document.getElementById('gacha-close-btn').classList.remove('show-action');
+    document.getElementById('gacha-multi-close').classList.remove('show-action');
+
+    // Nettoyage de la vue Résultat Unique
+    document.getElementById('gacha-result-icon').textContent = '';
+    document.getElementById('gacha-result-name').textContent = '';
+    document.getElementById('gacha-result-rarity').textContent = '';
+    document.getElementById('gacha-result-rarity').className = '';
+
+    if (petsArray.length === 1) {
+        _playSingleRoulette(egg, petsArray[0], callback);
+    } else {
+        _playSimultaneousOpen(egg, petsArray, callback);
+    }
+}
+
+// --- Roulette classique (1 œuf) ---
+function _playSingleRoulette(egg, wonPet, callback) {
+    const modal    = document.getElementById('gacha-modal');
+    const eggDiv   = document.getElementById('gacha-egg');
+    const roulette = document.getElementById('gacha-roulette');
+    const track    = document.getElementById('gacha-track');
+    const resultDiv= document.getElementById('gacha-result');
+    const closeBtn = document.getElementById('gacha-close-btn');
+
+    modal.classList.remove('hidden');
+    eggDiv.classList.remove('hidden');
+    eggDiv.textContent = egg.icon;
+
+    _playEggSound('pop');
+
+    setTimeout(() => {
+        eggDiv.classList.add('hidden');
+        roulette.classList.remove('hidden');
+        
+        track.innerHTML = '';
+        const numSpins = 30;
+        for (let i = 0; i < numSpins; i++) {
+            const rp = data.PETS[Math.floor(Math.random() * data.PETS.length)];
+            const s  = document.createElement('div'); s.className = 'gacha-slot';
+            s.innerHTML = `<div class="slot-icon">${rp.icon}</div>`;
+            track.appendChild(s);
+        }
+        const win = document.createElement('div'); win.className = 'gacha-slot';
+        win.innerHTML = `<div class="slot-icon" style="filter:drop-shadow(0 0 20px var(--accent-secondary))">${wonPet.icon}</div>`;
+        track.appendChild(win);
+        for (let i = 0; i < 3; i++) {
+            const p = data.PETS[Math.floor(Math.random() * data.PETS.length)];
+            const s = document.createElement('div'); s.className = 'gacha-slot';
+            s.innerHTML = `<div class="slot-icon">${p.icon}</div>`;
+            track.appendChild(s);
+        }
+        
+        track.style.transition = 'none';
+        track.style.transform  = 'translateY(0px)';
+        
+        // Son de tick pendant que la roulette tourne
+        let ticks = 0;
+        const tickInterval = setInterval(() => {
+            _playEggSound('roulette-tick');
+            ticks++;
+            if(ticks > 15) clearInterval(tickInterval);
+        }, 150);
+
+        void track.offsetWidth; 
+        track.style.transition = 'transform 4s cubic-bezier(0.1, 0.9, 0.2, 1)';
+        track.style.transform  = `translateY(-${numSpins * 150}px)`;
+
+        setTimeout(() => {
+            roulette.classList.add('hidden');
+            resultDiv.classList.remove('hidden');
+            
+            _playEggSound('reveal-single');
+
+            document.getElementById('gacha-result-icon').textContent = wonPet.icon;
+            document.getElementById('gacha-result-name').textContent = wonPet.name;
+            const rarityEl = document.getElementById('gacha-result-rarity');
+            rarityEl.textContent = wonPet.rarity;
+            rarityEl.className  = `gacha-rarity badge-fusion-0 rarity-${wonPet.rarity}`;
+            
+            setTimeout(() => closeBtn.classList.add('show-action'), 1000);
+            
+            closeBtn.onclick = () => { 
+                modal.classList.add('hidden'); 
+                resultDiv.classList.add('hidden'); // CRUCIAL : on cache la div de résultat !
+                callback(); 
+            };
+        }, 4200);
+    }, 1000);
+}
+
+// --- Animation simultanée en pods (N œufs) ---
+function _playSimultaneousOpen(egg, petsArray, callback) {
+    const modal   = document.getElementById('gacha-modal');
+    const podsDiv = document.getElementById('gacha-multi-open');
+    const podsCtn = document.getElementById('gacha-pods-container');
+    const closeBtn= document.getElementById('gacha-multi-close');
+
+    modal.classList.remove('hidden');
+    podsDiv.classList.remove('hidden');
+    
+    podsCtn.innerHTML = '';
+    const pods = petsArray.map((pet, idx) => {
+        const pod = document.createElement('div');
+        pod.className = 'egg-pod';
+        pod.innerHTML = `
+            <div class="pod-egg" id="pod-egg-${idx}">${egg.icon}</div>
+            <div class="pod-reveal hidden" id="pod-reveal-${idx}">
+                <div class="pod-pet-icon">${pet.icon}</div>
+                <div class="pod-pet-name">${pet.name}</div>
+                <div class="pod-pet-rarity rarity-${pet.rarity}">${pet.rarity}</div>
+            </div>
+        `;
+        podsCtn.appendChild(pod);
+        return { pod, pet, idx };
+    });
+
+    _playEggSound('pop');
+
+    // Crack & Reveal
+    setTimeout(() => {
+        _playEggSound('reveal-multi');
+
+        pods.forEach(({ idx }) => {
+            const podEgg    = document.getElementById(`pod-egg-${idx}`);
+            const podReveal = document.getElementById(`pod-reveal-${idx}`);
+            if (podEgg) podEgg.classList.add('cracking');
+
+            setTimeout(() => {
+                if (podEgg)    podEgg.classList.add('hidden');
+                if (podReveal) podReveal.classList.remove('hidden');
+            }, 400);
+        });
+
+        setTimeout(() => closeBtn.classList.add('show-action'), 900);
+        
+        closeBtn.onclick = () => {
+            modal.classList.add('hidden');
+            podsDiv.classList.add('hidden'); // CRUCIAL : on cache la div multi !
+            callback();
+        };
+    }, 900);
 }
