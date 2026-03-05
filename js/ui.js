@@ -5,7 +5,9 @@ import * as core from './core.js';
 let lastQuoteIndex = -1;
 let currentOrbitConfig = '';
 
-// ============ DYNAMIC EVENTS ============
+let currentModalEgg = null;
+let currentModalIsDiamond = false;
+
 function bindPetEvents(container) {
     if(!container) return;
     container.querySelectorAll('.pet-card').forEach(card => {
@@ -32,7 +34,6 @@ function bindPetEvents(container) {
     });
 }
 
-// ============ THEMES & DIAMONDS UI ============
 export function applyUniverseTheme() {
     const u = core.getCurrentUniverse();
     document.body.className = u.theme;
@@ -47,14 +48,16 @@ export function updateDiamondUI() {
     
     const u = core.getCurrentUniverse();
     const classBonusLvl = state.diamondUpgradesPurchased['diamond_class'] || 0;
-    const rate = u.diamondRate + classBonusLvl;
+    
+    // LE NOUVEAU CALCUL EXPONENTIEL POUR L'AFFICHAGE (+X/min)
+    const rate = Math.floor(u.diamondRate * Math.pow(2, classBonusLvl));
 
     if (dc) {
-        dc.innerHTML = `${core.formatNumber(state.diamonds)} <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal; margin-left: 5px;">(+${rate}/5min)</span>`;
+        dc.innerHTML = `${core.formatNumber(state.diamonds)} <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal; margin-left: 5px;">(+${core.formatNumber(rate)}/min)</span>`;
     }
     
     if (dp || dt) {
-        const effectiveTick = 300; 
+        const effectiveTick = 60; // 60 secondes
         
         if (dp) {
             const pct = (state.diamondProgress / effectiveTick) * 100;
@@ -105,12 +108,6 @@ export function renderDiamondShop() {
         eggSection.innerHTML = '';
         const maxInv = core.getMaxInventory();
         const isInvFull = state.inventoryPets.length >= maxInv;
-        const maxBatch = core.getEggBatchSize();
-        const qty = Math.min(state.eggQtySelected, maxBatch);
-
-        if (maxBatch > 1) {
-            eggSection.appendChild(_buildQtySelector(qty, maxBatch, 'dia'));
-        }
 
         const eggList = document.createElement('div');
         eggList.id = 'diamond-eggs-list';
@@ -118,8 +115,7 @@ export function renderDiamondShop() {
         eggSection.appendChild(eggList);
 
         for (const egg of data.DIAMOND_EGGS) {
-            const totalCost = core.getEggTotalCost(egg, qty, true);
-            const discount = core.getEggBulkDiscount(qty);
+            const totalCost = egg.cost; 
             const canAfford = state.diamonds >= totalCost;
             const card = document.createElement('div');
             card.className = `egg-card ${isInvFull || !canAfford ? 'locked' : 'can-afford'}`;
@@ -130,44 +126,61 @@ export function renderDiamondShop() {
             else if (!canAfford) statusHtml = `<span class="egg-req">${core.formatNumber(totalCost)} 💎</span>`;
             else {
                 statusHtml = `<span class="egg-cost" style="color:#00d2ff">${core.formatNumber(totalCost)} 💎</span>`;
-                if (qty > 1) statusHtml += `<span class="egg-discount-tag">-${Math.round((1 - discount) * 100)}%/œuf</span>`;
             }
 
             card.innerHTML = `<div class="egg-icon">${egg.icon}</div><div class="egg-name">${egg.name}</div><div class="egg-status-text">${statusHtml}</div>`;
-            card.addEventListener('click', () => core.buyDiamondEgg(egg.id));
+            card.addEventListener('click', () => showEggModal(egg, true));
             eggList.appendChild(card);
         }
     }
 }
 
-function _buildQtySelector(qty, maxBatch, prefixId) {
-    const bar = document.createElement('div');
-    bar.className = 'egg-qty-bar glass-panel-inner';
+// PARAMÈTRES ET AUTO-SELL
+export function renderSettings() {
+    const controls = document.getElementById('auto-sell-controls');
+    const lockedMsg = document.getElementById('auto-sell-locked-msg');
+    if (!controls) return;
 
-    const discount = core.getEggBulkDiscount(qty);
-    const discountPct = Math.round((1 - discount) * 100);
-    const discTag = qty > 1 ? `<span class="qty-discount-tag">−${discountPct}% / œuf</span>` : '';
+    const isUnlocked = state.diamondUpgradesPurchased['auto_sell'] > 0;
+    if (lockedMsg) lockedMsg.style.display = isUnlocked ? 'none' : 'block';
+    controls.style.opacity = isUnlocked ? '1' : '0.4';
+    controls.style.pointerEvents = isUnlocked ? 'auto' : 'none';
 
-    bar.innerHTML = `
-        <span class="qty-label">🥚 Acheter :</span>
-        <div class="qty-stepper">
-            <button class="qty-btn" id="${prefixId}-qty-minus">&#8722;</button>
-            <span class="qty-num" id="${prefixId}-qty-num">${qty}</span>
-            <button class="qty-btn" id="${prefixId}-qty-plus">+</button>
-            <span class="qty-max">/ ${maxBatch}</span>
-        </div>
-        ${discTag}
-    `;
-    requestAnimationFrame(() => {
-        const minus = document.getElementById(`${prefixId}-qty-minus`);
-        const plus  = document.getElementById(`${prefixId}-qty-plus`);
-        if (minus) minus.addEventListener('click', () => core.setEggQty(state.eggQtySelected - 1));
-        if (plus)  plus.addEventListener('click',  () => core.setEggQty(state.eggQtySelected + 1));
+    controls.innerHTML = '';
+    const rarities = [
+        { id: 'common', name: 'Commun', color: '#a0a0b0' },
+        { id: 'rare', name: 'Rare', color: '#38bdf8' },
+        { id: 'epic', name: 'Épique', color: '#a855f7' },
+        { id: 'legendary', name: 'Légend.', color: '#ffc947' },
+        { id: 'mythic', name: 'Mythique', color: '#ec4899' }
+    ];
+
+    rarities.forEach(r => {
+        const isChecked = state.autoSellConfig[r.id];
+        const label = document.createElement('label');
+        label.style.display = 'flex';
+        label.style.alignItems = 'center';
+        label.style.gap = '5px';
+        label.style.cursor = 'pointer';
+        label.style.background = 'rgba(255,255,255,0.05)';
+        label.style.padding = '6px 12px';
+        label.style.borderRadius = '8px';
+        label.style.border = `1px solid ${r.color}`;
+        
+        label.innerHTML = `
+            <input type="checkbox" data-rarity="${r.id}" ${isChecked ? 'checked' : ''}>
+            <span style="color: ${r.color}; font-weight: bold; font-size: 0.8rem;">${r.name}</span>
+        `;
+        
+        label.querySelector('input').addEventListener('change', (e) => {
+            state.autoSellConfig[r.id] = e.target.checked;
+            core.saveGame();
+        });
+        
+        controls.appendChild(label);
     });
-    return bar;
 }
 
-// ============ RENDER FUNCTIONS ============
 export function updateDisplay() {
     const el = (id) => document.getElementById(id);
     if(el('calorie-count')) el('calorie-count').textContent = core.formatNumber(state.calories);
@@ -184,7 +197,6 @@ export function updateDisplay() {
 
     const bList = el('buildings-list');
     if(bList) {
-        // On itère sur les LIGNES (.shop-row) plutôt que sur les cartes directes
         bList.querySelectorAll('.shop-row').forEach(row => {
             const b = data.BUILDINGS.find(x => x.id === row.dataset.id);
             if (!b) return;
@@ -199,12 +211,19 @@ export function updateDisplay() {
             const isMaxed = b.count >= maxBuildings;
             const cost = core.getBuildingCost(b);
             
-            // On vérifie si on a l'argent pour au moins 1 bâtiment
             const canAfford = state.calories >= cost && !isMaxed && !isHardLocked;
             const isSoftLocked = state.totalCalories < b.baseCost * 0.5 && b.count === 0;
             
             if (item) {
                 item.className = `shop-item ${canAfford ? 'can-afford' : ''} ${(isSoftLocked || isHardLocked) ? 'locked' : ''} ${isMaxed ? 'locked maxed' : ''}`;
+                
+                const nameEl = item.querySelector('.shop-item-name');
+                if (nameEl) {
+                    let cpsValue = core.getBuildingCps(b);
+                    let cpsHtml = (isHardLocked || isSoftLocked) ? '' : `<span class="hover-cps">+${core.formatNumber(cpsValue)} cal/s</span>`;
+                    nameEl.innerHTML = `${isHardLocked ? 'Bâtiment bloqué' : (isSoftLocked ? '???' : b.name)}${cpsHtml}`;
+                }
+
                 const costEl = item.querySelector('.shop-item-cost');
                 if (costEl) {
                     if (isLockedByAscension) { costEl.textContent = '✨ Ascension requise'; costEl.classList.remove('too-expensive'); }
@@ -216,12 +235,11 @@ export function updateDisplay() {
                 if (countEl) countEl.textContent = isHardLocked ? '0' : `${b.count} / ${maxBuildings}`;
             }
 
-            // Gère l'affichage et l'état du bouton MAX
             if (maxBtn) {
                 if (isMaxed || isHardLocked || isSoftLocked) {
                     maxBtn.style.display = 'none';
                 } else {
-                    maxBtn.style.display = 'flex'; // On garde l'affichage flex pour le centrage du texte
+                    maxBtn.style.display = 'flex'; 
                     if (canAfford) {
                         maxBtn.classList.add('max-ready');
                         maxBtn.style.opacity = '1';
@@ -265,7 +283,6 @@ export function updateDisplay() {
         const isDiamond = gridId === 'diamond-eggs-list';
         const maxInv = core.getMaxInventory();
         const isInvFull = state.inventoryPets.length >= maxInv;
-        const qty = Math.min(state.eggQtySelected, core.getEggBatchSize());
 
         grid.querySelectorAll('.egg-card').forEach(card => {
             const eggId = card.dataset.id;
@@ -273,8 +290,7 @@ export function updateDisplay() {
             if (!egg) return;
 
             const isLocked = isDiamond ? false : (state.rebirthCount < egg.minRebirth);
-            const totalCost = core.getEggTotalCost(egg, qty, isDiamond);
-            const discount  = core.getEggBulkDiscount(qty);
+            const totalCost = egg.cost;
             const canAfford = isDiamond ? (state.diamonds >= totalCost) : (state.calories >= totalCost);
 
             card.className = `egg-card ${isLocked || isInvFull ? 'locked' : ''} ${canAfford && !isInvFull && !isLocked ? 'can-afford' : ''}`;
@@ -286,12 +302,11 @@ export function updateDisplay() {
                 else if (isInvFull) html = `<span class="egg-req">Inventaire plein !</span>`;
                 else if (!canAfford) {
                     const cost1 = isDiamond ? `${core.formatNumber(egg.cost)} 💎` : `${core.formatNumber(egg.cost)} cal`;
-                    html = `<span class="egg-req">${cost1} (x1)</span>`;
+                    html = `<span class="egg-req">${cost1}</span>`;
                 } else {
                     const costStr = isDiamond ? `${core.formatNumber(totalCost)} 💎` : `${core.formatNumber(totalCost)} cal`;
                     const color   = isDiamond ? 'color:#00d2ff' : '';
                     html = `<span class="egg-cost" style="${color}">${costStr}</span>`;
-                    if (qty > 1) html += `<span class="egg-discount-tag">-${Math.round((1-discount)*100)}%/œuf</span>`;
                 }
                 statusEl.innerHTML = html;
             }
@@ -341,12 +356,18 @@ export function renderBuildings() {
         const canAfford = state.calories >= cost && !isMaxed && !isHardLocked;
         const isSoftLocked = state.totalCalories < b.baseCost * 0.5 && b.count === 0;
 
-        // Création du conteneur global
         const row = document.createElement('div');
         row.className = 'shop-row';
         row.dataset.id = b.id;
 
-        // Création de la carte du bâtiment (achète 1)
+        const maxBtn = document.createElement('button');
+        maxBtn.className = `btn-buy-max ${canAfford ? 'max-ready' : ''}`;
+        maxBtn.textContent = 'MAX';
+        if (isHardLocked || isSoftLocked || isMaxed) maxBtn.style.display = 'none';
+        
+        maxBtn.addEventListener('click', () => core.buyMaxBuilding(b));
+        row.appendChild(maxBtn); 
+
         const item = document.createElement('div');
         item.className = `shop-item ${canAfford ? 'can-afford' : ''} ${(isSoftLocked || isHardLocked) ? 'locked' : ''} ${isMaxed ? 'locked maxed' : ''}`;
         
@@ -356,10 +377,13 @@ export function renderBuildings() {
         else if (isMaxed) costText = 'MAX';
         else costText = `${core.formatNumber(cost)} cal`;
 
+        let cpsValue = core.getBuildingCps(b);
+        let cpsHtml = (isHardLocked || isSoftLocked) ? '' : `<span class="hover-cps">+${core.formatNumber(cpsValue)} cal/s</span>`;
+
         item.innerHTML = `
             <div class="shop-item-icon">${isHardLocked ? '🔒' : b.icon}</div>
             <div class="shop-item-info">
-                <div class="shop-item-name">${isHardLocked ? 'Bâtiment bloqué' : (isSoftLocked ? '???' : b.name)}</div>
+                <div class="shop-item-name">${isHardLocked ? 'Bâtiment bloqué' : (isSoftLocked ? '???' : b.name)}${cpsHtml}</div>
                 <div class="shop-item-cost ${canAfford || isMaxed ? '' : 'too-expensive'}">${costText}</div>
             </div>
             <div class="shop-item-count" style="min-width: 45px; text-align: right;">
@@ -367,19 +391,8 @@ export function renderBuildings() {
             </div>
         `;
         
-        // Listener sur la carte = achète 1
         item.addEventListener('click', () => core.buyBuilding(b));
-        row.appendChild(item);
-
-        // Création du bouton MAX (indépendant)
-        const maxBtn = document.createElement('button');
-        maxBtn.className = `btn-buy-max ${canAfford ? 'max-ready' : ''}`;
-        maxBtn.textContent = 'MAX';
-        if (isHardLocked || isSoftLocked || isMaxed) maxBtn.style.display = 'none';
-        
-        // Listener sur le bouton MAX = achète tout
-        maxBtn.addEventListener('click', () => core.buyMaxBuilding(b));
-        row.appendChild(maxBtn);
+        row.appendChild(item); 
 
         list.appendChild(row);
     }
@@ -550,12 +563,6 @@ export function renderEggs() {
     section.innerHTML = '';
 
     const isInvFull = state.inventoryPets.length >= core.getMaxInventory();
-    const maxBatch = core.getEggBatchSize();
-    const qty = Math.min(state.eggQtySelected, maxBatch);
-
-    if (maxBatch > 1) {
-        section.appendChild(_buildQtySelector(qty, maxBatch, 'std'));
-    }
 
     const grid = document.createElement('div');
     grid.id = 'egg-shop-grid';
@@ -564,8 +571,7 @@ export function renderEggs() {
 
     for (const egg of data.EGGS) {
         const isLocked = state.rebirthCount < egg.minRebirth;
-        const totalCost = core.getEggTotalCost(egg, qty);
-        const discount  = core.getEggBulkDiscount(qty);
+        const totalCost = egg.cost; 
         const canAfford = state.calories >= totalCost;
 
         const card = document.createElement('div');
@@ -578,12 +584,11 @@ export function renderEggs() {
         else if (!canAfford) statusHtml = `<span class="egg-req">${core.formatNumber(totalCost)} cal</span>`;
         else {
             statusHtml = `<span class="egg-cost">${core.formatNumber(totalCost)} cal</span>`;
-            if (qty > 1) statusHtml += `<span class="egg-discount-tag">-${Math.round((1 - discount) * 100)}%/œuf</span>`;
         }
 
         card.innerHTML = `<div class="egg-icon">${egg.icon}</div><div class="egg-name">${egg.name}</div><div class="egg-status-text">${statusHtml}</div>`;
 
-        card.addEventListener('click', () => core.buyEgg(egg));
+        card.addEventListener('click', () => showEggModal(egg, false));
         
         grid.appendChild(card);
     }
@@ -799,7 +804,199 @@ export function renderAll() {
     updateRebirthUI();
     updateAscensionUI();
     updateAubinAppearance();
+    renderSettings();
 }
+
+// ============ MODALE DES OEUFS (DETAILS ET ACHAT) ============
+
+function getOrCreateEggModal() {
+    let modal = document.getElementById('egg-detail-modal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'egg-detail-modal';
+        modal.className = 'hidden';
+        modal.innerHTML = `
+            <div class="egg-modal-overlay"></div>
+            <div class="glass-panel egg-modal-content">
+                <button class="egg-modal-close" id="em-close-btn">×</button>
+                <div class="egg-modal-header">
+                    <div class="em-icon" id="em-icon"></div>
+                    <div class="em-name" id="em-name"></div>
+                </div>
+                <div class="em-section-title">Probabilités des pets :</div>
+                <div id="em-pool" class="index-grid"></div>
+                <div id="em-controls" style="margin-top: 10px;"></div>
+                <div id="em-autoroll-container"></div>
+                <button id="em-buy-btn" class="btn-buy-max max-ready" style="width:100%; height: 50px; font-size: 1.1rem; margin-top:5px; border-radius: 12px;">Acheter</button>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        
+        modal.querySelector('.egg-modal-overlay').addEventListener('click', closeEggModal);
+        modal.querySelector('#em-close-btn').addEventListener('click', closeEggModal);
+    }
+    return modal;
+}
+
+export function closeEggModal() {
+    const modal = document.getElementById('egg-detail-modal');
+    if (modal) modal.classList.add('hidden');
+    currentModalEgg = null;
+}
+
+export function showEggModal(egg, isDiamond) {
+    currentModalEgg = egg;
+    currentModalIsDiamond = isDiamond;
+    const modal = getOrCreateEggModal();
+    
+    document.getElementById('em-icon').textContent = egg.icon;
+    document.getElementById('em-name').textContent = egg.name;
+    
+    const poolEl = document.getElementById('em-pool');
+    poolEl.innerHTML = '';
+    
+    const totalWeight = egg.pool.reduce((sum, p) => sum + p.weight, 0);
+    const sortedPool = [...egg.pool].sort((a,b) => b.weight - a.weight);
+    
+    sortedPool.forEach(pItem => {
+        const pData = data.PETS.find(x => x.id === pItem.id);
+        const isDiscovered = state.discoveredPets.includes(pItem.id);
+        const pct = (pItem.weight / totalWeight * 100).toFixed(1);
+        
+        const card = document.createElement('div');
+        card.className = `index-card rarity-${pData.rarity}`;
+        card.style.position = 'relative';
+        
+        const pctHtml = `<div style="position:absolute; top:-6px; right:-6px; background:var(--glass-bg); padding:2px 5px; border-radius:6px; font-size:0.6rem; border:1px solid var(--glass-border); font-weight:bold; backdrop-filter:blur(4px); box-shadow: 0 2px 5px rgba(0,0,0,0.5);">${pct}%</div>`;
+        
+        if (isDiscovered) {
+            card.innerHTML = `${pctHtml}<div class="index-icon">${pData.icon}</div><div class="egg-name">${pData.name}</div>`;
+        } else {
+            card.innerHTML = `${pctHtml}<div class="index-icon" style="filter:brightness(0); opacity:0.6;">❓</div><div class="egg-name" style="opacity:0.8;">Inconnu</div>`;
+        }
+        poolEl.appendChild(card);
+    });
+    
+    updateEggModalControls();
+    modal.classList.remove('hidden');
+}
+
+function buildQtySelectorDOM(qty, maxBatch, onMinus, onPlus) {
+    const bar = document.createElement('div');
+    bar.className = 'egg-qty-bar glass-panel-inner';
+    bar.style.marginBottom = '0'; 
+
+    const discount = core.getEggBulkDiscount(qty);
+    const discountPct = Math.round((1 - discount) * 100);
+    const discTag = qty > 1 ? `<span class="qty-discount-tag">−${discountPct}% / œuf</span>` : '';
+
+    bar.innerHTML = `
+        <span class="qty-label">Acheter :</span>
+        <div class="qty-stepper">
+            <button class="qty-btn" id="modal-qty-minus">&#8722;</button>
+            <span class="qty-num">${qty}</span>
+            <button class="qty-btn" id="modal-qty-plus">+</button>
+            <span class="qty-max">/ ${maxBatch}</span>
+        </div>
+        ${discTag}
+    `;
+    
+    bar.querySelector('#modal-qty-minus').onclick = onMinus;
+    bar.querySelector('#modal-qty-plus').onclick = onPlus;
+    
+    return bar;
+}
+
+export function updateEggModalControls() {
+    if (!currentModalEgg) return;
+    const controlsEl = document.getElementById('em-controls');
+    const buyBtn = document.getElementById('em-buy-btn');
+    
+    const egg = currentModalEgg;
+    const isDiamond = currentModalIsDiamond;
+    
+    const maxBatch = core.getEggBatchSize();
+    state.eggQtySelected = Math.max(1, Math.min(state.eggQtySelected, maxBatch));
+    const qty = state.eggQtySelected;
+    
+    controlsEl.innerHTML = '';
+    if (maxBatch > 1) {
+        const stepper = buildQtySelectorDOM(
+            qty, 
+            maxBatch, 
+            () => core.setEggQty(qty - 1),
+            () => core.setEggQty(qty + 1)
+        );
+        controlsEl.appendChild(stepper);
+    }
+    
+    const isAutoSellUnlocked = state.diamondUpgradesPurchased['auto_sell'] > 0;
+    const autoRollContainer = document.getElementById('em-autoroll-container');
+    
+    if (autoRollContainer) {
+        if (state.diamondUpgradesPurchased['auto_roll'] > 0) {
+            const isActive = state.autoRollActive && state.autoRollEggId === egg.id;
+            autoRollContainer.innerHTML = `
+                <div style="margin-top:10px; border-top: 1px solid rgba(255,255,255,0.1); padding-top:15px; width: 100%;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-size:0.9rem; font-weight:bold; color:var(--accent-secondary);">🎰 Auto-Roll</span>
+                        <button id="em-autoroll-btn" class="btn" style="padding: 5px 15px; font-size: 0.8rem; color: #fff; background: ${isActive ? 'var(--danger)' : 'var(--success)'}; border:none;">
+                            ${isActive ? 'Désactiver' : 'Activer'}
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.getElementById('em-autoroll-btn').onclick = () => {
+                if (isActive) {
+                    state.autoRollActive = false;
+                    state.autoRollEggId = null;
+                } else {
+                    state.autoRollActive = true;
+                    state.autoRollEggId = egg.id;
+                    showQuote(`🎰 Auto-Roll activé ! (Vérifie d'avoir de l'espace ou l'Auto-Vente)`);
+                }
+                updateEggModalControls(); 
+            };
+        } else {
+            autoRollContainer.innerHTML = '';
+        }
+    }
+
+    const totalCost = core.getEggTotalCost(egg, qty, isDiamond);
+    const canAfford = isDiamond ? state.diamonds >= totalCost : state.calories >= totalCost;
+    const maxInv = core.getMaxInventory();
+    const spaceLeft = maxInv - state.inventoryPets.length;
+    
+    if (!isAutoSellUnlocked && spaceLeft <= 0) {
+        buyBtn.textContent = "Inventaire Plein !";
+        buyBtn.className = "btn-buy-max";
+        buyBtn.style.opacity = "0.5";
+        buyBtn.disabled = true;
+    } else if (!isAutoSellUnlocked && qty > spaceLeft) {
+        buyBtn.textContent = `Plus que ${spaceLeft} place(s)`;
+        buyBtn.className = "btn-buy-max";
+        buyBtn.style.opacity = "0.5";
+        buyBtn.disabled = true;
+    } else if (!canAfford) {
+        buyBtn.innerHTML = `Trop cher <span style="font-size:0.8em; margin-left:5px;">(${core.formatNumber(totalCost)} ${isDiamond ? '💎' : 'cal'})</span>`;
+        buyBtn.className = "btn-buy-max";
+        buyBtn.style.opacity = "0.5";
+        buyBtn.disabled = true;
+    } else {
+        buyBtn.innerHTML = `Acheter <span style="font-size:0.8em; margin-left:5px;">(${core.formatNumber(totalCost)} ${isDiamond ? '💎' : 'cal'})</span>`;
+        buyBtn.className = "btn-buy-max max-ready";
+        buyBtn.style.opacity = "1";
+        buyBtn.disabled = false;
+    }
+    
+    buyBtn.onclick = () => {
+        if (buyBtn.disabled) return;
+        closeEggModal();
+        if (isDiamond) core.buyDiamondEgg(egg.id);
+        else core.buyEgg(egg);
+    };
+}
+
 
 // ============ ANIMATION FUSION ============
 export function playFusionAnimation(participants, petData, currentLevel, callback) {

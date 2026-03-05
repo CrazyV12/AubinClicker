@@ -960,7 +960,7 @@ body {
     gap: 0.25rem;
 }
 
-.egg-card:hover { border-color: var(--accent-primary); }
+.egg-card:hover { border-color: var(--accent-primary); cursor: pointer; }
 .egg-card.locked { opacity: 0.5; filter: grayscale(1); pointer-events: none; }
 
 .egg-icon, .index-icon, .pet-card .pet-icon { 
@@ -1292,7 +1292,6 @@ body {
 
 /* ============ EGG QTY SELECTOR & DISCOUNT ============ */
 
-/* Barre stepper dans la section \u0153ufs */
 .egg-qty-bar {
     display: flex;
     align-items: center;
@@ -1312,7 +1311,6 @@ body {
     color: var(--text-secondary);
 }
 
-/* Stepper [-] [N] [+] */
 .qty-stepper {
     display: flex;
     align-items: center;
@@ -1358,7 +1356,6 @@ body {
     color: var(--text-muted);
 }
 
-/* Badge remise (-X%/\u0153uf) */
 .qty-discount-tag, .egg-discount-tag {
     font-size: 0.65rem;
     font-weight: 800;
@@ -1371,14 +1368,13 @@ body {
     white-space: nowrap;
 }
 
-/* Tag remise inline dans la carte \u0153uf */
 .egg-discount-tag {
     display: block;
     margin-top: 3px;
     font-size: 0.6rem;
 }
 
-/* ============ ANIMATION GACHA SIMULTAN\u00c9E ============ */
+/* ============ ANIMATION GACHA SIMULTANÉE ============ */
 
 /* Conteneur global de la zone multi-pods */
 #gacha-multi-open {
@@ -1418,7 +1414,7 @@ body {
     text-align: center;
 }
 
-/* \u0152uf dans le pod : secoue en boucle */
+/* Œuf dans le pod : secoue en boucle */
 .pod-egg {
     font-size: 3rem;
     line-height: 1;
@@ -1431,7 +1427,7 @@ body {
     50%       { transform: rotate(10deg) scale(1.05); }
 }
 
-/* Crack de l'\u0153uf */
+/* Crack de l'œuf */
 .pod-egg.cracking {
     animation: podCrack 0.4s ease-out forwards;
 }
@@ -1442,7 +1438,7 @@ body {
     100% { transform: scale(0.1); opacity: 0; filter: brightness(3); }
 }
 
-/* Zone de r\u00e9v\u00e9lation du pet */
+/* Zone de révélation du pet */
 .pod-reveal {
     display: flex;
     flex-direction: column;
@@ -1469,7 +1465,7 @@ body {
     border-radius: 4px;
 }
 
-/* Bouton Continuer du mode multi-open (mêmes styles que gacha-close-btn) */
+/* Bouton Continuer du mode multi-open */
 .gacha-close-btn-style {
     margin-top: 0.5rem;
     font-size: 1.1rem;
@@ -1491,7 +1487,7 @@ body {
    ========= ANIMATION FUSION ========================
    ==================================================== */
 
-/* Overlay plein \u00e9cran */
+/* Overlay plein écran */
 #fusion-modal {
     position: fixed;
     inset: 0;
@@ -1529,7 +1525,7 @@ body {
     pointer-events: none;
 }
 
-/* \u00c9toile centrale (d\u00e9cor) */
+/* Étoile centrale (décor) */
 .fusion-center-star {
     position: absolute;
     font-size: 3rem;
@@ -1547,7 +1543,7 @@ body {
     position: absolute;
     width: 64px;
     height: 64px;
-    transform: translate(-50%, -50%); /* centre sur left/top */
+    transform: translate(-50%, -50%); 
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -1596,7 +1592,7 @@ body {
     100% { transform: translate(-50%, -50%) translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
 }
 
-/* --- Zone de r\u00e9sultat --- */
+/* --- Zone de résultat --- */
 #fusion-result {
     position: relative;
     z-index: 10;
@@ -1642,72 +1638,67 @@ body {
     background: linear-gradient(135deg, #fbbf24, #f59e0b);
     color: #1a1a1a;
 }
-/* Couleurs par niveau de fusion */
 .badge-fusion-1 { background: linear-gradient(135deg, #86efac, #22c55e); color: #052e16; }
 .badge-fusion-2 { background: linear-gradient(135deg, #93c5fd, #3b82f6); color: #eff6ff; }
 .badge-fusion-3 { background: linear-gradient(135deg, #c084fc, #a855f7); color: #faf5ff; }
 .badge-fusion-4 { background: linear-gradient(135deg, #fbbf24, #f97316); color: #1a1a1a;
                   box-shadow: 0 0 20px rgba(251, 191, 36, 0.6); }
 
-
 /* ====================================================
    ========= RESPONSIVE DESIGN (TELEPHONE/TABLETTE) ======
    ==================================================== */
 
-
-/* ====================================================
-   ========= RESPONSIVE DESIGN & MOBILE APP MODE ======
-   ==================================================== */
-
-/* --- DÉSACTIVATION DU SURBRILLAGE BLEU SUR MOBILE --- */
-* {
-    -webkit-tap-highlight-color: transparent;
-    outline: none;
-}
-
-/* --- TABLETTES ET PETITS ÉCRANS PC (Mode 1 colonne) --- */
 @media (max-width: 1100px) {
-    #game-container {
-        grid-template-columns: 1fr;
-        padding: 1rem;
-        gap: 1.5rem;
-        max-width: 750px;
-    }
-    #clicker-panel { order: -1; }
-    #right-interface {
-        flex-direction: column-reverse;
-        height: auto;
-    }
-    #vertical-nav {
-        flex-direction: row;
-        flex-wrap: wrap;
-        justify-content: center;
-        width: 100%;
-        padding: 0.5rem;
-    }
-    .shop-tab { flex: 1; min-width: 50px; max-width: 70px; }
-    #shop-panel, #stats-panel { width: 100%; max-height: none; }
+  #game-container {
+    grid-template-columns: 1fr;
+    align-items: start;
+    padding: 1rem;
+    gap: 1.5rem;
+    max-width: 700px;
+  }
+  
+  #clicker-panel { order: -1; }
+  
+  #right-interface {
+    height: auto; 
+    flex-direction: column-reverse;
+    align-items: stretch;
+    justify-content: flex-start;
+    width: 100%;
+  }
+  
+  #vertical-nav {
+    flex-direction: row;
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+    padding: 0.5rem;
+  }
+  
+  .shop-tab {
+    flex: 1;
+    min-width: 50px;
+    max-width: 70px;
+  }
+  
+  #shop-panel, #stats-panel {
+    width: 100%;
+    max-height: none; 
+  }
 }
 
 /* --- TÉLÉPHONES (Mode Application Mobile Native) --- */
 @media (max-width: 768px) {
-    /* Empêche le pull-to-refresh natif des navigateurs mobiles */
     body { overscroll-behavior-y: none; }
-
-    /* Conteneur principal transformé en Flexbox Vertical */
     #game-container {
         display: flex;
         flex-direction: column;
-        padding: 10px 10px 90px 10px; /* 90px en bas pour laisser la place à la Tab Bar */
+        padding: 10px 10px 90px 10px; 
         gap: 20px;
     }
-
-    /* Ordre parfait : Clicker -> Boutique -> Stats */
     #clicker-panel { order: 1; padding: 10px 0; }
     #right-interface { order: 2; display: flex; flex-direction: column; }
     #stats-panel { order: 3; }
-
-    /* Réduction de la taille d'Aubin pour gagner de la place */
     #click-target { width: 220px; height: 220px; margin: 10px 0; }
     .aubin-img { width: 140px; height: 140px; }
     #puff-orbit { width: 220px; height: 220px; }
@@ -1715,7 +1706,6 @@ body {
     #game-header h1 { font-size: 2.2rem; }
     #calorie-display { min-width: unset; width: 100%; padding: 0.5rem; }
 
-    /* ====== LA MAGIE : TAB BAR FIXÉE EN BAS ====== */
     #vertical-nav {
         position: fixed;
         bottom: 0;
@@ -1723,7 +1713,7 @@ body {
         width: 100%;
         flex-direction: row;
         flex-wrap: nowrap;
-        overflow-x: auto; /* Permet de scroller horizontalement dans les onglets */
+        overflow-x: auto; 
         background: rgba(15, 15, 25, 0.95);
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
@@ -1733,21 +1723,19 @@ body {
         gap: 15px;
         z-index: 9000;
         justify-content: flex-start;
-        scrollbar-width: none; /* Firefox : cache la scrollbar */
+        scrollbar-width: none; 
         box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
     }
-    /* Chrome/Safari : cache la scrollbar de la navbar */
     #vertical-nav::-webkit-scrollbar { display: none; } 
 
     .shop-tab {
-        flex: 0 0 auto; /* Empêche l'onglet de s'écraser */
+        flex: 0 0 auto; 
         width: 50px;
         height: 50px;
         font-size: 1.5rem;
         background: rgba(255,255,255,0.05);
     }
 
-    /* Remonte l'UI des diamants pour ne pas être cachée par la nouvelle Tab Bar */
     .diamond-ui {
         bottom: 85px;
         right: 15px;
@@ -1755,19 +1743,16 @@ body {
         transform-origin: bottom right;
     }
 
-    /* Ajustement des grilles pour les petits écrans */
     .egg-grid, .inventory-grid, .index-grid {
         grid-template-columns: repeat(auto-fill, minmax(75px, 1fr));
         gap: 0.4rem;
     }
 
-    /* Ajustement des boutons des pets */
     .pet-card .btn-fuse, .pet-card .btn-equip, .pet-card .btn-sell {
         font-size: 0.55rem;
         padding: 0.35rem;
     }
 
-    /* Redimensionnement des modales de fusion/gacha */
     .fusion-content { transform: scale(0.8); }
     #gacha-result-icon { font-size: 6rem !important; }
     .gacha-egg { font-size: 6rem; }
@@ -1777,34 +1762,30 @@ body {
    ========= CORRECTION AFFICHAGE FUSION ==============
    ==================================================== */
 
-/* 1. Désintègre l'étoile centrale dès que le résultat s'affiche */
 .fusion-content:has(#fusion-result:not(.hidden)) .fusion-center-star {
     display: none !important;
     opacity: 0 !important;
     animation: none !important;
 }
 
-/* 2. Force un bel espace sous la grosse tête du pet */
 #fusion-result-icon {
     margin-bottom: 25px !important; 
-    font-size: 7rem !important; /* On le rend un peu plus grand et majestueux ! */
+    font-size: 7rem !important; 
 }
 
-/* 3. Ajoute un petit espace entre le nom et le badge vert */
 #fusion-result-name {
     margin-bottom: 15px !important;
     font-size: 2.2rem !important;
-    text-shadow: 0 0 15px rgba(0, 0, 0, 0.8) !important; /* Rend le texte plus lisible */
+    text-shadow: 0 0 15px rgba(0, 0, 0, 0.8) !important; 
 }
 
 /* ====================================================
    ========= CORRECTION DOUBLE CLIC (MOBILE & PC) =====
    ==================================================== */
 
-/* 1. Correction du menu des pets (pointer-events: all est invalide en HTML) */
 .pet-card .btn-group {
     opacity: 0;
-    visibility: hidden; /* Mieux que pointer-events pour bloquer les clics fantômes */
+    visibility: hidden; 
     pointer-events: none;
     transition: opacity 0.15s ease, visibility 0.15s ease;
 }
@@ -1812,11 +1793,9 @@ body {
 .pet-card.selected .btn-group {
     opacity: 1;
     visibility: visible;
-    pointer-events: auto; /* La VRAIE valeur pour restaurer le clic */
+    pointer-events: auto; 
 }
 
-/* 2. Désactivation des animations de déformation sur les écrans tactiles. 
-   Sur mobile, un hover qui modifie la taille bloque systématiquement le premier clic ! */
 @media (hover: none) {
     .shop-item:hover:not(.locked),
     .upgrade-item:hover:not(.locked):not(.purchased),
@@ -1832,43 +1811,9 @@ body {
 }
 
 /* ====================================================
-   ========= STYLE DU BOUTON MAX DES BÂTIMENTS ========
-   ==================================================== */
-.btn-buy-max {
-    font-size: 0.85rem;
-    padding: 6px 12px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 6px;
-    background: rgba(255, 255, 255, 0.05);
-    color: var(--text-secondary);
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-/* État "Prêt à acheter" (Jaune lumineux) */
-.btn-buy-max.max-ready {
-    border-color: var(--accent-secondary);
-    background: rgba(255, 201, 71, 0.15);
-    color: var(--accent-secondary);
-    box-shadow: 0 0 12px rgba(255, 201, 71, 0.2);
-}
-
-@media (hover: hover) {
-    .btn-buy-max.max-ready:hover {
-        background: rgba(255, 201, 71, 0.3);
-        box-shadow: 0 0 15px rgba(255, 201, 71, 0.4);
-        transform: scale(1.05);
-    }
-}
-
-/* ====================================================
    ========= LAYOUT BÂTIMENTS & BOUTON MAX ============
    ==================================================== */
 
-/* La ligne qui contient la carte et le bouton MAX */
 .shop-row {
     display: flex;
     align-items: stretch;
@@ -1877,13 +1822,11 @@ body {
     width: 100%;
 }
 
-/* On retire la marge de la carte puisqu'elle est gérée par la ligne */
 .shop-row .shop-item {
     flex: 1;
     margin-bottom: 0 !important;
 }
 
-/* Le nouveau gros bouton MAX indépendant */
 .btn-buy-max {
     flex-shrink: 0;
     width: 65px;
@@ -1893,7 +1836,7 @@ body {
     font-size: 1rem;
     padding: 0;
     border: 2px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px; /* Bords bien arrondis */
+    border-radius: 12px; 
     background: rgba(255, 255, 255, 0.05);
     color: var(--text-muted);
     font-weight: 800;
@@ -1901,7 +1844,6 @@ body {
     transition: all 0.2s ease;
 }
 
-/* État "Prêt à acheter" (Jaune lumineux) */
 .btn-buy-max.max-ready {
     border-color: var(--accent-secondary);
     background: rgba(255, 201, 71, 0.15);
@@ -1921,26 +1863,83 @@ body {
    ========= CORRECTION ESPACEMENT & ZOOM =============
    ==================================================== */
 
-/* 1. Listes verticales (Bâtiments, Upgrades, Quêtes) */
 .shop-content {
-    gap: 0.8rem !important; /* Aère l'espace vertical */
-    padding: 0.6rem !important; /* Empêche les éléments de toucher les bords au zoom */
+    gap: 0.8rem !important; 
+    padding: 0.6rem !important; 
 }
 
-/* 2. Grilles (Œufs, Inventaire Pets, Index) */
 .egg-grid, .inventory-grid, .index-grid {
-    gap: 0.8rem !important; /* Sépare un peu plus les cartes entre elles */
-    padding: 0.6rem !important; /* Marge pour le zoom */
+    gap: 0.8rem !important; 
+    padding: 0.6rem !important; 
 }
 
-/* 3. Boutique d'Ascension */
 #ascension-shop {
     gap: 15px !important;
     padding: 10px !important;
 }
 
-/* 4. Améliorations en Diamants */
 #diamond-upgrades-list {
     gap: 15px !important;
     padding: 10px !important;
 }
+
+/* ====================================================
+   ========= EFFET HOVER CPS BÂTIMENT =================
+   ==================================================== */
+.hover-cps {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-left: 8px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    font-weight: normal;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.shop-item:hover .hover-cps {
+    opacity: 1;
+}
+
+/* ====================================================
+   ========= EGG DETAIL MODAL ========================
+   ==================================================== */
+#egg-detail-modal {
+    position: fixed; inset: 0; z-index: 10000;
+    display: flex; align-items: center; justify-content: center;
+}
+
+#egg-detail-modal.hidden { display: none; }
+
+.egg-modal-overlay {
+    position: absolute; inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+}
+
+.egg-modal-content {
+    position: relative; z-index: 1;
+    width: 90%; max-width: 400px;
+    display: flex; flex-direction: column; gap: 15px;
+    animation: gachaPop 0.3s ease-out forwards;
+}
+
+.egg-modal-header {
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+}
+
+.em-icon { font-size: 4rem; filter: drop-shadow(0 0 20px rgba(255,255,255,0.3)); line-height: 1; }
+.em-name { font-size: 1.5rem; font-weight: bold; color: var(--text-primary); text-shadow: 0 0 10px var(--accent-glow); }
+
+.em-section-title {
+    font-size: 0.85rem; font-weight: bold; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 1px;
+    border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;
+}
+
+.egg-modal-close {
+    position: absolute; top: 10px; right: 15px;
+    background: none; border: none; color: var(--text-muted);
+    font-size: 2rem; cursor: pointer; transition: color 0.2s;
+}
+.egg-modal-close:hover { color: var(--danger); }

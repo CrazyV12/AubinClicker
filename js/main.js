@@ -36,8 +36,11 @@ function gameLoop(now) {
     lastTick = now;
     state.stats.timePlayed += debugDt;
 
+    // AUTO-ROLL EXECUTION
+    core.processAutoRoll(debugDt);
+
     state.diamondProgress += debugDt;
-    const effectiveTick = 300; 
+    const effectiveTick = 60; // 1 MINUTE AU LIEU DE 5 !
 
     if (state.diamondProgress >= effectiveTick) {
         const cycles = Math.floor(state.diamondProgress / effectiveTick);
@@ -45,7 +48,9 @@ function gameLoop(now) {
         
         const u = core.getCurrentUniverse();
         const classBonusLvl = state.diamondUpgradesPurchased['diamond_class'] || 0;
-        const totalDiamonds = (u.diamondRate + classBonusLvl) * cycles;
+        
+        // LE NOUVEAU CALCUL EXPONENTIEL (x2 à chaque niveau de classe !)
+        const totalDiamonds = Math.floor(u.diamondRate * Math.pow(2, classBonusLvl)) * cycles;
         
         state.diamonds += totalDiamonds;
         ui.showMilestone(`💎 +${totalDiamonds} Diamants récoltés !`);
@@ -56,7 +61,7 @@ function gameLoop(now) {
         const gained = state.cps * debugDt;
         state.calories += gained;
         state.totalCalories += gained;
-        ui.updateDisplay(); // Mise à jour fluide uniquement
+        ui.updateDisplay(); 
         ui.checkMilestones();
     }
     requestAnimationFrame(gameLoop);
@@ -123,7 +128,6 @@ function init() {
     setInterval(ui.spawnBackgroundParticle, 2000);
     for (let i = 0; i < 5; i++) setTimeout(() => ui.spawnBackgroundParticle(), i * 400);
     
-    // RAFRAÎCHISSEMENT INTELLIGENT (Sans recréer les boutons !)
     setInterval(() => {
         ui.updateDisplay();
         ui.checkQuests();

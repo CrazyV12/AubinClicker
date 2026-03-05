@@ -31,7 +31,6 @@ export function getCurrentUniverse() {
 // ============ ENGINE ============
 export let clickTimestamps = [];
 
-// Le multiplicateur global basé sur les rebirths (Réduit à x2 pour un équilibrage parfait)
 export function getRebirthScale() {
     return Math.pow(2, state.rebirthCount);
 }
@@ -39,6 +38,21 @@ export function getRebirthScale() {
 export function getBuildingCost(building) {
     const scale = getRebirthScale();
     return Math.floor((building.baseCost * scale) * Math.pow(building.costScale, building.count));
+}
+
+export function getBuildingCps(b) {
+    const scale = getRebirthScale();
+    let bCps = (b.baseCps * scale);
+    for (const u of data.UPGRADES) {
+        if (u.purchased && u.type === 'building' && u.target === b.id) {
+            bCps *= u.multiplier;
+        }
+    }
+    const petMult = getPetMultiplier();
+    const ascensionCpsMult = getCpsMultiplierBonus();
+    const universeCpsMult = getCurrentUniverse().cpsMult;
+    
+    return bCps * state.globalMultiplier * petMult * ascensionCpsMult * universeCpsMult;
 }
 
 export function getUpgradeCost(upgrade) {
@@ -102,7 +116,7 @@ export function recalculateCps() {
 export function handleClick(e) {
     const now = Date.now();
     clickTimestamps = clickTimestamps.filter(t => now - t < 1000);
-    if (clickTimestamps.length >= 20) return; // Limite fixée à 20 CPS
+    if (clickTimestamps.length >= 20) return; 
     clickTimestamps.push(now);
 
     const amount = state.clickPower;
@@ -158,7 +172,7 @@ export function recalcMaxPetSlots() {
 export function getRebirthTarget() { 
     const base = 100000 * Math.pow(5, state.rebirthCount); 
     const discountLvl = state.diamondUpgradesPurchased['rebirth_cost'] || 0;
-    return base * (1 - (discountLvl * 0.05)); // Jusqu'à -50% avec les diamants
+    return base * (1 - (discountLvl * 0.05)); 
 }
 export function canRebirth() { return state.calories >= getRebirthTarget(); }
 export function getAscensionCost() { return state.ascensionCount * 10 + 10; }
@@ -177,7 +191,7 @@ export function doRebirth() {
     state.clickPower = 1; state.cps = 0; state.clickMultiplier = 1; state.globalMultiplier = 1;
     state.milestonesReached = [];
     state.completedQuests = []; state.activeQuests = []; state.lastQuestTypes = [];
-    state.stats = { eggsOpened: 0, petsFused: 0, petsSold: 0, timePlayed: 0 };
+    // CORRECTION : On ne reset plus state.stats ici !
     
     state.isSelectionMode = false; state.selectedPetsToSell = []; 
 
@@ -202,13 +216,12 @@ export function doAscension() {
     state.clickPower = 1; state.cps = 0; state.clickMultiplier = 1; state.globalMultiplier = 1;
     state.milestonesReached = []; state.rebirthTokens = 0;
     state.completedQuests = []; state.activeQuests = []; state.lastQuestTypes = [];
-    state.stats = { eggsOpened: 0, petsFused: 0, petsSold: 0, timePlayed: 0 };
+    // CORRECTION : On ne reset plus state.stats ici non plus !
     state.codesUsed = []; state.isSelectionMode = false; state.selectedPetsToSell = [];
     
     for (const b of data.BUILDINGS) b.count = 0;
     for (const u of data.UPGRADES) u.purchased = false;
     
-    // Génère les oeufs de la nouvelle ascension
     data.updateDynamicContent(state.ascensionCount);
     
     ui.applyUniverseTheme();
@@ -255,7 +268,8 @@ export function buyDiamondUpgrade(uId) {
         ui.renderDiamondShop();
         ui.updateRebirthUI();
         ui.renderPetInventory();
-        ui.updateAubinAppearance(); 
+        ui.updateAubinAppearance();
+        ui.renderSettings(); 
         ui.showMilestone(`💎 Amélioration achetée : ${u.name}`);
     }
 }
@@ -266,11 +280,19 @@ export function buyDiamondEgg(eggId) {
     if (!egg) return;
 
     const maxInv = getMaxInventory();
-    const spaceLeft = maxInv - state.inventoryPets.length;
-    if (spaceLeft <= 0) { ui.showQuote("Inventaire plein !"); return; }
-
     const maxBatch = getEggBatchSize();
-    const requestedQty = Math.min(state.eggQtySelected, maxBatch, spaceLeft);
+    
+    const isAutoSellUnlocked = state.diamondUpgradesPurchased['auto_sell'] > 0;
+    
+    let spaceLeft = maxInv - state.inventoryPets.length;
+    let requestedQty = state.eggQtySelected;
+    if (!isAutoSellUnlocked) {
+        requestedQty = Math.min(state.eggQtySelected, maxBatch, spaceLeft);
+        if (spaceLeft <= 0) { ui.showQuote("Inventaire plein !"); return; }
+    } else {
+        requestedQty = Math.min(state.eggQtySelected, maxBatch);
+    }
+    
     if (requestedQty <= 0) return;
 
     const totalCost = getEggTotalCost(egg, requestedQty, true);
@@ -283,6 +305,7 @@ export function buyDiamondEgg(eggId) {
     const newPets = [];
     const petsData = [];
     const newlyDiscovered = [];
+    let autoSoldAmount = 0;
 
     for (let i = 0; i < requestedQty; i++) {
         const selectedId = rollPetFromPool(egg.pool);
@@ -291,9 +314,27 @@ export function buyDiamondEgg(eggId) {
             state.discoveredPets.push(selectedId);
             newlyDiscovered.push(petData);
         }
-        const newPet = { uid: Date.now() + Math.random() + i, id: selectedId, fusionLevel: 0, isHatching: true };
-        state.inventoryPets.push(newPet);
-        newPets.push(newPet);
+        
+        const willAutoSell = isAutoSellUnlocked && state.autoSellConfig[petData.rarity];
+        
+        if (willAutoSell) {
+            const sellValue = petData.sellPrice;
+            state.calories += sellValue;
+            state.totalCalories += sellValue;
+            state.stats.petsSold++;
+            autoSoldAmount += sellValue;
+            newPets.push({ uid: Date.now() + Math.random() + i, id: selectedId, fusionLevel: 0, isHatching: true, autoSold: true });
+        } else {
+            if (state.inventoryPets.length < maxInv) {
+                const newPet = { uid: Date.now() + Math.random() + i, id: selectedId, fusionLevel: 0, isHatching: true };
+                state.inventoryPets.push(newPet);
+                newPets.push(newPet);
+            } else {
+                state.calories += petData.sellPrice;
+                autoSoldAmount += petData.sellPrice;
+                newPets.push({ uid: Date.now() + Math.random() + i, id: selectedId, fusionLevel: 0, isHatching: true, autoSold: true });
+            }
+        }
         petsData.push(petData);
     }
 
@@ -301,11 +342,12 @@ export function buyDiamondEgg(eggId) {
     ui.updateDiamondUI();
 
     ui.playMultiEggAnimation(egg, petsData, () => {
-        for (const p of newPets) delete p.isHatching;
+        for (const p of newPets) {
+            if (!p.autoSold) delete p.isHatching;
+        }
         saveGame();
         for (const pd of newlyDiscovered) ui.showMilestone(`📖 Nouveau Pet découvert : ${pd.name} !`);
-        if (requestedQty === 1) ui.showMilestone(`💎 Éclosion Divine : ${petsData[0].icon} ${petsData[0].name} !`);
-        else ui.showMilestone(`💎 Éclosion Divine x${requestedQty} ! ${petsData.map(p => p.icon).join('')}`);
+        if (autoSoldAmount > 0) ui.showMilestone(`🗑️ Vente Automatique : +${formatNumber(autoSoldAmount)} cal`);
         ui.renderDiamondShop();
         if (state.sortOrder) toggleSortInventory(true); else ui.renderPetInventory();
         ui.renderPetIndex();
@@ -333,8 +375,9 @@ export function getEggTotalCost(egg, qty, isDiamond = false) {
 export function setEggQty(qty) {
     const maxBatch = getEggBatchSize();
     state.eggQtySelected = Math.max(1, Math.min(qty, maxBatch));
-    ui.renderEggs();
-    ui.renderDiamondShop();
+    if (typeof ui.updateEggModalControls === 'function') {
+        ui.updateEggModalControls();
+    }
 }
 
 function rollPetFromPool(pool) {
@@ -373,11 +416,19 @@ export function buyEgg(egg) {
     if (state.isOpeningEgg) return;
 
     const maxInv = getMaxInventory();
-    const spaceLeft = maxInv - state.inventoryPets.length;
-    if (spaceLeft <= 0) { ui.showQuote("Inventaire plein ! Vends des pets d'abord."); return; }
-
     const maxBatch = getEggBatchSize();
-    const requestedQty = Math.min(state.eggQtySelected, maxBatch, spaceLeft);
+    const isAutoSellUnlocked = state.diamondUpgradesPurchased['auto_sell'] > 0;
+    
+    let spaceLeft = maxInv - state.inventoryPets.length;
+    let requestedQty = state.eggQtySelected;
+    
+    if (!isAutoSellUnlocked) {
+        requestedQty = Math.min(state.eggQtySelected, maxBatch, spaceLeft);
+        if (spaceLeft <= 0) { ui.showQuote("Inventaire plein ! Vends des pets."); return; }
+    } else {
+        requestedQty = Math.min(state.eggQtySelected, maxBatch);
+    }
+    
     if (requestedQty <= 0) return;
 
     const totalCost = getEggTotalCost(egg, requestedQty);
@@ -390,6 +441,7 @@ export function buyEgg(egg) {
     const newPets = [];
     const petsData = [];
     const newlyDiscovered = [];
+    let autoSoldAmount = 0;
 
     for (let i = 0; i < requestedQty; i++) {
         const selectedId = rollPetFromPool(egg.pool);
@@ -398,9 +450,27 @@ export function buyEgg(egg) {
             state.discoveredPets.push(selectedId);
             newlyDiscovered.push(petData);
         }
-        const newPet = { uid: Date.now() + Math.random() + i, id: selectedId, fusionLevel: 0, isHatching: true };
-        state.inventoryPets.push(newPet);
-        newPets.push(newPet);
+        
+        const willAutoSell = isAutoSellUnlocked && state.autoSellConfig[petData.rarity];
+        
+        if (willAutoSell) {
+            const sellValue = petData.sellPrice;
+            state.calories += sellValue;
+            state.totalCalories += sellValue;
+            state.stats.petsSold++;
+            autoSoldAmount += sellValue;
+            newPets.push({ uid: Date.now() + Math.random() + i, id: selectedId, fusionLevel: 0, isHatching: true, autoSold: true });
+        } else {
+            if (state.inventoryPets.length < maxInv) {
+                const newPet = { uid: Date.now() + Math.random() + i, id: selectedId, fusionLevel: 0, isHatching: true };
+                state.inventoryPets.push(newPet);
+                newPets.push(newPet);
+            } else {
+                state.calories += petData.sellPrice;
+                autoSoldAmount += petData.sellPrice;
+                newPets.push({ uid: Date.now() + Math.random() + i, id: selectedId, fusionLevel: 0, isHatching: true, autoSold: true });
+            }
+        }
         petsData.push(petData);
     }
 
@@ -408,17 +478,108 @@ export function buyEgg(egg) {
     ui.updateDisplay();
 
     ui.playMultiEggAnimation(egg, petsData, () => {
-        for (const p of newPets) delete p.isHatching;
+        for (const p of newPets) {
+            if (!p.autoSold) delete p.isHatching;
+        }
         saveGame();
         for (const pd of newlyDiscovered) ui.showMilestone(`📖 Nouveau Pet découvert : ${pd.name} !`);
-        if (requestedQty === 1) ui.showMilestone(`🥚 Éclosion : ${petsData[0].icon} ${petsData[0].name} !`);
-        else ui.showMilestone(`🥚 Éclosion x${requestedQty} ! ${petsData.map(p => p.icon).join('')}`);
+        if (autoSoldAmount > 0) ui.showMilestone(`🗑️ Vente Automatique : +${formatNumber(autoSoldAmount)} cal`);
         ui.renderEggs();
         if (state.sortOrder) toggleSortInventory(true); else ui.renderPetInventory();
         ui.renderPetIndex();
         state.isOpeningEgg = false;
     });
 }
+
+// ============ AUTO-ROLL ENGINE ============
+let autoRollTimer = 0;
+export function processAutoRoll(dt) {
+    if (!state.diamondUpgradesPurchased['auto_roll']) {
+        state.autoRollActive = false;
+        return;
+    }
+    if (!state.autoRollActive || !state.autoRollEggId || state.isOpeningEgg) return;
+    
+    autoRollTimer += dt;
+    if (autoRollTimer >= 2.0) { // S'exécute toutes les 2 secondes
+        autoRollTimer = 0;
+        executeAutoRoll();
+    }
+}
+
+function executeAutoRoll() {
+    let egg = data.EGGS.find(e => e.id === state.autoRollEggId);
+    let isDiamond = false;
+    if (!egg) {
+        egg = data.DIAMOND_EGGS.find(e => e.id === state.autoRollEggId);
+        isDiamond = true;
+    }
+    if (!egg) { state.autoRollActive = false; return; }
+    if (!isDiamond && state.rebirthCount < egg.minRebirth) { state.autoRollActive = false; return; }
+    
+    const maxInv = getMaxInventory();
+    const maxBatch = getEggBatchSize();
+    const isAutoSellUnlocked = state.diamondUpgradesPurchased['auto_sell'] > 0;
+    const spaceLeft = maxInv - state.inventoryPets.length;
+    
+    let requestedQty = maxBatch;
+    if (!isAutoSellUnlocked) {
+        requestedQty = Math.min(maxBatch, spaceLeft);
+        if (spaceLeft <= 0) return; // Arrête temporairement si plein et sans auto-sell
+    }
+    
+    if (requestedQty <= 0) return;
+    
+    const totalCost = getEggTotalCost(egg, requestedQty, isDiamond);
+    
+    if (isDiamond) {
+        if (state.diamonds < totalCost) return;
+        state.diamonds -= totalCost;
+    } else {
+        if (state.calories < totalCost) return;
+        state.calories -= totalCost;
+    }
+    
+    state.stats.eggsOpened += requestedQty;
+    let autoSoldAmount = 0;
+    let keptAmount = 0;
+    
+    for (let i = 0; i < requestedQty; i++) {
+        const selectedId = rollPetFromPool(egg.pool);
+        const petData = data.PETS.find(p => p.id === selectedId);
+        
+        if (!state.discoveredPets.includes(selectedId)) {
+            state.discoveredPets.push(selectedId);
+            ui.showMilestone(`📖 Nouveau Pet découvert : ${petData.name} !`);
+        }
+        
+        const willAutoSell = isAutoSellUnlocked && state.autoSellConfig[petData.rarity];
+        if (willAutoSell) {
+            const sellValue = petData.sellPrice;
+            state.calories += sellValue;
+            state.totalCalories += sellValue;
+            state.stats.petsSold++;
+            autoSoldAmount += sellValue;
+        } else {
+            if (state.inventoryPets.length < maxInv) {
+                state.inventoryPets.push({ uid: Date.now() + Math.random() + i, id: selectedId, fusionLevel: 0 });
+                keptAmount++;
+            } else {
+                state.calories += petData.sellPrice;
+                autoSoldAmount += petData.sellPrice;
+            }
+        }
+    }
+    
+    ui.updateDisplay();
+    ui.renderPetInventory();
+    if (isDiamond) ui.updateDiamondUI();
+    
+    if (autoSoldAmount > 0) {
+        ui.showMilestone(`🎰 Auto-Roll: ${keptAmount} gardés | Vente: +${formatNumber(autoSoldAmount)}`);
+    }
+}
+
 
 export function fusePet(uid) {
     let targetPet = state.inventoryPets.find(p => p.uid === uid) || state.equippedPets.find(p => p.uid === uid);
@@ -684,7 +845,6 @@ export function buyBuilding(building) {
     if (el) { el.classList.add('purchase-flash'); setTimeout(() => el.classList.remove('purchase-flash'), 500); }
 }
 
-// NOUVEAU : Fonction pour acheter le maximum d'un bâtiment
 export function buyMaxBuilding(building) {
     const maxBuildings = getMaxBuildings(building);
     if (building.count >= maxBuildings) return;
@@ -692,12 +852,11 @@ export function buyMaxBuilding(building) {
     let bought = false;
     let cost = getBuildingCost(building);
     
-    // Tant qu'on a l'argent et qu'on n'a pas atteint la limite
     while (building.count < maxBuildings && state.calories >= cost) {
         state.calories -= cost;
         building.count++;
         bought = true;
-        cost = getBuildingCost(building); // On recalcule le coût pour le suivant
+        cost = getBuildingCost(building); 
     }
     
     if (bought) {
@@ -731,7 +890,6 @@ export function redeemCode(inputRaw) {
         state.codesUsed.push(input);
         state.bonusPetSlots++; recalcMaxPetSlots();
         
-        // La licorne s'adapte à ton monde actuel !
         const licorneId = state.ascensionCount === 0 ? 'licorne' : `licorne_${state.ascensionCount}`;
         state.inventoryPets.push({ uid: Date.now() + Math.random(), id: licorneId, fusionLevel: 0 });
         if (!state.discoveredPets.includes(licorneId)) state.discoveredPets.push(licorneId);
@@ -762,8 +920,9 @@ export function saveGame() {
         sortOrder: state.sortOrder, completedQuests: state.completedQuests,
         activeQuests: state.activeQuests, lastQuestTypes: state.lastQuestTypes,
         stats: state.stats, savedAt: Date.now(),
-        // Diamants
-        diamonds: state.diamonds, diamondProgress: state.diamondProgress, diamondUpgradesPurchased: state.diamondUpgradesPurchased
+        diamonds: state.diamonds, diamondProgress: state.diamondProgress, diamondUpgradesPurchased: state.diamondUpgradesPurchased,
+        // NOUVEAUX
+        autoSellConfig: state.autoSellConfig, autoRollActive: state.autoRollActive, autoRollEggId: state.autoRollEggId
     };
     
     localStorage.setItem('aubinclicker_save_v3', JSON.stringify(saveData));
@@ -798,7 +957,10 @@ export function loadGame() {
         state.equippedPets.forEach(migrateFusion); state.inventoryPets.forEach(migrateFusion);
         state.ascensionCount = d.ascensionCount || 0; state.ascensionPoints = d.ascensionPoints || 0; state.ascensionUpgrades = d.ascensionUpgrades || {};
         
-        // Charge les oeufs de la bonne ascension
+        state.autoSellConfig = d.autoSellConfig || { common: false, rare: false, epic: false, legendary: false, mythic: false };
+        state.autoRollActive = d.autoRollActive || false;
+        state.autoRollEggId = d.autoRollEggId || null;
+
         data.updateDynamicContent(state.ascensionCount);
         
         recalcMaxPetSlots();
@@ -830,7 +992,10 @@ export function resetGame() {
     state.isSelectionMode = false; state.selectedPetsToSell = [];
     state.diamonds = 0; state.diamondProgress = 0; state.diamondUpgradesPurchased = {};
     
-    // Remet les oeufs au niveau 0
+    state.autoSellConfig = { common: false, rare: false, epic: false, legendary: false, mythic: false };
+    state.autoRollActive = false;
+    state.autoRollEggId = null;
+
     data.updateDynamicContent(0);
     
     ui.applyUniverseTheme();

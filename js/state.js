@@ -34,5 +34,10 @@ export let state = {
     stats: { eggsOpened: 0, petsFused: 0, petsSold: 0, timePlayed: 0 },
     
     isOpeningEgg: false,
-    eggQtySelected: 1   // Quantité choisie dans le stepper d'achat d'œufs
+    eggQtySelected: 1,
+    
+    // NOUVELLES VARIABLES AUTO
+    autoSellConfig: { common: false, rare: false, epic: false, legendary: false, mythic: false },
+    autoRollActive: false,
+    autoRollEggId: null
 };

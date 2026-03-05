@@ -22,8 +22,10 @@ export const UNIVERSES = [
 export const DIAMOND_UPGRADES = [
     { id: 'inv_space', name: 'Extension Sac', icon: '🎒', desc: '+10 places d\'inventaire', baseCost: 10, costMult: 1.5, type: 'inventory', value: 10, maxLevel: 20 },
     { id: 'rebirth_cost', name: 'Charisme Divin', icon: '🗣️', desc: '-5% sur l\'objectif de Rebirth', baseCost: 25, costMult: 2.0, type: 'rebirthCost', value: 0.05, maxLevel: 10 },
-    { id: 'diamond_class', name: 'Classe Supérieure', icon: '👑', desc: '+1 diamant / 5 min', baseCost: 50, costMult: 2.5, type: 'diamondRate', value: 1, maxLevel: 10 },
-    { id: 'egg_batch', name: 'Éclosion Multiple', icon: '🥚', desc: '+1 œuf ouvert par clic', baseCost: 40, costMult: 2.5, type: 'eggBatch', value: 1, maxLevel: 9 }
+    { id: 'diamond_class', name: 'Classe Supérieure', icon: '👑', desc: 'Double les diamants / min', baseCost: 50, costMult: 2.5, type: 'diamondRate', value: 2, maxLevel: 20 },
+    { id: 'egg_batch', name: 'Éclosion Multiple', icon: '🥚', desc: '+1 œuf ouvert par clic', baseCost: 40, costMult: 2.5, type: 'eggBatch', value: 1, maxLevel: 9 },
+    { id: 'auto_sell', name: 'Auto-Vente', icon: '🗑️', desc: 'Débloque la vente automatique', baseCost: 250, costMult: 1, type: 'unlock', value: 1, maxLevel: 1 },
+    { id: 'auto_roll', name: 'Auto-Éclosion', icon: '🎰', desc: 'Ouvre des œufs en arrière-plan', baseCost: 1000, costMult: 1, type: 'unlock', value: 1, maxLevel: 1 }
 ];
 
 const BASE_DIAMOND_EGGS = [
@@ -69,9 +71,8 @@ export function updateDynamicContent(ascensionCount) {
         const suffixStr = suffixes[Math.min(a, suffixes.length - 1)] || `Tier ${a}`;
         const suffix = ` (${suffixStr})`;
         
-        // CORRECTION D'ÉQUILIBRAGE : Les pets scalent beaucoup moins fort !
-        const multPower = Math.pow(6, a); // Multiplicateur de x6 au lieu de x100 par Ascension !
-        const costPower = Math.pow(500, a); // Le prix est nerf aussi (x500 au lieu de x10000)
+        const multPower = Math.pow(6, a); 
+        const costPower = Math.pow(500, a); 
 
         const aPets = [
             { id: `hamster_${a}`, name: `Hamster${suffix}`, icon: '🐹', mult: 1.2 * multPower, rarity: 'common', sellPrice: 500 * costPower },

@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=1.5">
+    <link rel="stylesheet" href="style.css?v=1.6">
 </head>
 <body class="theme-classic">
     <div id="particles"></div>
@@ -25,7 +25,7 @@
         <div class="diamond-progress-bg">
             <div id="diamond-progress" class="diamond-progress-fill"></div>
         </div>
-        <div id="diamond-timer" class="diamond-timer">05:00</div>
+        <div id="diamond-timer" class="diamond-timer">01:00</div>
     </div>
 
     <main id="game-container">
@@ -221,6 +221,13 @@
                             </div>
                         </div>
 
+                        <div id="auto-sell-settings-container" class="glass-panel-inner" style="width: 100%; margin-bottom: 20px;">
+                            <h3 style="margin-bottom: 15px; color: var(--accent-secondary); text-align: center;">🤖 Auto-Vente Pets</h3>
+                            <div id="auto-sell-controls" style="display:flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
+                                </div>
+                            <p id="auto-sell-locked-msg" style="color: var(--danger); font-size: 0.8rem; margin-top: 15px; text-align: center;">🔒 Achetez l'Auto-Vente au Marché Noir !</p>
+                        </div>
+
                         <p class="settings-intro">Gère ta sauvegarde ici.</p>
                         <button id="reset-btn" class="btn btn-reset">🗑️ Reset Sauvegarde</button>
                     </div>
@@ -244,7 +251,6 @@
 
     <div id="float-text-container"></div>
 
-    <!-- Modal Fusion -->
     <div id="fusion-modal" class="hidden">
         <div class="fusion-content">
             <div id="fusion-arena"></div>
