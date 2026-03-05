@@ -925,12 +925,12 @@ export function saveGame() {
         autoSellConfig: state.autoSellConfig, autoRollActive: state.autoRollActive, autoRollEggId: state.autoRollEggId
     };
     
-    localStorage.setItem('aubinclicker_save_v3', JSON.stringify(saveData));
+    localStorage.setItem('aubinclicker_save_v4', JSON.stringify(saveData));
     ui.showQuote("💾 Partie sauvegardée !");
 }
 
 export function loadGame() {
-    const raw = localStorage.getItem('aubinclicker_save_v3');
+    const raw = localStorage.getItem('aubinclicker_save_v4');
     if (!raw) {
         data.updateDynamicContent(0);
         return false;
@@ -975,7 +975,7 @@ export function loadGame() {
 export function resetGame() {
     if (!confirm("⚠️ Tout effacer ? Aubin va devoir recommencer son régime...")) return;
     
-    localStorage.removeItem('aubinclicker_save_v3');
+    localStorage.removeItem('aubinclicker_save_v4');
     
     state.calories = 0; state.totalCalories = 0; state.totalClicks = 0; state.clickPower = 1;
     state.cps = 0; state.clickMultiplier = 1; state.globalMultiplier = 1;
