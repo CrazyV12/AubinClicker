@@ -48,8 +48,6 @@ export function updateDiamondUI() {
     
     const u = core.getCurrentUniverse();
     const classBonusLvl = state.diamondUpgradesPurchased['diamond_class'] || 0;
-    
-    // LE NOUVEAU CALCUL EXPONENTIEL POUR L'AFFICHAGE (+X/min)
     const rate = Math.floor(u.diamondRate * Math.pow(2, classBonusLvl));
 
     if (dc) {
@@ -57,7 +55,7 @@ export function updateDiamondUI() {
     }
     
     if (dp || dt) {
-        const effectiveTick = 60; // 60 secondes
+        const effectiveTick = 60; 
         
         if (dp) {
             const pct = (state.diamondProgress / effectiveTick) * 100;
@@ -135,7 +133,6 @@ export function renderDiamondShop() {
     }
 }
 
-// PARAMÈTRES ET AUTO-SELL
 export function renderSettings() {
     const controls = document.getElementById('auto-sell-controls');
     const lockedMsg = document.getElementById('auto-sell-locked-msg');
@@ -181,6 +178,66 @@ export function renderSettings() {
     });
 }
 
+function updateDiamondShopLive() {
+    const uList = document.getElementById('diamond-upgrades-list');
+    if (uList) {
+        uList.querySelectorAll('.ascension-card').forEach(card => {
+            const uId = card.dataset.id;
+            const u = data.DIAMOND_UPGRADES.find(x => x.id === uId);
+            if (u) {
+                const currentLevel = state.diamondUpgradesPurchased[u.id] || 0;
+                const isMaxed = currentLevel >= u.maxLevel;
+                const cost = Math.floor(u.baseCost * Math.pow(u.costMult, currentLevel));
+                const canAfford = state.diamonds >= cost;
+                
+                const btn = card.querySelector('.ascension-buy-btn');
+                if (isMaxed) {
+                    card.classList.add('maxed');
+                    card.classList.remove('cant-afford');
+                    if (btn) { btn.disabled = true; btn.textContent = 'MAX'; }
+                } else {
+                    card.classList.remove('maxed');
+                    if (canAfford) {
+                        card.classList.remove('cant-afford');
+                        if (btn) { btn.disabled = false; btn.innerHTML = `${core.formatNumber(cost)} 💎`; }
+                    } else {
+                        card.classList.add('cant-afford');
+                        if (btn) { btn.disabled = true; btn.innerHTML = `${core.formatNumber(cost)} 💎`; }
+                    }
+                }
+            }
+        });
+    }
+
+    const eggList = document.getElementById('diamond-eggs-list');
+    if (eggList) {
+        const maxInv = core.getMaxInventory();
+        const isInvFull = state.inventoryPets.length >= maxInv;
+
+        eggList.querySelectorAll('.egg-card').forEach(card => {
+            const eggId = card.dataset.id;
+            const egg = data.DIAMOND_EGGS.find(x => x.id === eggId);
+            if (egg) {
+                const totalCost = egg.cost; 
+                const canAfford = state.diamonds >= totalCost;
+                
+                card.className = `egg-card ${isInvFull || !canAfford ? 'locked' : 'can-afford'}`;
+                
+                const statusEl = card.querySelector('.egg-status-text');
+                if (statusEl) {
+                    if (isInvFull) {
+                        statusEl.innerHTML = `<span class="egg-req">Inventaire plein !</span>`;
+                    } else if (!canAfford) {
+                        statusEl.innerHTML = `<span class="egg-req">${core.formatNumber(totalCost)} 💎</span>`;
+                    } else {
+                        statusEl.innerHTML = `<span class="egg-cost" style="color:#00d2ff">${core.formatNumber(totalCost)} 💎</span>`;
+                    }
+                }
+            }
+        });
+    }
+}
+
 export function updateDisplay() {
     const el = (id) => document.getElementById(id);
     if(el('calorie-count')) el('calorie-count').textContent = core.formatNumber(state.calories);
@@ -214,6 +271,9 @@ export function updateDisplay() {
             const canAfford = state.calories >= cost && !isMaxed && !isHardLocked;
             const isSoftLocked = state.totalCalories < b.baseCost * 0.5 && b.count === 0;
             
+            // NOUVEAU : Affichage "∞" si le bâtiment n'a pas de limite (comme les Puffs)
+            const maxStr = maxBuildings === Infinity ? '∞' : maxBuildings;
+
             if (item) {
                 item.className = `shop-item ${canAfford ? 'can-afford' : ''} ${(isSoftLocked || isHardLocked) ? 'locked' : ''} ${isMaxed ? 'locked maxed' : ''}`;
                 
@@ -232,7 +292,7 @@ export function updateDisplay() {
                     else { costEl.textContent = `${core.formatNumber(cost)} cal`; costEl.classList.toggle('too-expensive', !canAfford); }
                 }
                 const countEl = item.querySelector('.shop-item-count');
-                if (countEl) countEl.textContent = isHardLocked ? '0' : `${b.count} / ${maxBuildings}`;
+                if (countEl) countEl.textContent = isHardLocked ? '0' : `${b.count} / ${maxStr}`;
             }
 
             if (maxBtn) {
@@ -277,21 +337,21 @@ export function updateDisplay() {
         }
     }
 
-    ['egg-shop-grid', 'diamond-eggs-list'].forEach(gridId => {
+    ['egg-shop-grid'].forEach(gridId => {
         const grid = el(gridId);
         if (!grid) return;
-        const isDiamond = gridId === 'diamond-eggs-list';
+        const isDiamond = false;
         const maxInv = core.getMaxInventory();
         const isInvFull = state.inventoryPets.length >= maxInv;
 
         grid.querySelectorAll('.egg-card').forEach(card => {
             const eggId = card.dataset.id;
-            const egg = isDiamond ? data.DIAMOND_EGGS.find(x => x.id === eggId) : data.EGGS.find(x => x.id === eggId);
+            const egg = data.EGGS.find(x => x.id === eggId);
             if (!egg) return;
 
-            const isLocked = isDiamond ? false : (state.rebirthCount < egg.minRebirth);
+            const isLocked = state.rebirthCount < egg.minRebirth;
             const totalCost = egg.cost;
-            const canAfford = isDiamond ? (state.diamonds >= totalCost) : (state.calories >= totalCost);
+            const canAfford = state.calories >= totalCost;
 
             card.className = `egg-card ${isLocked || isInvFull ? 'locked' : ''} ${canAfford && !isInvFull && !isLocked ? 'can-afford' : ''}`;
 
@@ -300,14 +360,8 @@ export function updateDisplay() {
                 let html = '';
                 if (isLocked)      html = `<span class="egg-req">🔒 Rebirth ${egg.minRebirth}</span>`;
                 else if (isInvFull) html = `<span class="egg-req">Inventaire plein !</span>`;
-                else if (!canAfford) {
-                    const cost1 = isDiamond ? `${core.formatNumber(egg.cost)} 💎` : `${core.formatNumber(egg.cost)} cal`;
-                    html = `<span class="egg-req">${cost1}</span>`;
-                } else {
-                    const costStr = isDiamond ? `${core.formatNumber(totalCost)} 💎` : `${core.formatNumber(totalCost)} cal`;
-                    const color   = isDiamond ? 'color:#00d2ff' : '';
-                    html = `<span class="egg-cost" style="${color}">${costStr}</span>`;
-                }
+                else if (!canAfford) html = `<span class="egg-req">${core.formatNumber(totalCost)} cal</span>`;
+                else html = `<span class="egg-cost">${core.formatNumber(totalCost)} cal</span>`;
                 statusEl.innerHTML = html;
             }
         });
@@ -337,6 +391,8 @@ export function updateDisplay() {
             }
         });
     }
+
+    updateDiamondShopLive();
 }
 
 export function renderBuildings() {
@@ -355,6 +411,8 @@ export function renderBuildings() {
         
         const canAfford = state.calories >= cost && !isMaxed && !isHardLocked;
         const isSoftLocked = state.totalCalories < b.baseCost * 0.5 && b.count === 0;
+
+        const maxStr = maxBuildings === Infinity ? '∞' : maxBuildings;
 
         const row = document.createElement('div');
         row.className = 'shop-row';
@@ -387,7 +445,7 @@ export function renderBuildings() {
                 <div class="shop-item-cost ${canAfford || isMaxed ? '' : 'too-expensive'}">${costText}</div>
             </div>
             <div class="shop-item-count" style="min-width: 45px; text-align: right;">
-                ${isHardLocked ? '0' : b.count} / ${isHardLocked ? '0' : maxBuildings}
+                ${isHardLocked ? '0' : b.count} / ${isHardLocked ? '0' : maxStr}
             </div>
         `;
         
@@ -474,7 +532,7 @@ export function renderPetInventory() {
                 const pInfo = state.equippedPets[i];
                 const pet = data.PETS.find(p => p.id === pInfo.id);
                 const fLvl = pInfo.fusionLevel || 0;
-                const bonusPct = (pet.mult - 1) * (1 + fLvl * 0.5) * 100;
+                const bonusPct = (pet.mult - 1) * (1 + fLvl * 0.2) * 100;
                 const totalSame = state.inventoryPets.filter(p=>p.id===pInfo.id && (p.fusionLevel||0)===fLvl).length + state.equippedPets.filter(p=>p.id===pInfo.id && (p.fusionLevel||0)===fLvl).length;
                 const fusionCost = data.FUSION_BASE_COST[pet.rarity] * Math.pow(10, fLvl);
                 
@@ -521,7 +579,7 @@ export function renderPetInventory() {
             const pet = data.PETS.find(p => p.id === pInfo.id);
             const isSel = state.selectedPetsToSell.includes(pInfo.uid);
             const fLvl = pInfo.fusionLevel || 0;
-            const bonusPct = (pet.mult - 1) * (1 + fLvl * 0.5) * 100;
+            const bonusPct = (pet.mult - 1) * (1 + fLvl * 0.2) * 100;
             const totalSame = state.inventoryPets.filter(p=>p.id===pInfo.id && (p.fusionLevel||0)===fLvl).length + state.equippedPets.filter(p=>p.id===pInfo.id && (p.fusionLevel||0)===fLvl).length;
             const fusionCost = data.FUSION_BASE_COST[pet.rarity] * Math.pow(10, fLvl);
             

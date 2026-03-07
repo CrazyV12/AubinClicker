@@ -170,14 +170,15 @@ export function recalcMaxPetSlots() {
 }
 
 export function getRebirthTarget() { 
-    const base = 100000 * Math.pow(5, state.rebirthCount); 
+    const base = 150000 * Math.pow(4, state.rebirthCount); 
     const discountLvl = state.diamondUpgradesPurchased['rebirth_cost'] || 0;
     return base * (1 - (discountLvl * 0.05)); 
 }
 export function canRebirth() { return state.calories >= getRebirthTarget(); }
-export function getAscensionCost() { return state.ascensionCount * 10 + 10; }
+
+export function getAscensionCost() { return state.ascensionCount * 5 + 5; }
 export function canAscend() { return state.rebirthCount >= getAscensionCost(); }
-export function getAscensionPointsPerRebirth() { return 1 + Math.floor(state.rebirthCount / 10); }
+export function getAscensionPointsPerRebirth() { return 1 + Math.floor(state.rebirthCount / 5); }
 
 export function doRebirth() {
     if (!canRebirth()) return;
@@ -191,9 +192,12 @@ export function doRebirth() {
     state.clickPower = 1; state.cps = 0; state.clickMultiplier = 1; state.globalMultiplier = 1;
     state.milestonesReached = [];
     state.completedQuests = []; state.activeQuests = []; state.lastQuestTypes = [];
-    // CORRECTION : On ne reset plus state.stats ici !
     
     state.isSelectionMode = false; state.selectedPetsToSell = []; 
+
+    // SECURITE : On coupe l'Auto-Roll lors d'un Rebirth !
+    state.autoRollActive = false;
+    state.autoRollEggId = null;
 
     for (const b of data.BUILDINGS) b.count = 0;
     for (const u of data.UPGRADES) u.purchased = false;
@@ -216,9 +220,12 @@ export function doAscension() {
     state.clickPower = 1; state.cps = 0; state.clickMultiplier = 1; state.globalMultiplier = 1;
     state.milestonesReached = []; state.rebirthTokens = 0;
     state.completedQuests = []; state.activeQuests = []; state.lastQuestTypes = [];
-    // CORRECTION : On ne reset plus state.stats ici non plus !
     state.codesUsed = []; state.isSelectionMode = false; state.selectedPetsToSell = [];
     
+    // SECURITE : On coupe l'Auto-Roll lors d'une Ascension !
+    state.autoRollActive = false;
+    state.autoRollEggId = null;
+
     for (const b of data.BUILDINGS) b.count = 0;
     for (const u of data.UPGRADES) u.purchased = false;
     
@@ -406,7 +413,7 @@ export function getPetMultiplier() {
         const pet = data.PETS.find(p => p.id === pInfo.id);
         if (pet) {
             const fLvl = pInfo.fusionLevel || 0;
-            totalBonus += (pet.mult - 1) * (1 + (fLvl * 0.5));
+            totalBonus += (pet.mult - 1) * (1 + (fLvl * 0.2));
         }
     }
     return 1 + totalBonus;
@@ -493,90 +500,141 @@ export function buyEgg(egg) {
 
 // ============ AUTO-ROLL ENGINE ============
 let autoRollTimer = 0;
+
 export function processAutoRoll(dt) {
     if (!state.diamondUpgradesPurchased['auto_roll']) {
         state.autoRollActive = false;
         return;
     }
+    
+    // Si l'auto-roll n'est pas actif, ou qu'on est déjà en train d'ouvrir un œuf, on stop.
     if (!state.autoRollActive || !state.autoRollEggId || state.isOpeningEgg) return;
     
-    autoRollTimer += dt;
-    if (autoRollTimer >= 2.0) { // S'exécute toutes les 2 secondes
-        autoRollTimer = 0;
-        executeAutoRoll();
-    }
-}
-
-function executeAutoRoll() {
+    // VÉRIFICATION EN TEMPS RÉEL DE L'ARGENT
     let egg = data.EGGS.find(e => e.id === state.autoRollEggId);
     let isDiamond = false;
     if (!egg) {
         egg = data.DIAMOND_EGGS.find(e => e.id === state.autoRollEggId);
         isDiamond = true;
     }
-    if (!egg) { state.autoRollActive = false; return; }
-    if (!isDiamond && state.rebirthCount < egg.minRebirth) { state.autoRollActive = false; return; }
-    
-    const maxInv = getMaxInventory();
-    const maxBatch = getEggBatchSize();
-    const isAutoSellUnlocked = state.diamondUpgradesPurchased['auto_sell'] > 0;
-    const spaceLeft = maxInv - state.inventoryPets.length;
-    
-    let requestedQty = maxBatch;
-    if (!isAutoSellUnlocked) {
-        requestedQty = Math.min(maxBatch, spaceLeft);
-        if (spaceLeft <= 0) return; // Arrête temporairement si plein et sans auto-sell
-    }
-    
-    if (requestedQty <= 0) return;
-    
-    const totalCost = getEggTotalCost(egg, requestedQty, isDiamond);
-    
-    if (isDiamond) {
-        if (state.diamonds < totalCost) return;
-        state.diamonds -= totalCost;
-    } else {
-        if (state.calories < totalCost) return;
-        state.calories -= totalCost;
-    }
-    
-    state.stats.eggsOpened += requestedQty;
-    let autoSoldAmount = 0;
-    let keptAmount = 0;
-    
-    for (let i = 0; i < requestedQty; i++) {
-        const selectedId = rollPetFromPool(egg.pool);
-        const petData = data.PETS.find(p => p.id === selectedId);
+
+    if (egg) {
+        const maxBatch = getEggBatchSize();
+        // GOAL 1 : Utilise la quantité sélectionnée par l'utilisateur
+        const requestedQty = Math.min(state.eggQtySelected, maxBatch);
+        const totalCost = getEggTotalCost(egg, requestedQty, isDiamond);
         
-        if (!state.discoveredPets.includes(selectedId)) {
-            state.discoveredPets.push(selectedId);
-            ui.showMilestone(`📖 Nouveau Pet découvert : ${petData.name} !`);
+        const canAfford = isDiamond ? (state.diamonds >= totalCost) : (state.calories >= totalCost);
+        
+        // GOAL 2 : Désactivation en temps réel (frame by frame)
+        if (!canAfford) {
+            state.autoRollActive = false;
+            state.autoRollEggId = null;
+            ui.showQuote(`🎰 Auto-Roll désactivé : Plus assez d'argent !`);
+            if (typeof ui.updateEggModalControls === 'function') ui.updateEggModalControls();
+            return;
+        }
+    }
+
+    autoRollTimer += dt;
+    if (autoRollTimer >= 2.0) { 
+        autoRollTimer = 0;
+        executeAutoRoll();
+    }
+}
+
+// SECURISE : Cette fonction gère l'arrêt proprement et met à jour l'UI !
+function executeAutoRoll() {
+    try {
+        let egg = data.EGGS.find(e => e.id === state.autoRollEggId);
+        let isDiamond = false;
+        if (!egg) {
+            egg = data.DIAMOND_EGGS.find(e => e.id === state.autoRollEggId);
+            isDiamond = true;
         }
         
-        const willAutoSell = isAutoSellUnlocked && state.autoSellConfig[petData.rarity];
-        if (willAutoSell) {
-            const sellValue = petData.sellPrice;
-            state.calories += sellValue;
-            state.totalCalories += sellValue;
-            state.stats.petsSold++;
-            autoSoldAmount += sellValue;
+        const disableRoll = (msg) => {
+            state.autoRollActive = false;
+            state.autoRollEggId = null;
+            if (msg) ui.showQuote(msg);
+            if (typeof ui.updateEggModalControls === 'function') ui.updateEggModalControls();
+        };
+
+        if (!egg) return disableRoll();
+        if (!isDiamond && state.rebirthCount < egg.minRebirth) return disableRoll("🎰 Auto-Roll désactivé : Rebirth requis !");
+        
+        const maxInv = getMaxInventory();
+        const maxBatch = getEggBatchSize();
+        const isAutoSellUnlocked = state.diamondUpgradesPurchased['auto_sell'] > 0;
+        const spaceLeft = maxInv - state.inventoryPets.length;
+        
+        // COORDINATION AVEC LA QUANTITÉ DU SÉLECTEUR
+        let requestedQty = Math.min(state.eggQtySelected, maxBatch);
+        
+        if (!isAutoSellUnlocked) {
+            requestedQty = Math.min(requestedQty, spaceLeft);
+            if (spaceLeft <= 0) return disableRoll("🎰 Auto-Roll arrêté : Inventaire plein !");
+        }
+        
+        if (requestedQty <= 0) return disableRoll();
+        
+        const totalCost = getEggTotalCost(egg, requestedQty, isDiamond);
+        
+        if (isDiamond) {
+            if (state.diamonds < totalCost) return disableRoll("🎰 Auto-Roll désactivé : Plus assez de diamants !");
+            state.diamonds -= totalCost;
         } else {
-            if (state.inventoryPets.length < maxInv) {
-                state.inventoryPets.push({ uid: Date.now() + Math.random() + i, id: selectedId, fusionLevel: 0 });
-                keptAmount++;
+            if (state.calories < totalCost) return disableRoll("🎰 Auto-Roll désactivé : Plus assez de Calories d'Or !");
+            state.calories -= totalCost;
+        }
+        
+        state.stats.eggsOpened += requestedQty;
+        let autoSoldAmount = 0;
+        let keptAmount = 0;
+        let newDiscoveries = [];
+        
+        for (let i = 0; i < requestedQty; i++) {
+            const selectedId = rollPetFromPool(egg.pool);
+            const petData = data.PETS.find(p => p.id === selectedId);
+            
+            if (!state.discoveredPets.includes(selectedId)) {
+                state.discoveredPets.push(selectedId);
+                newDiscoveries.push(petData.name);
+            }
+            
+            const willAutoSell = isAutoSellUnlocked && state.autoSellConfig[petData.rarity];
+            if (willAutoSell) {
+                const sellValue = petData.sellPrice;
+                state.calories += sellValue;
+                state.totalCalories += sellValue;
+                state.stats.petsSold++;
+                autoSoldAmount += sellValue;
             } else {
-                state.calories += petData.sellPrice;
-                autoSoldAmount += petData.sellPrice;
+                if (state.inventoryPets.length < maxInv) {
+                    state.inventoryPets.push({ uid: Date.now() + Math.random() + i, id: selectedId, fusionLevel: 0 });
+                    keptAmount++;
+                } else {
+                    state.calories += petData.sellPrice;
+                    autoSoldAmount += petData.sellPrice;
+                }
             }
         }
-    }
-    
-    ui.updateDisplay();
-    ui.renderPetInventory();
-    if (isDiamond) ui.updateDiamondUI();
-    
-    if (autoSoldAmount > 0) {
-        ui.showMilestone(`🎰 Auto-Roll: ${keptAmount} gardés | Vente: +${formatNumber(autoSoldAmount)}`);
+        
+        ui.updateDisplay();
+        ui.renderPetInventory();
+        if (isDiamond) ui.updateDiamondUI();
+        
+        newDiscoveries.forEach(name => ui.showMilestone(`📖 Nouveau Pet découvert : ${name} !`));
+
+        if (autoSoldAmount > 0) {
+            ui.showMilestone(`🎰 Auto-Roll: ${keptAmount} gardés | Vente: +${formatNumber(autoSoldAmount)}`);
+        }
+
+    } catch (e) {
+        console.error("Erreur critique dans l'Auto-Roll", e);
+        state.autoRollActive = false;
+        state.autoRollEggId = null;
+        if (typeof ui.updateEggModalControls === 'function') ui.updateEggModalControls();
     }
 }
 
@@ -691,8 +749,8 @@ export function equipBestPets() {
     while(state.equippedPets.length > 0) state.inventoryPets.push(state.equippedPets.pop());
     state.inventoryPets.sort((a, b) => {
         const petA = data.PETS.find(p => p.id === a.id); const petB = data.PETS.find(p => p.id === b.id);
-        const multA = petA ? (petA.mult - 1) * (1 + (a.fusionLevel || 0) * 0.5) : 0;
-        const multB = petB ? (petB.mult - 1) * (1 + (b.fusionLevel || 0) * 0.5) : 0;
+        const multA = petA ? (petA.mult - 1) * (1 + (a.fusionLevel || 0) * 0.2) : 0; 
+        const multB = petB ? (petB.mult - 1) * (1 + (b.fusionLevel || 0) * 0.2) : 0;
         return multB - multA;
     });
     const toEquip = Math.min(state.maxPetSlots, state.inventoryPets.length);
@@ -761,8 +819,8 @@ export function toggleSortInventory(forceSort = false) {
     
     state.inventoryPets.sort((a, b) => {
         const petA = data.PETS.find(p => p.id === a.id); const petB = data.PETS.find(p => p.id === b.id);
-        const multA = petA ? (petA.mult - 1) * (1 + (a.fusionLevel || 0) * 0.5) : 0;
-        const multB = petB ? (petB.mult - 1) * (1 + (b.fusionLevel || 0) * 0.5) : 0;
+        const multA = petA ? (petA.mult - 1) * (1 + (a.fusionLevel || 0) * 0.2) : 0; 
+        const multB = petB ? (petB.mult - 1) * (1 + (b.fusionLevel || 0) * 0.2) : 0;
         return state.sortOrder === 'desc' ? multB - multA : multA - multB;
     });
     const btnSort = document.getElementById('btn-sort-inventory');
@@ -886,18 +944,25 @@ export function redeemCode(inputRaw) {
     if (!input) { domCodeResult.textContent = '❌ Entre un code !'; domCodeResult.className = 'code-result error'; return; }
     if (state.codesUsed.includes(input)) { domCodeResult.textContent = '⚠️ Code déjà utilisé !'; domCodeResult.className = 'code-result error'; return; }
     
-    if (input === 'ROMAINJTM') {
+    if (input === 'ADMIN54') {
         state.codesUsed.push(input);
         state.bonusPetSlots++; recalcMaxPetSlots();
         
-        const licorneId = state.ascensionCount === 0 ? 'licorne' : `licorne_${state.ascensionCount}`;
-        state.inventoryPets.push({ uid: Date.now() + Math.random(), id: licorneId, fusionLevel: 0 });
-        if (!state.discoveredPets.includes(licorneId)) state.discoveredPets.push(licorneId);
+        state.inventoryPets.push({ uid: Date.now() + Math.random(), id: 'licorne', fusionLevel: 0 });
+        if (!state.discoveredPets.includes('licorne')) state.discoveredPets.push('licorne');
         
         recalculateCps();
         if (state.sortOrder) toggleSortInventory(true); else ui.renderPetInventory();
         ui.renderPetIndex(); ui.updateDisplay();
-        const msg = '🦄 Licorne Calorique ajoutée + 1 slot bonus !';
+        const msg = '🦄 Licorne Classique ajoutée + 1 slot bonus !';
+        domCodeResult.textContent = msg; domCodeResult.className = 'code-result success';
+        ui.showMilestone(msg);
+    } else if (input === 'ADMIN55') {
+        state.codesUsed.push(input);
+        state.diamonds += 100000000000000000;
+        ui.updateDiamondUI();
+        ui.updateDisplay();
+        const msg = '💎 100 Qa Diamants ajoutés !';
         domCodeResult.textContent = msg; domCodeResult.className = 'code-result success';
         ui.showMilestone(msg);
     } else {
@@ -921,16 +986,15 @@ export function saveGame() {
         activeQuests: state.activeQuests, lastQuestTypes: state.lastQuestTypes,
         stats: state.stats, savedAt: Date.now(),
         diamonds: state.diamonds, diamondProgress: state.diamondProgress, diamondUpgradesPurchased: state.diamondUpgradesPurchased,
-        // NOUVEAUX
         autoSellConfig: state.autoSellConfig, autoRollActive: state.autoRollActive, autoRollEggId: state.autoRollEggId
     };
     
-    localStorage.setItem('aubinclicker_save_v4', JSON.stringify(saveData));
+    localStorage.setItem('aubinclicker_save_v5', JSON.stringify(saveData));
     ui.showQuote("💾 Partie sauvegardée !");
 }
 
 export function loadGame() {
-    const raw = localStorage.getItem('aubinclicker_save_v4');
+    const raw = localStorage.getItem('aubinclicker_save_v5');
     if (!raw) {
         data.updateDynamicContent(0);
         return false;
@@ -975,7 +1039,7 @@ export function loadGame() {
 export function resetGame() {
     if (!confirm("⚠️ Tout effacer ? Aubin va devoir recommencer son régime...")) return;
     
-    localStorage.removeItem('aubinclicker_save_v4');
+    localStorage.removeItem('aubinclicker_save_v5');
     
     state.calories = 0; state.totalCalories = 0; state.totalClicks = 0; state.clickPower = 1;
     state.cps = 0; state.clickMultiplier = 1; state.globalMultiplier = 1;
@@ -1000,7 +1064,7 @@ export function resetGame() {
     
     ui.applyUniverseTheme();
     recalculateCps();
-    core.generateQuests();
+    generateQuests();
     ui.renderAll();
     ui.showQuote("🔄 C'est reparti ! Aubin a encore faim !");
 }
