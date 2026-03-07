@@ -195,7 +195,6 @@ export function doRebirth() {
     
     state.isSelectionMode = false; state.selectedPetsToSell = []; 
 
-    // SECURITE : On coupe l'Auto-Roll lors d'un Rebirth !
     state.autoRollActive = false;
     state.autoRollEggId = null;
 
@@ -222,7 +221,6 @@ export function doAscension() {
     state.completedQuests = []; state.activeQuests = []; state.lastQuestTypes = [];
     state.codesUsed = []; state.isSelectionMode = false; state.selectedPetsToSell = [];
     
-    // SECURITE : On coupe l'Auto-Roll lors d'une Ascension !
     state.autoRollActive = false;
     state.autoRollEggId = null;
 
@@ -288,18 +286,13 @@ export function buyDiamondEgg(eggId) {
 
     const maxInv = getMaxInventory();
     const maxBatch = getEggBatchSize();
-    
     const isAutoSellUnlocked = state.diamondUpgradesPurchased['auto_sell'] > 0;
     
     let spaceLeft = maxInv - state.inventoryPets.length;
-    let requestedQty = state.eggQtySelected;
-    if (!isAutoSellUnlocked) {
-        requestedQty = Math.min(state.eggQtySelected, maxBatch, spaceLeft);
-        if (spaceLeft <= 0) { ui.showQuote("Inventaire plein !"); return; }
-    } else {
-        requestedQty = Math.min(state.eggQtySelected, maxBatch);
-    }
+    if (spaceLeft <= 0) { ui.showQuote("Inventaire plein !"); return; }
     
+    // SECURITE ABSOLUE : La quantité achetée est toujours bridée par l'espace restant
+    let requestedQty = Math.min(state.eggQtySelected, maxBatch, spaceLeft);
     if (requestedQty <= 0) return;
 
     const totalCost = getEggTotalCost(egg, requestedQty, true);
@@ -332,15 +325,9 @@ export function buyDiamondEgg(eggId) {
             autoSoldAmount += sellValue;
             newPets.push({ uid: Date.now() + Math.random() + i, id: selectedId, fusionLevel: 0, isHatching: true, autoSold: true });
         } else {
-            if (state.inventoryPets.length < maxInv) {
-                const newPet = { uid: Date.now() + Math.random() + i, id: selectedId, fusionLevel: 0, isHatching: true };
-                state.inventoryPets.push(newPet);
-                newPets.push(newPet);
-            } else {
-                state.calories += petData.sellPrice;
-                autoSoldAmount += petData.sellPrice;
-                newPets.push({ uid: Date.now() + Math.random() + i, id: selectedId, fusionLevel: 0, isHatching: true, autoSold: true });
-            }
+            const newPet = { uid: Date.now() + Math.random() + i, id: selectedId, fusionLevel: 0, isHatching: true };
+            state.inventoryPets.push(newPet);
+            newPets.push(newPet);
         }
         petsData.push(petData);
     }
@@ -427,15 +414,10 @@ export function buyEgg(egg) {
     const isAutoSellUnlocked = state.diamondUpgradesPurchased['auto_sell'] > 0;
     
     let spaceLeft = maxInv - state.inventoryPets.length;
-    let requestedQty = state.eggQtySelected;
+    if (spaceLeft <= 0) { ui.showQuote("Inventaire plein ! Vends des pets."); return; }
     
-    if (!isAutoSellUnlocked) {
-        requestedQty = Math.min(state.eggQtySelected, maxBatch, spaceLeft);
-        if (spaceLeft <= 0) { ui.showQuote("Inventaire plein ! Vends des pets."); return; }
-    } else {
-        requestedQty = Math.min(state.eggQtySelected, maxBatch);
-    }
-    
+    // SECURITE ABSOLUE : La quantité achetée est toujours bridée par l'espace restant
+    let requestedQty = Math.min(state.eggQtySelected, maxBatch, spaceLeft);
     if (requestedQty <= 0) return;
 
     const totalCost = getEggTotalCost(egg, requestedQty);
@@ -468,15 +450,9 @@ export function buyEgg(egg) {
             autoSoldAmount += sellValue;
             newPets.push({ uid: Date.now() + Math.random() + i, id: selectedId, fusionLevel: 0, isHatching: true, autoSold: true });
         } else {
-            if (state.inventoryPets.length < maxInv) {
-                const newPet = { uid: Date.now() + Math.random() + i, id: selectedId, fusionLevel: 0, isHatching: true };
-                state.inventoryPets.push(newPet);
-                newPets.push(newPet);
-            } else {
-                state.calories += petData.sellPrice;
-                autoSoldAmount += petData.sellPrice;
-                newPets.push({ uid: Date.now() + Math.random() + i, id: selectedId, fusionLevel: 0, isHatching: true, autoSold: true });
-            }
+            const newPet = { uid: Date.now() + Math.random() + i, id: selectedId, fusionLevel: 0, isHatching: true };
+            state.inventoryPets.push(newPet);
+            newPets.push(newPet);
         }
         petsData.push(petData);
     }
@@ -507,10 +483,20 @@ export function processAutoRoll(dt) {
         return;
     }
     
-    // Si l'auto-roll n'est pas actif, ou qu'on est déjà en train d'ouvrir un œuf, on stop.
     if (!state.autoRollActive || !state.autoRollEggId || state.isOpeningEgg) return;
     
-    // VÉRIFICATION EN TEMPS RÉEL DE L'ARGENT
+    // VERIFICATION EN TEMPS RÉEL (Inventaire & Argent)
+    const maxInv = getMaxInventory();
+    const spaceLeft = maxInv - state.inventoryPets.length;
+    
+    if (spaceLeft <= 0) {
+        state.autoRollActive = false;
+        state.autoRollEggId = null;
+        ui.showQuote(`🎰 Auto-Roll désactivé : Inventaire plein !`);
+        if (typeof ui.updateEggModalControls === 'function') ui.updateEggModalControls();
+        return;
+    }
+
     let egg = data.EGGS.find(e => e.id === state.autoRollEggId);
     let isDiamond = false;
     if (!egg) {
@@ -520,13 +506,12 @@ export function processAutoRoll(dt) {
 
     if (egg) {
         const maxBatch = getEggBatchSize();
-        // GOAL 1 : Utilise la quantité sélectionnée par l'utilisateur
-        const requestedQty = Math.min(state.eggQtySelected, maxBatch);
+        // On respecte la demande, MAIS on limite à la place dispo pour ne rien forcer.
+        const requestedQty = Math.min(state.eggQtySelected, maxBatch, spaceLeft);
         const totalCost = getEggTotalCost(egg, requestedQty, isDiamond);
         
         const canAfford = isDiamond ? (state.diamonds >= totalCost) : (state.calories >= totalCost);
         
-        // GOAL 2 : Désactivation en temps réel (frame by frame)
         if (!canAfford) {
             state.autoRollActive = false;
             state.autoRollEggId = null;
@@ -543,7 +528,7 @@ export function processAutoRoll(dt) {
     }
 }
 
-// SECURISE : Cette fonction gère l'arrêt proprement et met à jour l'UI !
+// L'exécution du roll est désormais 100% sécurisée
 function executeAutoRoll() {
     try {
         let egg = data.EGGS.find(e => e.id === state.autoRollEggId);
@@ -568,15 +553,11 @@ function executeAutoRoll() {
         const isAutoSellUnlocked = state.diamondUpgradesPurchased['auto_sell'] > 0;
         const spaceLeft = maxInv - state.inventoryPets.length;
         
-        // COORDINATION AVEC LA QUANTITÉ DU SÉLECTEUR
-        let requestedQty = Math.min(state.eggQtySelected, maxBatch);
+        if (spaceLeft <= 0) return disableRoll("🎰 Auto-Roll arrêté : Inventaire plein !");
         
-        if (!isAutoSellUnlocked) {
-            requestedQty = Math.min(requestedQty, spaceLeft);
-            if (spaceLeft <= 0) return disableRoll("🎰 Auto-Roll arrêté : Inventaire plein !");
-        }
-        
-        if (requestedQty <= 0) return disableRoll();
+        // SECURITE : on ne demande jamais plus d'œufs que d'espace libre !
+        let requestedQty = Math.min(state.eggQtySelected, maxBatch, spaceLeft);
+        if (requestedQty <= 0) return disableRoll("🎰 Auto-Roll arrêté : Inventaire plein !");
         
         const totalCost = getEggTotalCost(egg, requestedQty, isDiamond);
         
@@ -610,13 +591,9 @@ function executeAutoRoll() {
                 state.stats.petsSold++;
                 autoSoldAmount += sellValue;
             } else {
-                if (state.inventoryPets.length < maxInv) {
-                    state.inventoryPets.push({ uid: Date.now() + Math.random() + i, id: selectedId, fusionLevel: 0 });
-                    keptAmount++;
-                } else {
-                    state.calories += petData.sellPrice;
-                    autoSoldAmount += petData.sellPrice;
-                }
+                // Sûr et certain de ne pas dépasser l'inventaire ici
+                state.inventoryPets.push({ uid: Date.now() + Math.random() + i, id: selectedId, fusionLevel: 0 });
+                keptAmount++;
             }
         }
         

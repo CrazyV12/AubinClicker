@@ -271,7 +271,6 @@ export function updateDisplay() {
             const canAfford = state.calories >= cost && !isMaxed && !isHardLocked;
             const isSoftLocked = state.totalCalories < b.baseCost * 0.5 && b.count === 0;
             
-            // NOUVEAU : Affichage "∞" si le bâtiment n'a pas de limite (comme les Puffs)
             const maxStr = maxBuildings === Infinity ? '∞' : maxBuildings;
 
             if (item) {
@@ -988,12 +987,14 @@ export function updateEggModalControls() {
         controlsEl.appendChild(stepper);
     }
     
-    const isAutoSellUnlocked = state.diamondUpgradesPurchased['auto_sell'] > 0;
-    const autoRollContainer = document.getElementById('em-autoroll-container');
+    const maxInv = core.getMaxInventory();
+    const spaceLeft = maxInv - state.inventoryPets.length;
     
+    const autoRollContainer = document.getElementById('em-autoroll-container');
     if (autoRollContainer) {
         if (state.diamondUpgradesPurchased['auto_roll'] > 0) {
             const isActive = state.autoRollActive && state.autoRollEggId === egg.id;
+            
             autoRollContainer.innerHTML = `
                 <div style="margin-top:10px; border-top: 1px solid rgba(255,255,255,0.1); padding-top:15px; width: 100%;">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -1009,9 +1010,14 @@ export function updateEggModalControls() {
                     state.autoRollActive = false;
                     state.autoRollEggId = null;
                 } else {
+                    if (spaceLeft <= 0) {
+                        showQuote("Tu n'as pas de place pour lancer l'Auto-Roll !");
+                        return;
+                    }
                     state.autoRollActive = true;
                     state.autoRollEggId = egg.id;
-                    showQuote(`🎰 Auto-Roll activé ! (Vérifie d'avoir de l'espace ou l'Auto-Vente)`);
+                    let safeQty = Math.min(qty, spaceLeft);
+                    showQuote(`🎰 Auto-Roll activé ! (Quantité : x${safeQty})`);
                 }
                 updateEggModalControls(); 
             };
@@ -1020,18 +1026,15 @@ export function updateEggModalControls() {
         }
     }
 
-    const totalCost = core.getEggTotalCost(egg, qty, isDiamond);
+    // SECURITE D'AFFICHAGE : On ne permet JAMAIS d'acheter plus que la place dispo !
+    let actualQty = Math.min(qty, spaceLeft);
+    if (actualQty < 0) actualQty = 0;
+
+    const totalCost = core.getEggTotalCost(egg, actualQty, isDiamond);
     const canAfford = isDiamond ? state.diamonds >= totalCost : state.calories >= totalCost;
-    const maxInv = core.getMaxInventory();
-    const spaceLeft = maxInv - state.inventoryPets.length;
     
-    if (!isAutoSellUnlocked && spaceLeft <= 0) {
+    if (spaceLeft <= 0) {
         buyBtn.textContent = "Inventaire Plein !";
-        buyBtn.className = "btn-buy-max";
-        buyBtn.style.opacity = "0.5";
-        buyBtn.disabled = true;
-    } else if (!isAutoSellUnlocked && qty > spaceLeft) {
-        buyBtn.textContent = `Plus que ${spaceLeft} place(s)`;
         buyBtn.className = "btn-buy-max";
         buyBtn.style.opacity = "0.5";
         buyBtn.disabled = true;
@@ -1041,7 +1044,7 @@ export function updateEggModalControls() {
         buyBtn.style.opacity = "0.5";
         buyBtn.disabled = true;
     } else {
-        buyBtn.innerHTML = `Acheter <span style="font-size:0.8em; margin-left:5px;">(${core.formatNumber(totalCost)} ${isDiamond ? '💎' : 'cal'})</span>`;
+        buyBtn.innerHTML = `Acheter ${actualQty < qty ? 'x'+actualQty : ''} <span style="font-size:0.8em; margin-left:5px;">(${core.formatNumber(totalCost)} ${isDiamond ? '💎' : 'cal'})</span>`;
         buyBtn.className = "btn-buy-max max-ready";
         buyBtn.style.opacity = "1";
         buyBtn.disabled = false;
