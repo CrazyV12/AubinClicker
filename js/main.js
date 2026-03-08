@@ -48,8 +48,6 @@ function gameLoop(now) {
         
         const u = core.getCurrentUniverse();
         const classBonusLvl = state.diamondUpgradesPurchased['diamond_class'] || 0;
-        
-        // LE NOUVEAU CALCUL EXPONENTIEL (x2 à chaque niveau de classe !)
         const totalDiamonds = Math.floor(u.diamondRate * Math.pow(2, classBonusLvl)) * cycles;
         
         state.diamonds += totalDiamonds;
@@ -105,6 +103,15 @@ function init() {
     addEv('btn-delete-selected', core.sellSelectedPets);
     addEv('btn-sort-inventory', () => core.toggleSortInventory(false));
     addEv('btn-auto-fuse', core.autoFusePets);
+
+    // NOUVEAU BOUTON : Désactivation flottante de l'Auto-Roll
+    addEv('autoroll-indicator-btn', () => {
+        state.autoRollActive = false;
+        state.autoRollEggId = null;
+        ui.updateAutoRollUI();
+        if (typeof ui.updateEggModalControls === 'function') ui.updateEggModalControls();
+        ui.showQuote("🎰 Auto-Roll désactivé.");
+    });
 
     const codeSubmit = document.getElementById('code-submit');
     const codeInput = document.getElementById('code-input');

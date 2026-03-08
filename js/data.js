@@ -29,8 +29,8 @@ export const DIAMOND_UPGRADES = [
 ];
 
 const BASE_DIAMOND_EGGS = [
-    { id: 'egg_crystal', name: 'Œuf de Cristal', icon: '🔮', cost: 500, pool: [{ id: 'dragon', weight: 80 }, { id: 'licorne', weight: 20 }] },
-    { id: 'egg_void', name: 'Œuf du Néant', icon: '🕳️', cost: 5000, pool: [{ id: 'licorne', weight: 100 }] }
+    { id: 'egg_crystal', name: 'Œuf de Cristal', icon: '🔮', cost: 10000, pool: [{ id: 'dragon', weight: 80 }, { id: 'licorne', weight: 20 }] },
+    { id: 'egg_void', name: 'Œuf du Néant', icon: '🕳️', cost: 250000, pool: [{ id: 'licorne', weight: 100 }] }
 ];
 
 const BASE_PETS = [
@@ -96,14 +96,13 @@ export function updateDynamicContent(ascensionCount) {
     const licorneId = ascensionCount === 0 ? 'licorne' : `licorne${maxTier}`;
 
     DIAMOND_EGGS.push(
-        { id: 'egg_crystal', name: 'Œuf de Cristal', icon: '🔮', cost: 500, pool: [{ id: dragonId, weight: 80 }, { id: licorneId, weight: 20 }] },
-        { id: 'egg_void', name: 'Œuf du Néant', icon: '🕳️', cost: 5000, pool: [{ id: licorneId, weight: 100 }] }
+        { id: 'egg_crystal', name: 'Œuf de Cristal', icon: '🔮', cost: 10000, pool: [{ id: dragonId, weight: 80 }, { id: licorneId, weight: 20 }] },
+        { id: 'egg_void', name: 'Œuf du Néant', icon: '🕳️', cost: 250000, pool: [{ id: licorneId, weight: 100 }] }
     );
 }
 
 export const BUILDINGS = [
-    // NOUVEAU : baseMax passe à Infinity et costScale à 1.04 !
-    { id: 'puff', name: 'Puff 16k', icon: '💨', desc: 'Un curseur en forme de Puff qui clique automatiquement sur Aubin', baseCost: 15, baseCps: 0.5, count: 0, minRebirth: 0, baseMax: Infinity, costScale: 1.05 },
+    { id: 'puff', name: 'Puff 16k', icon: '💨', desc: 'Un curseur en forme de Puff qui clique automatiquement sur Aubin', baseCost: 15, baseCps: 0.5, count: 0, minRebirth: 0, baseMax: Infinity, costScale: 1.001 },
     { id: 'frite', name: 'Barquette de Frites', icon: '🍟', desc: 'Une bonne grosse barquette bien grasse', baseCost: 100, baseCps: 3, count: 0, minRebirth: 0, baseMax: 50, costScale: 1.12 },
     { id: 'burger', name: 'Burger Double', icon: '🍔', desc: 'Double steak, double cheese, double Aubin', baseCost: 500, baseCps: 15, count: 0, minRebirth: 0, baseMax: 50, costScale: 1.14 },
     { id: 'kebab', name: 'Kebab Ketchup', icon: '🥙', desc: 'Kebab au ketchup', baseCost: 2000, baseCps: 50, count: 0, minRebirth: 1, baseMax: 50, costScale: 1.15 },

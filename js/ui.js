@@ -238,6 +238,25 @@ function updateDiamondShopLive() {
     }
 }
 
+// NOUVEAU : Fonction pour mettre à jour l'indicateur Auto-Roll flottant
+export function updateAutoRollUI() {
+    const indicator = document.getElementById('autoroll-indicator');
+    const nameEl = document.getElementById('autoroll-indicator-name');
+    if (!indicator || !nameEl) return;
+
+    if (state.autoRollActive && state.autoRollEggId) {
+        let egg = data.EGGS.find(e => e.id === state.autoRollEggId) || data.DIAMOND_EGGS.find(e => e.id === state.autoRollEggId);
+        if (egg) {
+            nameEl.textContent = `${egg.icon} ${egg.name}`;
+            indicator.style.display = 'flex'; // On l'affiche
+        } else {
+            indicator.style.display = 'none';
+        }
+    } else {
+        indicator.style.display = 'none'; // On le cache
+    }
+}
+
 export function updateDisplay() {
     const el = (id) => document.getElementById(id);
     if(el('calorie-count')) el('calorie-count').textContent = core.formatNumber(state.calories);
@@ -392,6 +411,7 @@ export function updateDisplay() {
     }
 
     updateDiamondShopLive();
+    updateAutoRollUI(); // On met à jour l'indicateur à chaque frame
 }
 
 export function renderBuildings() {
@@ -1020,13 +1040,13 @@ export function updateEggModalControls() {
                     showQuote(`🎰 Auto-Roll activé ! (Quantité : x${safeQty})`);
                 }
                 updateEggModalControls(); 
+                updateAutoRollUI(); // Actualise aussi l'interface flottante
             };
         } else {
             autoRollContainer.innerHTML = '';
         }
     }
 
-    // SECURITE D'AFFICHAGE : On ne permet JAMAIS d'acheter plus que la place dispo !
     let actualQty = Math.min(qty, spaceLeft);
     if (actualQty < 0) actualQty = 0;
 

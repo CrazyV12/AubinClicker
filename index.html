@@ -8,13 +8,19 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=1.7.1">
+    <link rel="stylesheet" href="style.css?v=1.7">
 </head>
 <body class="theme-classic">
     <div id="particles"></div>
 
     <div id="universe-display" class="glass-panel" style="position:fixed; top:20px; left:20px; z-index:100; display:flex; gap:10px; align-items:center; padding: 0.5rem 1rem;">
         🌍 <span id="universe-name" style="font-weight:bold;">Monde Classique</span>
+    </div>
+
+    <div id="autoroll-indicator" class="glass-panel" style="position:fixed; top:80px; left:20px; z-index:100; display:none; flex-direction:column; gap:5px; align-items:center; padding: 0.5rem 1rem; border-color: rgba(255, 201, 71, 0.5); box-shadow: 0 0 15px rgba(255, 201, 71, 0.2);">
+        <div style="font-size: 0.8rem; font-weight: bold; color: var(--accent-secondary);">🎰 Auto-Roll Actif</div>
+        <div id="autoroll-indicator-name" style="font-size: 0.85rem; color: var(--text-primary); font-weight: bold;"></div>
+        <button id="autoroll-indicator-btn" class="btn btn-sell" style="padding: 4px 10px; font-size: 0.7rem; margin-top: 2px;">Désactiver</button>
     </div>
 
     <div id="diamond-container" class="glass-panel diamond-ui">
@@ -224,7 +230,7 @@
                         <div id="auto-sell-settings-container" class="glass-panel-inner" style="width: 100%; margin-bottom: 20px;">
                             <h3 style="margin-bottom: 15px; color: var(--accent-secondary); text-align: center;">🤖 Auto-Vente Pets</h3>
                             <div id="auto-sell-controls" style="display:flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
-                                </div>
+                            </div>
                             <p id="auto-sell-locked-msg" style="color: var(--danger); font-size: 0.8rem; margin-top: 15px; text-align: center;">🔒 Achetez l'Auto-Vente au Marché Noir !</p>
                         </div>
 
@@ -288,6 +294,6 @@
         </div>
     </div>
 
-    <script type="module" src="js/main.js?v=1.7.1"></script>
+    <script type="module" src="js/main.js?v=1.7"></script>
 </body>
 </html>
