@@ -233,6 +233,35 @@
                             </div>
                             <p id="auto-sell-locked-msg" style="color: var(--danger); font-size: 0.8rem; margin-top: 15px; text-align: center;">🔒 Achetez l'Auto-Vente au Marché Noir !</p>
                         </div>
+                        
+                        </div>
+
+                        <div id="cloud-settings-container" class="glass-panel-inner" style="width: 100%; margin-bottom: 20px;">
+                            <h3 style="margin-bottom: 15px; color: var(--info); text-align: center;">☁️ Sauvegarde en Ligne</h3>
+                            
+                            <div id="cloud-unauth-ui">
+                                <input type="email" id="cloud-email" placeholder="Email" class="cloud-input">
+                                <input type="password" id="cloud-password" placeholder="Mot de passe" class="cloud-input">
+                                <div style="display:flex; gap:10px; margin-top:10px;">
+                                    <button id="btn-cloud-login" class="btn btn-save" style="flex:1;">Connexion</button>
+                                    <button id="btn-cloud-register" class="btn" style="flex:1;">Créer Compte</button>
+                                </div>
+                                <button id="btn-cloud-google" class="btn" style="width:100%; margin-top:10px; background: white; color: #333; font-weight: bold; border: none; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.2s;">
+                                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" style="width: 18px; height: 18px;">
+                                    Continuer avec Google
+                                </button>
+                                <p id="cloud-auth-msg" style="color:var(--danger); font-size:0.8rem; margin-top:10px; text-align:center; min-height: 14px;"></p>
+                            </div>
+
+                            <div id="cloud-auth-ui" style="display:none; flex-direction:column; align-items:center; gap:10px;">
+                                <p style="font-size:0.85rem; color:var(--success);">Connecté : <span id="cloud-user-email" style="font-weight:bold;"></span></p>
+                                <div style="display:flex; gap:10px; width:100%;">
+                                    <button id="btn-cloud-force-save" class="btn btn-save" style="flex:1;">⬆️ Envoyer</button>
+                                    <button id="btn-cloud-force-load" class="btn btn-save" style="flex:1;">⬇️ Récupérer</button>
+                                </div>
+                                <button id="btn-cloud-logout" class="btn btn-reset" style="width:100%; margin-top:5px;">Déconnexion</button>
+                            </div>
+                        </div>                       
 
                         <p class="settings-intro">Gère ta sauvegarde ici.</p>
                         <button id="reset-btn" class="btn btn-reset">🗑️ Reset Sauvegarde</button>

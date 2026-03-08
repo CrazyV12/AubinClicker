@@ -2,6 +2,7 @@ import { state } from './state.js';
 import * as data from './data.js';
 import * as core from './core.js';
 import * as ui from './ui.js';
+import * as cloud from './cloud.js';
 
 function initShopTabs() {
     const tabs = document.querySelectorAll('.shop-tab');
@@ -103,6 +104,42 @@ function init() {
     addEv('btn-delete-selected', core.sellSelectedPets);
     addEv('btn-sort-inventory', () => core.toggleSortInventory(false));
     addEv('btn-auto-fuse', core.autoFusePets);
+
+    // INITIALISATION DU CLOUD
+    cloud.initAuth((user) => {
+        ui.updateCloudUI(user);
+    });
+
+    const emailEl = document.getElementById('cloud-email');
+    const passEl = document.getElementById('cloud-password');
+    const msgEl = document.getElementById('cloud-auth-msg');
+
+    addEv('btn-cloud-register', async () => {
+        if(!emailEl.value || !passEl.value) return;
+        msgEl.style.color = "var(--text-secondary)";
+        msgEl.textContent = "Création du compte...";
+        const res = await cloud.register(emailEl.value, passEl.value);
+        if(!res.success) { msgEl.style.color = "var(--danger)"; msgEl.textContent = res.message; }
+    });
+
+    addEv('btn-cloud-login', async () => {
+        if(!emailEl.value || !passEl.value) return;
+        msgEl.style.color = "var(--text-secondary)";
+        msgEl.textContent = "Connexion...";
+        const res = await cloud.login(emailEl.value, passEl.value);
+        if(!res.success) { msgEl.style.color = "var(--danger)"; msgEl.textContent = res.message; }
+    });
+
+    addEv('btn-cloud-google', async () => {
+        msgEl.style.color = "var(--text-secondary)";
+        msgEl.textContent = "Ouverture de Google...";
+        const res = await cloud.loginWithGoogle();
+        if(!res.success) { msgEl.style.color = "var(--danger)"; msgEl.textContent = res.message; }
+    });
+    
+    addEv('btn-cloud-logout', cloud.logout);
+    addEv('btn-cloud-force-save', () => core.saveGame(true));
+    addEv('btn-cloud-force-load', core.loadFromCloud);
 
     // NOUVEAU BOUTON : Désactivation flottante de l'Auto-Roll
     addEv('autoroll-indicator-btn', () => {

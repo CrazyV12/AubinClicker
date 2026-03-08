@@ -1422,3 +1422,25 @@ function _playSimultaneousOpen(egg, petsArray, callback) {
         };
     }, 900);
 }
+
+// ============ CLOUD UI ============
+export function updateCloudUI(user) {
+    const unauthUI = document.getElementById('cloud-unauth-ui');
+    const authUI = document.getElementById('cloud-auth-ui');
+    const emailDisplay = document.getElementById('cloud-user-email');
+    const msg = document.getElementById('cloud-auth-msg');
+    
+    if (!unauthUI || !authUI) return;
+
+    if (user) {
+        unauthUI.style.display = 'none';
+        authUI.style.display = 'flex';
+        if(emailDisplay) emailDisplay.textContent = user.email;
+    } else {
+        unauthUI.style.display = 'block';
+        authUI.style.display = 'none';
+        document.getElementById('cloud-email').value = '';
+        document.getElementById('cloud-password').value = '';
+        if(msg) msg.textContent = '';
+    }
+}

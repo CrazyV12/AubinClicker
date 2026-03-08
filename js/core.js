@@ -1,6 +1,7 @@
 import { state } from './state.js';
 import * as data from './data.js';
 import * as ui from './ui.js';
+import * as cloud from './cloud.js';
 
 // ============ UTILS ============
 export function formatNumber(n) {
@@ -948,7 +949,10 @@ export function redeemCode(inputRaw) {
 }
 
 // ============ SAVE/LOAD ============
-export function saveGame() {
+export function saveGame(e) {
+    // Si appelé par un clic manuel (event) ou true
+    const isManual = (e === true || (e && e.type === 'click'));
+    
     const saveData = {
         calories: state.calories, totalCalories: state.totalCalories, totalClicks: state.totalClicks,
         startTime: state.startTime, milestonesReached: state.milestonesReached,
@@ -967,7 +971,30 @@ export function saveGame() {
     };
     
     localStorage.setItem('aubinclicker_save_v5', JSON.stringify(saveData));
-    ui.showQuote("💾 Partie sauvegardée !");
+    if (isManual) ui.showQuote("💾 Partie locale sauvegardée !");
+    
+    // NOUVEAU : Sauvegarde automatique en ligne (silencieuse)
+    if (cloud.currentUser) {
+        cloud.saveGameData(saveData).then(success => {
+            if (isManual && success) ui.showQuote("☁️ Cloud mis à jour !");
+        });
+    }
+}
+
+// NOUVEAU : Fonction pour forcer le chargement depuis le Cloud
+export async function loadFromCloud() {
+    ui.showQuote("☁️ Téléchargement en cours...");
+    const data = await cloud.loadGameData();
+    if (data) {
+        localStorage.setItem('aubinclicker_save_v5', JSON.stringify(data));
+        loadGame(); // On recharge les variables
+        recalculateCps();
+        ui.renderAll();
+        ui.showMilestone("☁️ Progression récupérée avec succès !");
+        ui.showQuote("Te revoilà !");
+    } else {
+        ui.showQuote("❌ Aucune sauvegarde trouvée sur ce compte.");
+    }
 }
 
 export function loadGame() {
