@@ -179,6 +179,18 @@
                     </div>
                 </div>
                 
+                <div id="leaderboard-list" class="shop-content">
+                    <div class="ascension-section">
+                        <p class="ascension-intro" style="color: var(--accent-secondary); font-weight: bold;">Top 50 des plus gros mangeurs de l'univers !</p>
+                        <div style="display:flex; justify-content:center; margin-bottom: 15px;">
+                            <button id="btn-refresh-leaderboard" class="btn btn-save" style="font-size:0.8rem;">🔄 Rafraîchir le classement</button>
+                        </div>
+                        <div id="leaderboard-container" style="display:flex; flex-direction:column; gap:8px;">
+                            <div style="text-align:center; color:var(--text-muted);">Clique sur rafraîchir...</div>
+                        </div>
+                    </div>
+                </div>
+
                 <div id="ascension-list" class="shop-content">
                     <div id="ascension-section">
                         <p class="ascension-intro">Améliorations permanentes avec tes Points d'Ascension !</p>
@@ -254,6 +266,12 @@
 
                             <div id="cloud-auth-ui" style="display:none; flex-direction:column; align-items:center; gap:10px;">
                                 <p style="font-size:0.85rem; color:var(--success);">Connecté : <span id="cloud-user-email" style="font-weight:bold;"></span></p>
+                                
+                                <div style="width:100%; display:flex; gap:5px; margin-bottom:5px;">
+                                    <input type="text" id="player-username" placeholder="Choisis ton Pseudo..." class="cloud-input" style="margin-bottom:0; flex:2;" maxlength="15">
+                                    <button id="btn-save-username" class="btn btn-save" style="flex:1;">Valider</button>
+                                </div>
+
                                 <p style="font-size:0.75rem; color:var(--text-muted);">🔄 Sauvegarde auto. en temps réel</p>
                                 <button id="btn-cloud-logout" class="btn btn-reset" style="width:100%; margin-top:5px;">Déconnexion</button>
                             </div>
@@ -273,6 +291,7 @@
                 <button class="shop-tab" data-tab="inventory" id="inventory-tab" style="display:none;" data-title="🎒 Inventaire Pets" title="Inventaire">🎒</button>
                 <button class="shop-tab" data-tab="index" id="index-tab" style="display:none;" data-title="📖 Index Pets" title="Index">📖</button>
                 <button class="shop-tab" data-tab="ascension" id="ascension-tab" style="display:none;" data-title="✨ Ascension" title="Ascension">✨</button>
+                <button class="shop-tab" data-tab="leaderboard" data-title="🏆 Classement" title="Classement">🏆</button>
                 <button class="shop-tab" data-tab="diamonds" id="diamonds-tab" style="display:none;" data-title="💎 Marché Noir" title="Marché Noir">💎</button>
                 <button class="shop-tab" data-tab="codes" id="codes-tab" style="display:none;" data-title="🔑 Codes" title="Codes">🔑</button>
                 <button class="shop-tab" data-tab="settings" data-title="⚙️ Paramètres & Stats" title="Paramètres">⚙️</button>

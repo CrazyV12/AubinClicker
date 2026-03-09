@@ -965,8 +965,10 @@ export function saveGame() {
         sortOrder: state.sortOrder, completedQuests: state.completedQuests,
         activeQuests: state.activeQuests, lastQuestTypes: state.lastQuestTypes,
         stats: state.stats, savedAt: Date.now(),
+        username: state.username, // NOUVEAU
         diamonds: state.diamonds, diamondProgress: state.diamondProgress, diamondUpgradesPurchased: state.diamondUpgradesPurchased,
         autoSellConfig: state.autoSellConfig, autoRollActive: state.autoRollActive, autoRollEggId: state.autoRollEggId
+        
     };
     
     // Sauvegarde Locale (silencieuse)
@@ -1037,6 +1039,7 @@ export function loadGame() {
         state.sortOrder = d.sortOrder || 'desc';
         state.completedQuests = d.completedQuests || []; state.activeQuests = d.activeQuests || [];
         state.lastQuestTypes = d.lastQuestTypes || []; state.stats = d.stats || { eggsOpened: 0, petsFused: 0, petsSold: 0, timePlayed: 0 };
+        state.username = d.username || ""; // NOUVEAU
         state.equippedPets = d.equippedPets || []; state.inventoryPets = d.inventoryPets || []; state.discoveredPets = d.discoveredPets || [];
         
         state.diamonds = d.diamonds || 0; state.diamondProgress = d.diamondProgress || 0; state.diamondUpgradesPurchased = d.diamondUpgradesPurchased || {};

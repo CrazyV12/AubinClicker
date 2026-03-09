@@ -39,5 +39,7 @@ export let state = {
     // NOUVELLES VARIABLES AUTO
     autoSellConfig: { common: false, rare: false, epic: false, legendary: false, mythic: false },
     autoRollActive: false,
-    autoRollEggId: null
+    autoRollEggId: null,
+
+    username: "" // NOUVEAU : Pour le classement
 };

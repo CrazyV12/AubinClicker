@@ -69,6 +69,9 @@ export function updateDiamondUI() {
             dt.textContent = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
         }
     }
+
+    // NOUVEAU : Rafraîchit le bouton de pseudo en temps réel avec les diamants
+    updateUsernameBtnUI();
 }
 
 export function renderDiamondShop() {
@@ -1421,12 +1424,43 @@ function _playSimultaneousOpen(egg, petsArray, callback) {
     }, 900);
 }
 
-// ============ CLOUD UI ============
+// ============ CLOUD UI & PSEUDO ============
+export function updateUsernameBtnUI() {
+    const btnPseudo = document.getElementById('btn-save-username');
+    if (!btnPseudo) return;
+    
+    btnPseudo.style.lineHeight = "1.1";
+    const cost = 1000000; // 1 Million
+
+    if (state.username && state.username.trim() !== "") {
+        // Déjà un pseudo -> Changement Payant
+        btnPseudo.innerHTML = "Changer<br><small style='font-size:0.6rem;font-weight:normal;'>(1M 💎)</small>";
+        if (state.diamonds >= cost) {
+            // Peut payer -> Vert (Transparent)
+            btnPseudo.style.background = "rgba(74, 222, 128, 0.15)";
+            btnPseudo.style.color = "var(--success)";
+            btnPseudo.style.borderColor = "var(--success)";
+        } else {
+            // Ne peut pas payer -> Rouge
+            btnPseudo.style.background = "rgba(244, 63, 94, 0.1)"; 
+            btnPseudo.style.color = "var(--danger)";
+            btnPseudo.style.borderColor = "var(--danger)";
+        }
+    } else {
+        // Première fois -> Gratuit -> Vert (Plein)
+        btnPseudo.innerHTML = "Valider<br><small style='font-size:0.6rem;font-weight:normal;'>(Gratuit)</small>";
+        btnPseudo.style.background = "var(--success)";
+        btnPseudo.style.color = "#0d0d0d";
+        btnPseudo.style.borderColor = "var(--success)";
+    }
+}
+
 export function updateCloudUI(user) {
     const unauthUI = document.getElementById('cloud-unauth-ui');
     const authUI = document.getElementById('cloud-auth-ui');
     const emailDisplay = document.getElementById('cloud-user-email');
     const msg = document.getElementById('cloud-auth-msg');
+    const inputPseudo = document.getElementById('player-username');
     
     if (!unauthUI || !authUI) return;
 
@@ -1434,6 +1468,11 @@ export function updateCloudUI(user) {
         unauthUI.style.display = 'none';
         authUI.style.display = 'flex';
         if(emailDisplay) emailDisplay.textContent = user.email;
+        
+        if (inputPseudo) inputPseudo.value = state.username || "";
+        
+        // On met à jour l'apparence du bouton au chargement
+        updateUsernameBtnUI();
     } else {
         unauthUI.style.display = 'block';
         authUI.style.display = 'none';
@@ -1457,4 +1496,39 @@ export function resetToMainTab() {
     
     const panelTitle = document.getElementById('panel-title');
     if (panelTitle) panelTitle.textContent = "🏗️ Bâtiments";
+}
+
+export function renderLeaderboard(boardData) {
+    const container = document.getElementById('leaderboard-container');
+    if (!container) return;
+    container.innerHTML = '';
+    if (!boardData || boardData.length === 0) {
+        container.innerHTML = '<div style="text-align:center; color:var(--text-muted);">Aucun joueur classé pour le moment.</div>';
+        return;
+    }
+    boardData.forEach((p, index) => {
+        const el = document.createElement('div');
+        el.className = 'glass-panel-inner';
+        el.style.display = 'flex';
+        el.style.justifyContent = 'space-between';
+        el.style.alignItems = 'center';
+        el.style.padding = '10px';
+        
+        let rankStr = `#${index + 1}`;
+        if (index === 0) rankStr = '🥇';
+        if (index === 1) rankStr = '🥈';
+        if (index === 2) rankStr = '🥉';
+
+        el.innerHTML = `
+            <div style="display:flex; align-items:center; gap:10px;">
+                <span style="font-size:1.2rem; font-weight:bold; min-width:35px; text-align:center; color:var(--accent-secondary);">${rankStr}</span>
+                <span style="font-weight:bold; color:var(--text-primary); font-size:1.1rem;">${p.username}</span>
+            </div>
+            <div style="text-align:right; font-size:0.85rem; color:var(--text-secondary);">
+                <div style="color:var(--accent-secondary); font-weight:bold;">✨ ${p.ascension} &nbsp;|&nbsp; 🔄 ${p.rebirth}</div>
+                <div>🍔 ${core.formatNumber(p.calories)} cal</div>
+            </div>
+        `;
+        container.appendChild(el);
+    });
 }

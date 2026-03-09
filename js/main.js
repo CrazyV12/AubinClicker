@@ -24,6 +24,11 @@ function initShopTabs() {
                 if(panelTitle) panelTitle.textContent = tab.dataset.title;
                 const targetEl = document.getElementById(`${tab.dataset.tab}-list`);
                 if (targetEl) targetEl.classList.add('active');
+                if (tab.dataset.tab === 'leaderboard') {
+                    const container = document.getElementById('leaderboard-container');
+                    if(container) container.innerHTML = '<div style="text-align:center; color:var(--text-muted);">Chargement du classement...</div>';
+                    cloud.getLeaderboard().then(board => ui.renderLeaderboard(board));
+                }
                 if(shopPanel) shopPanel.style.display = 'flex';
             }
         });
@@ -153,6 +158,78 @@ function init() {
     addEv('btn-cloud-logout', async () => {
         await cloud.logout();
         core.logoutReset();
+    });
+
+    addEv('btn-save-username', async () => {
+        const input = document.getElementById('player-username');
+        if (!input) return;
+        const newName = input.value.trim().substring(0, 15); // Limite à 15 caractères
+        
+        if (newName.length < 3) {
+            ui.showQuote("❌ Ton pseudo doit faire au moins 3 caractères !");
+            return;
+        }
+
+        if (state.username && newName.toLowerCase() === state.username.toLowerCase()) {
+            ui.showQuote("⚠️ C'est déjà ton pseudo !");
+            return;
+        }
+
+        // Filtre anti-insultes (Tu peux rajouter des mots dans ce tableau)
+        const forbidden = ['admin', 'modérateur', 'conard', 'connard', 'pute', 'salope', 'bitch', 'fuck', 'shit', 'merde', 'hitler', 'nazi', 'pd', 'encule', 'enculé', 'salaud', 'bite', 'chatte', 'couille', 'porn', 'sex'];
+        const lowerName = newName.toLowerCase();
+        const isBad = forbidden.some(word => lowerName.includes(word));
+        if (isBad) {
+            ui.showQuote("🛑 Ce pseudo est interdit. Aubin est un jeu tout public !");
+            return;
+        }
+
+        const isChange = (state.username && state.username.trim() !== "");
+        const cost = 1000000;
+
+        // Vérification de l'argent AVANT l'appel réseau
+        if (isChange) {
+            if (state.diamonds < cost) {
+                ui.showQuote(`💎 Tu n'as pas assez de diamants (${core.formatNumber(cost)} requis) !`);
+                return;
+            }
+            if(!confirm(`Changer de pseudo te coûtera ${core.formatNumber(cost)} 💎.\nEs-tu sûr de vouloir t'appeler "${newName}" ?`)) return;
+        }
+
+        // Feedback visuel pendant la vérification réseau
+        const btn = document.getElementById('btn-save-username');
+        const oldHtml = btn.innerHTML;
+        btn.innerHTML = "⏳...";
+        btn.disabled = true;
+
+        // On interroge Firebase pour voir si le pseudo existe déjà
+        const isAvailable = await cloud.checkUsernameAvailability(newName);
+        
+        btn.innerHTML = oldHtml;
+        btn.disabled = false;
+
+        if (!isAvailable) {
+            ui.showQuote("❌ Ce pseudo est déjà pris par un autre joueur !");
+            return;
+        }
+
+        // Tout est bon, on facture si besoin et on sauvegarde !
+        if (isChange) {
+            state.diamonds -= cost;
+            ui.updateDiamondUI();
+        }
+        
+        state.username = newName;
+        core.saveGame(true); // Sauvegarde locale + Cloud immédiate
+        ui.showMilestone(`✅ Nouveau pseudo : ${state.username} !`);
+        ui.updateCloudUI(cloud.currentUser); // Met le bouton en mode "Payant"
+    });
+
+    addEv('btn-refresh-leaderboard', async () => {
+        const container = document.getElementById('leaderboard-container');
+        if(container) container.innerHTML = '<div style="text-align:center; color:var(--text-muted);">Chargement du classement...</div>';
+        const board = await cloud.getLeaderboard();
+        ui.renderLeaderboard(board);
     });
 
     // Désactivation flottante de l'Auto-Roll
