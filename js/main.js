@@ -105,11 +105,21 @@ function init() {
     addEv('btn-sort-inventory', () => core.toggleSortInventory(false));
     addEv('btn-auto-fuse', core.autoFusePets);
 
-    // INITIALISATION DU CLOUD (Invisible et Intelligente)
+// INITIALISATION DU CLOUD (Invisible et Intelligente)
     cloud.initAuth(async (user) => {
         ui.updateCloudUI(user);
         if (user) {
             await core.syncWithCloud();
+            
+            // NOUVEAU : On lance la surveillance anti-clonage en temps réel
+            cloud.startSessionListener(async () => {
+                // Cette fonction s'exécute si un autre appareil/onglet se connecte !
+                window.alert("⚠️ Vous avez été déconnecté car ce compte vient d'être ouvert sur un autre appareil !");
+                await cloud.logout();
+                core.logoutReset(); // Remise à zéro locale immédiate
+            });
+        } else {
+            cloud.stopSessionListener();
         }
     });
 

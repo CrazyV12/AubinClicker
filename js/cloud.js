@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDDck1SfvZ2MbNKL3TX1WpMpZ7xi0yD-Js",
@@ -18,7 +18,11 @@ const db = getFirestore(app);
 const googleProvider = new GoogleAuthProvider();
 
 export let currentUser = null;
-export let isManualLogin = false; // Permet de savoir si on vient de cliquer sur "Connexion"
+export let isManualLogin = false; 
+
+// NOUVEAU : Badge unique pour cet appareil/onglet
+const localSessionId = Date.now().toString() + "_" + Math.random().toString(36).substring(2);
+let unsubSnapshot = null;
 
 export function setManualLogin(val) { isManualLogin = val; }
 
@@ -64,6 +68,7 @@ export async function loginWithGoogle() {
 }
 
 export async function logout() {
+    stopSessionListener();
     await signOut(auth);
     currentUser = null;
 }
@@ -74,7 +79,8 @@ export async function saveGameData(saveData) {
     try {
         await setDoc(doc(db, "saves", currentUser.uid), {
             data: JSON.stringify(saveData),
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            sessionId: localSessionId // <-- On dépose notre badge
         });
         return true;
     } catch (e) {
@@ -109,5 +115,29 @@ function translateFirebaseError(code) {
         case 'auth/invalid-credential': return "Email ou mot de passe incorrect.";
         case 'auth/popup-closed-by-user': return "Connexion Google annulée.";
         default: return "Une erreur est survenue (" + code + ").";
+    }
+}
+
+// ============ ANTI-CLONAGE & MULTI-COMPTES ============
+export function startSessionListener(onConflict) {
+    if (!currentUser) return;
+    if (unsubSnapshot) unsubSnapshot(); // Nettoie si déjà existant
+
+    // onSnapshot écoute la BDD en temps réel (réactivité < 1 seconde)
+    unsubSnapshot = onSnapshot(doc(db, "saves", currentUser.uid), (docSnap) => {
+        if (docSnap.exists()) {
+            const cloudSessionId = docSnap.data().sessionId;
+            // Si l'ID sur le cloud est différent du nôtre, un autre appareil a pris le contrôle !
+            if (cloudSessionId && cloudSessionId !== localSessionId) {
+                onConflict();
+            }
+        }
+    });
+}
+
+export function stopSessionListener() {
+    if (unsubSnapshot) {
+        unsubSnapshot();
+        unsubSnapshot = null;
     }
 }

@@ -974,38 +974,37 @@ export async function syncWithCloud() {
     const cloudData = await cloud.loadGameData();
     
     if (cloudData) {
-        // Si ce n'est PAS une connexion manuelle (ex: F5 de la page), on compare les dates pour ne rien perdre
         if (!cloud.isManualLogin) {
             const localRaw = localStorage.getItem('aubinclicker_save_v5');
             if (localRaw) {
                 try {
                     const localData = JSON.parse(localRaw);
                     if (localData.savedAt && localData.savedAt > cloudData.savedAt) {
-                        saveGame(); // La save locale est plus récente : on l'envoie au cloud
+                        saveGame(); 
                         return;
                     }
                 } catch(e) {}
             }
         }
         
-        // Si c'est une connexion manuelle OU que le Cloud est plus récent : On écrase la sauvegarde locale
         localStorage.setItem('aubinclicker_save_v5', JSON.stringify(cloudData));
         
-        // On recharge tout de A à Z
         loadGame(); 
-        ui.applyUniverseTheme(); // <-- CORRECTION DU MONDE ICI
+        ui.applyUniverseTheme();
         recalculateCps();
-        ui.resetToMainTab();     // <-- SÉCURITÉ : On remet sur l'onglet de base
+        ui.resetToMainTab();     
         ui.renderAll();
         
         ui.showMilestone("☁️ Compte synchronisé avec succès !");
         ui.showQuote("Te revoilà !");
+        
+        // NOUVEAU : On force une sauvegarde immédiate pour "voler" le contrôle de la session
+        saveGame();
     } else {
-        // Nouveau compte cloud : On envoie la progression locale actuelle dessus
         saveGame();
     }
     
-    cloud.setManualLogin(false); // Reset de la sécurité
+    cloud.setManualLogin(false);
 }
 
 
