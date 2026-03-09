@@ -95,7 +95,7 @@ function init() {
     }
 
     const addEv = (id, fn) => { const el = document.getElementById(id); if(el) el.addEventListener('click', fn); };
-    addEv('save-btn', core.saveGame);
+    
     addEv('reset-btn', core.resetGame);
     addEv('rebirth-btn', core.doRebirth);
     addEv('ascension-btn', core.doAscension);
@@ -105,9 +105,12 @@ function init() {
     addEv('btn-sort-inventory', () => core.toggleSortInventory(false));
     addEv('btn-auto-fuse', core.autoFusePets);
 
-    // INITIALISATION DU CLOUD
-    cloud.initAuth((user) => {
+    // INITIALISATION DU CLOUD (Invisible et Intelligente)
+    cloud.initAuth(async (user) => {
         ui.updateCloudUI(user);
+        if (user) {
+            await core.syncWithCloud();
+        }
     });
 
     const emailEl = document.getElementById('cloud-email');
@@ -137,11 +140,12 @@ function init() {
         if(!res.success) { msgEl.style.color = "var(--danger)"; msgEl.textContent = res.message; }
     });
     
-    addEv('btn-cloud-logout', cloud.logout);
-    addEv('btn-cloud-force-save', () => core.saveGame(true));
-    addEv('btn-cloud-force-load', core.loadFromCloud);
+    addEv('btn-cloud-logout', async () => {
+        await cloud.logout();
+        core.logoutReset();
+    });
 
-    // NOUVEAU BOUTON : Désactivation flottante de l'Auto-Roll
+    // Désactivation flottante de l'Auto-Roll
     addEv('autoroll-indicator-btn', () => {
         state.autoRollActive = false;
         state.autoRollEggId = null;
@@ -165,8 +169,10 @@ function init() {
 
     initShopTabs();
 
-    setInterval(core.saveGame, 30000);
+    // AUTO-SAVE TOUTES LES 10 SECONDES INVISIBLEMENT
+    setInterval(core.saveGame, 10000);
     window.addEventListener('beforeunload', core.saveGame);
+    
     setInterval(() => ui.showQuote(), 30000);
     
     setInterval(ui.spawnBackgroundParticle, 2000);

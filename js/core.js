@@ -292,7 +292,6 @@ export function buyDiamondEgg(eggId) {
     let spaceLeft = maxInv - state.inventoryPets.length;
     if (spaceLeft <= 0) { ui.showQuote("Inventaire plein !"); return; }
     
-    // SECURITE ABSOLUE : La quantité achetée est toujours bridée par l'espace restant
     let requestedQty = Math.min(state.eggQtySelected, maxBatch, spaceLeft);
     if (requestedQty <= 0) return;
 
@@ -333,14 +332,14 @@ export function buyDiamondEgg(eggId) {
         petsData.push(petData);
     }
 
-    saveGame();
+    saveGame(); // Sauvegarde silencieuse auto
     ui.updateDiamondUI();
 
     ui.playMultiEggAnimation(egg, petsData, () => {
         for (const p of newPets) {
             if (!p.autoSold) delete p.isHatching;
         }
-        saveGame();
+        saveGame(); // Sauvegarde silencieuse auto
         for (const pd of newlyDiscovered) ui.showMilestone(`📖 Nouveau Pet découvert : ${pd.name} !`);
         if (autoSoldAmount > 0) ui.showMilestone(`🗑️ Vente Automatique : +${formatNumber(autoSoldAmount)} cal`);
         ui.renderDiamondShop();
@@ -417,7 +416,6 @@ export function buyEgg(egg) {
     let spaceLeft = maxInv - state.inventoryPets.length;
     if (spaceLeft <= 0) { ui.showQuote("Inventaire plein ! Vends des pets."); return; }
     
-    // SECURITE ABSOLUE : La quantité achetée est toujours bridée par l'espace restant
     let requestedQty = Math.min(state.eggQtySelected, maxBatch, spaceLeft);
     if (requestedQty <= 0) return;
 
@@ -458,14 +456,14 @@ export function buyEgg(egg) {
         petsData.push(petData);
     }
 
-    saveGame();
+    saveGame(); // Sauvegarde silencieuse
     ui.updateDisplay();
 
     ui.playMultiEggAnimation(egg, petsData, () => {
         for (const p of newPets) {
             if (!p.autoSold) delete p.isHatching;
         }
-        saveGame();
+        saveGame(); // Sauvegarde silencieuse
         for (const pd of newlyDiscovered) ui.showMilestone(`📖 Nouveau Pet découvert : ${pd.name} !`);
         if (autoSoldAmount > 0) ui.showMilestone(`🗑️ Vente Automatique : +${formatNumber(autoSoldAmount)} cal`);
         ui.renderEggs();
@@ -486,7 +484,6 @@ export function processAutoRoll(dt) {
     
     if (!state.autoRollActive || !state.autoRollEggId || state.isOpeningEgg) return;
     
-    // VERIFICATION EN TEMPS RÉEL (Inventaire & Argent)
     const maxInv = getMaxInventory();
     const spaceLeft = maxInv - state.inventoryPets.length;
     
@@ -507,7 +504,6 @@ export function processAutoRoll(dt) {
 
     if (egg) {
         const maxBatch = getEggBatchSize();
-        // On respecte la demande, MAIS on limite à la place dispo pour ne rien forcer.
         const requestedQty = Math.min(state.eggQtySelected, maxBatch, spaceLeft);
         const totalCost = getEggTotalCost(egg, requestedQty, isDiamond);
         
@@ -529,7 +525,6 @@ export function processAutoRoll(dt) {
     }
 }
 
-// L'exécution du roll est désormais 100% sécurisée
 function executeAutoRoll() {
     try {
         let egg = data.EGGS.find(e => e.id === state.autoRollEggId);
@@ -556,7 +551,6 @@ function executeAutoRoll() {
         
         if (spaceLeft <= 0) return disableRoll("🎰 Auto-Roll arrêté : Inventaire plein !");
         
-        // SECURITE : on ne demande jamais plus d'œufs que d'espace libre !
         let requestedQty = Math.min(state.eggQtySelected, maxBatch, spaceLeft);
         if (requestedQty <= 0) return disableRoll("🎰 Auto-Roll arrêté : Inventaire plein !");
         
@@ -592,7 +586,6 @@ function executeAutoRoll() {
                 state.stats.petsSold++;
                 autoSoldAmount += sellValue;
             } else {
-                // Sûr et certain de ne pas dépasser l'inventaire ici
                 state.inventoryPets.push({ uid: Date.now() + Math.random() + i, id: selectedId, fusionLevel: 0 });
                 keptAmount++;
             }
@@ -948,11 +941,8 @@ export function redeemCode(inputRaw) {
     }
 }
 
-// ============ SAVE/LOAD ============
-export function saveGame(e) {
-    // Si appelé par un clic manuel (event) ou true
-    const isManual = (e === true || (e && e.type === 'click'));
-    
+// ============ SAUVEGARDE INVISIBLE ============
+export function saveGame() {
     const saveData = {
         calories: state.calories, totalCalories: state.totalCalories, totalClicks: state.totalClicks,
         startTime: state.startTime, milestonesReached: state.milestonesReached,
@@ -970,32 +960,54 @@ export function saveGame(e) {
         autoSellConfig: state.autoSellConfig, autoRollActive: state.autoRollActive, autoRollEggId: state.autoRollEggId
     };
     
+    // Sauvegarde Locale (silencieuse)
     localStorage.setItem('aubinclicker_save_v5', JSON.stringify(saveData));
-    if (isManual) ui.showQuote("💾 Partie locale sauvegardée !");
     
-    // NOUVEAU : Sauvegarde automatique en ligne (silencieuse)
+    // Sauvegarde Cloud (silencieuse)
     if (cloud.currentUser) {
-        cloud.saveGameData(saveData).then(success => {
-            if (isManual && success) ui.showQuote("☁️ Cloud mis à jour !");
-        });
+        cloud.saveGameData(saveData);
     }
 }
 
-// NOUVEAU : Fonction pour forcer le chargement depuis le Cloud
-export async function loadFromCloud() {
-    ui.showQuote("☁️ Téléchargement en cours...");
-    const data = await cloud.loadGameData();
-    if (data) {
-        localStorage.setItem('aubinclicker_save_v5', JSON.stringify(data));
-        loadGame(); // On recharge les variables
+// ============ SYNCHRONISATION INTELLIGENTE ============
+export async function syncWithCloud() {
+    const cloudData = await cloud.loadGameData();
+    
+    if (cloudData) {
+        // Si ce n'est PAS une connexion manuelle (ex: F5 de la page), on compare les dates pour ne rien perdre
+        if (!cloud.isManualLogin) {
+            const localRaw = localStorage.getItem('aubinclicker_save_v5');
+            if (localRaw) {
+                try {
+                    const localData = JSON.parse(localRaw);
+                    if (localData.savedAt && localData.savedAt > cloudData.savedAt) {
+                        saveGame(); // La save locale est plus récente : on l'envoie au cloud
+                        return;
+                    }
+                } catch(e) {}
+            }
+        }
+        
+        // Si c'est une connexion manuelle OU que le Cloud est plus récent : On écrase la sauvegarde locale
+        localStorage.setItem('aubinclicker_save_v5', JSON.stringify(cloudData));
+        
+        // On recharge tout de A à Z
+        loadGame(); 
+        ui.applyUniverseTheme(); // <-- CORRECTION DU MONDE ICI
         recalculateCps();
+        ui.resetToMainTab();     // <-- SÉCURITÉ : On remet sur l'onglet de base
         ui.renderAll();
-        ui.showMilestone("☁️ Progression récupérée avec succès !");
+        
+        ui.showMilestone("☁️ Compte synchronisé avec succès !");
         ui.showQuote("Te revoilà !");
     } else {
-        ui.showQuote("❌ Aucune sauvegarde trouvée sur ce compte.");
+        // Nouveau compte cloud : On envoie la progression locale actuelle dessus
+        saveGame();
     }
+    
+    cloud.setManualLogin(false); // Reset de la sécurité
 }
+
 
 export function loadGame() {
     const raw = localStorage.getItem('aubinclicker_save_v5');
@@ -1040,9 +1052,8 @@ export function loadGame() {
     }
 }
 
-export function resetGame() {
-    if (!confirm("⚠️ Tout effacer ? Aubin va devoir recommencer son régime...")) return;
-    
+// NOUVEAU : Fonction de Hard Reset paramétrable
+export function performHardReset(isLogout = false) {
     localStorage.removeItem('aubinclicker_save_v5');
     
     state.calories = 0; state.totalCalories = 0; state.totalClicks = 0; state.clickPower = 1;
@@ -1069,6 +1080,26 @@ export function resetGame() {
     ui.applyUniverseTheme();
     recalculateCps();
     generateQuests();
+    
+    // On force l'interface à revenir sur le premier onglet (Bâtiments)
+    ui.resetToMainTab();
     ui.renderAll();
-    ui.showQuote("🔄 C'est reparti ! Aubin a encore faim !");
+    
+    if (isLogout) {
+        ui.showQuote("Déconnexion réussie. Progression locale remise à zéro pour éviter le clonage !");
+    } else {
+        ui.showQuote("🔄 C'est reparti ! Aubin a encore faim !");
+        // Si c'est un reset volontaire du joueur connecté, on synchronise ce reset avec le Cloud.
+        saveGame(true); 
+    }
+}
+
+export function resetGame() {
+    if (!confirm("⚠️ Tout effacer ? Aubin va devoir recommencer son régime...")) return;
+    performHardReset(false);
+}
+
+// Fonction appelée uniquement lors de la déconnexion
+export function logoutReset() {
+    performHardReset(true);
 }

@@ -15,9 +15,12 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const googleProvider = new GoogleAuthProvider(); // <- NOUVEAU
+const googleProvider = new GoogleAuthProvider();
 
 export let currentUser = null;
+export let isManualLogin = false; // Permet de savoir si on vient de cliquer sur "Connexion"
+
+export function setManualLogin(val) { isManualLogin = val; }
 
 // Initialise l'écouteur de connexion
 export function initAuth(onStateChange) {
@@ -29,33 +32,40 @@ export function initAuth(onStateChange) {
 
 export async function register(email, password) {
     try {
+        isManualLogin = true;
         await createUserWithEmailAndPassword(auth, email, password);
         return { success: true };
     } catch (error) {
+        isManualLogin = false;
         return { success: false, message: translateFirebaseError(error.code) };
     }
 }
 
 export async function login(email, password) {
     try {
+        isManualLogin = true;
         await signInWithEmailAndPassword(auth, email, password);
         return { success: true };
     } catch (error) {
+        isManualLogin = false;
         return { success: false, message: translateFirebaseError(error.code) };
     }
 }
 
 export async function loginWithGoogle() {
     try {
+        isManualLogin = true;
         await signInWithPopup(auth, googleProvider);
         return { success: true };
     } catch (error) {
+        isManualLogin = false;
         return { success: false, message: translateFirebaseError(error.code) };
     }
 }
 
 export async function logout() {
     await signOut(auth);
+    currentUser = null;
 }
 
 // Sauvegarde dans la base de données

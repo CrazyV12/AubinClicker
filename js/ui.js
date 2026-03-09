@@ -771,20 +771,18 @@ export function updateRebirthUI() {
     }
     if(el('calorie-bar-text')) el('calorie-bar-text').textContent = `${core.formatNumber(state.calories)} / ${core.formatNumber(target)}`;
     
-    if (state.rebirthCount >= 1) {
-        ['eggs-tab', 'inventory-tab', 'index-tab', 'codes-tab', 'pet-inventory', 'diamonds-tab'].forEach(id => {
-            const element = document.getElementById(id);
-            if(element) element.style.display = '';
-        });
-    }
+    // CORRECTION DU BUG : On force le masquage quand on retombe à 0 Rebirth
+    const showRebirthTabs = state.rebirthCount >= 1;
+    ['eggs-tab', 'inventory-tab', 'index-tab', 'codes-tab', 'pet-inventory', 'diamonds-tab'].forEach(id => {
+        const element = document.getElementById(id);
+        if(element) element.style.display = showRebirthTabs ? '' : 'none';
+    });
 
-    if (state.rebirthCount >= 10) {
-        if (el('ascension-info')) el('ascension-info').style.display = '';
-        if (el('ascension-details')) el('ascension-details').style.display = '';
-        if (el('ascension-btn')) el('ascension-btn').style.display = '';
-        if (el('ascension-require')) el('ascension-require').style.display = '';
-        if (el('ascension-tab')) el('ascension-tab').style.display = '';
-    }
+    const showAscension = state.rebirthCount >= 10;
+    ['ascension-info', 'ascension-details', 'ascension-btn', 'ascension-require', 'ascension-tab'].forEach(id => {
+        const aEl = document.getElementById(id);
+        if(aEl) aEl.style.display = showAscension ? '' : 'none';
+    });
 }
 
 export function updateAscensionUI() {
@@ -1443,4 +1441,20 @@ export function updateCloudUI(user) {
         document.getElementById('cloud-password').value = '';
         if(msg) msg.textContent = '';
     }
+}
+
+// Remet l'interface sur l'onglet de base (Bâtiments) lors d'un Reset
+export function resetToMainTab() {
+    const tabs = document.querySelectorAll('.shop-tab');
+    tabs.forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.shop-content').forEach(c => c.classList.remove('active'));
+    
+    const bTab = document.querySelector('[data-tab="buildings"]');
+    if (bTab) bTab.classList.add('active');
+    
+    const bList = document.getElementById('buildings-list');
+    if (bList) bList.classList.add('active');
+    
+    const panelTitle = document.getElementById('panel-title');
+    if (panelTitle) panelTitle.textContent = "🏗️ Bâtiments";
 }
