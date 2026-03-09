@@ -216,6 +216,10 @@ export function doAscension() {
 
     state.ascensionCount++;
     state.ascensionPoints += getAscensionPointsPerRebirth();
+    
+    // --- CORRECTION DU BUG ICI ---
+    state.rebirthCount = 0; // On remet bien les rebirths à 0 pour bloquer le double clic !
+    
     state.calories = 0; state.totalCalories = 0; state.totalClicks = 0;
     state.clickPower = 1; state.cps = 0; state.clickMultiplier = 1; state.globalMultiplier = 1;
     state.milestonesReached = []; state.rebirthTokens = 0;
