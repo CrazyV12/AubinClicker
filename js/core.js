@@ -936,12 +936,13 @@ export function redeemCode(inputRaw) {
         const msg = '💎 100 Qa Diamants ajoutés !';
         domCodeResult.textContent = msg; domCodeResult.className = 'code-result success';
         ui.showMilestone(msg);
-    } else if (input === 'ADMIN56') {
+    } else if (input === 'ADMIN_ASCEND') {
         state.codesUsed.push(input);
-        state.rebirthTokens += 10000000; // 10 Millions
-        ui.updateRebirthUI();
+        state.ascensionPoints += 10000000;
+        ui.updateAscensionUI();
+        ui.renderAscensionShop();
         ui.updateDisplay();
-        const msg = '🪙 10 Millions de Tokens de Rebirth ajoutés !';
+        const msg = '✨ 10 Millions de Points d\'Ascension ajoutés !';
         domCodeResult.textContent = msg; domCodeResult.className = 'code-result success';
         ui.showMilestone(msg);
     } else {
