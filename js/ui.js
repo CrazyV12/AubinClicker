@@ -427,12 +427,15 @@ export function renderBuildings() {
         const cost = core.getBuildingCost(b);
         const isMaxed = b.count >= maxBuildings;
         
-        const isLockedByRebirth = state.rebirthCount < (b.minRebirth || 0);
+        // MODIFICATION ICI : On ignore le blocage Rebirth si on a déjà fait une Ascension !
+        const isLockedByRebirth = (state.rebirthCount < (b.minRebirth || 0)) && (state.ascensionCount === 0);
+        
         const isLockedByAscension = b.reqAscension ? core.getAscensionUpgradeLevel(b.reqAscension) === 0 : false;
         const isHardLocked = isLockedByRebirth || isLockedByAscension;
         
         const canAfford = state.calories >= cost && !isMaxed && !isHardLocked;
-        const isSoftLocked = state.totalCalories < b.baseCost * 0.5 && b.count === 0;
+        // On enlève aussi le SoftLock si on a déjà ascensionné pour pouvoir tout voir
+        const isSoftLocked = (state.totalCalories < b.baseCost * 0.5 && b.count === 0) && (state.ascensionCount === 0);
 
         const maxStr = maxBuildings === Infinity ? '∞' : maxBuildings;
 
@@ -774,14 +777,15 @@ export function updateRebirthUI() {
     }
     if(el('calorie-bar-text')) el('calorie-bar-text').textContent = `${core.formatNumber(state.calories)} / ${core.formatNumber(target)}`;
     
-    // CORRECTION DU BUG : On force le masquage quand on retombe à 0 Rebirth
-    const showRebirthTabs = state.rebirthCount >= 1;
+    // CORRECTION : On affiche les onglets si on a au moins 1 Rebirth OU si on a déjà fait une Ascension !
+    const showRebirthTabs = state.rebirthCount >= 1 || state.ascensionCount >= 1;
     ['eggs-tab', 'inventory-tab', 'index-tab', 'codes-tab', 'pet-inventory', 'diamonds-tab'].forEach(id => {
         const element = document.getElementById(id);
         if(element) element.style.display = showRebirthTabs ? '' : 'none';
     });
 
-    const showAscension = state.rebirthCount >= 10;
+    // Pareil pour le menu Ascension : on le garde affiché pour toujours !
+    const showAscension = state.rebirthCount >= 10 || state.ascensionCount >= 1;
     ['ascension-info', 'ascension-details', 'ascension-btn', 'ascension-require', 'ascension-tab'].forEach(id => {
         const aEl = document.getElementById(id);
         if(aEl) aEl.style.display = showAscension ? '' : 'none';
