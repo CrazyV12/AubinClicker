@@ -912,47 +912,7 @@ export function buyUpgrade(upgrade) {
 }
 
 // ============ CODES ============
-export function redeemCode(inputRaw) {
-    const input = inputRaw.trim().toUpperCase();
-    const domCodeResult = document.getElementById('code-result');
-    if(!domCodeResult) return;
-    if (!input) { domCodeResult.textContent = '❌ Entre un code !'; domCodeResult.className = 'code-result error'; return; }
-    if (state.codesUsed.includes(input)) { domCodeResult.textContent = '⚠️ Code déjà utilisé !'; domCodeResult.className = 'code-result error'; return; }
-    
-    if (input === 'ADMIN54') {
-        state.codesUsed.push(input);
-        state.bonusPetSlots++; recalcMaxPetSlots();
-        
-        state.inventoryPets.push({ uid: Date.now() + Math.random(), id: 'licorne', fusionLevel: 0 });
-        if (!state.discoveredPets.includes('licorne')) state.discoveredPets.push('licorne');
-        
-        recalculateCps();
-        if (state.sortOrder) toggleSortInventory(true); else ui.renderPetInventory();
-        ui.renderPetIndex(); ui.updateDisplay();
-        const msg = '🦄 Licorne Classique ajoutée + 1 slot bonus !';
-        domCodeResult.textContent = msg; domCodeResult.className = 'code-result success';
-        ui.showMilestone(msg);
-    } else if (input === 'ADMIN55') {
-        state.codesUsed.push(input);
-        state.diamonds += 100000000000000000;
-        ui.updateDiamondUI();
-        ui.updateDisplay();
-        const msg = '💎 100 Qa Diamants ajoutés !';
-        domCodeResult.textContent = msg; domCodeResult.className = 'code-result success';
-        ui.showMilestone(msg);
-    } else if (input === 'ADMIN_ASCEND') {
-        state.codesUsed.push(input);
-        state.ascensionPoints += 10000000;
-        ui.updateAscensionUI();
-        ui.renderAscensionShop();
-        ui.updateDisplay();
-        const msg = '✨ 10 Millions de Points d\'Ascension ajoutés !';
-        domCodeResult.textContent = msg; domCodeResult.className = 'code-result success';
-        ui.showMilestone(msg);
-    } else {
-        domCodeResult.textContent = '❌ Code invalide !'; domCodeResult.className = 'code-result error';
-    }
-}
+//================================
 
 // ============ SAUVEGARDE INVISIBLE ============
 export function saveGame() {
@@ -976,7 +936,7 @@ export function saveGame() {
     };
     
     // Sauvegarde Locale (silencieuse)
-    localStorage.setItem('aubinclicker_save_v5', JSON.stringify(saveData));
+    localStorage.setItem('aubinclicker_save_v6', JSON.stringify(saveData));
     
     // Sauvegarde Cloud (silencieuse)
     if (cloud.currentUser) {
@@ -990,7 +950,7 @@ export async function syncWithCloud() {
     
     if (cloudData) {
         if (!cloud.isManualLogin) {
-            const localRaw = localStorage.getItem('aubinclicker_save_v5');
+            const localRaw = localStorage.getItem('aubinclicker_save_v6');
             if (localRaw) {
                 try {
                     const localData = JSON.parse(localRaw);
@@ -1002,7 +962,7 @@ export async function syncWithCloud() {
             }
         }
         
-        localStorage.setItem('aubinclicker_save_v5', JSON.stringify(cloudData));
+        localStorage.setItem('aubinclicker_save_v6', JSON.stringify(cloudData));
         
         loadGame(); 
         ui.applyUniverseTheme();
@@ -1024,7 +984,7 @@ export async function syncWithCloud() {
 
 
 export function loadGame() {
-    const raw = localStorage.getItem('aubinclicker_save_v5');
+    const raw = localStorage.getItem('aubinclicker_save_v6');
     if (!raw) {
         data.updateDynamicContent(0);
         return false;
@@ -1069,7 +1029,7 @@ export function loadGame() {
 
 // NOUVEAU : Fonction de Hard Reset paramétrable
 export function performHardReset(isLogout = false) {
-    localStorage.removeItem('aubinclicker_save_v5');
+    localStorage.removeItem('aubinclicker_save_v6');
     
     state.calories = 0; state.totalCalories = 0; state.totalClicks = 0; state.clickPower = 1;
     state.cps = 0; state.clickMultiplier = 1; state.globalMultiplier = 1;
