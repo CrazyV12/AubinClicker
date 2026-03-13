@@ -2,7 +2,7 @@
 
 **Aubin a faim. Il a _toujours_ faim.** AubinClicker est un jeu incrémental (Clicker) développé en Vanilla JS, HTML et CSS. Nourrissez Aubin pour récolter des Calories d'Or, achetez des bâtiments toujours plus gras, collectionnez des familiers et transcendez l'univers connu !
 
-🌍 **[Jouer à AubinClicker maintenant !](https://romaindancette.github.io/aubinclicker)** _(Remplace par ton vrai lien)_
+🌍 **[Jouer à AubinClicker maintenant !](https://crazyv12.github.io/AubinClicker/)**
 
 ---
 
